@@ -16,6 +16,8 @@
   ],
   "globals": { "BigInt": true, "console": true, "WebAssembly": true },
   "rules": {
+    "functional/prefer-readonly-type":0,
+    "eslint-comments/no-unlimited-disable": 0,
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "eslint-comments/disable-enable-pair": [
       "error",
