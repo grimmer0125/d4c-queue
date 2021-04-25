@@ -15,15 +15,7 @@ test('insert a task in global queue', async (t) => {
   const resp = await job;
   t.is(resp, "12");
 
-  let error; // eslint-disable-line
-  try {
-    await D4C.wrap(func, {});
-  } catch (err) {
-    error = err;
-  }
-  t.is(error.message, "You should specify queueTag in option when using share queues");
-
-  /** gwrap_exec */
+  /** apply */
   const resp2 = await D4C.apply(func, { tag: "abc", args: [["33", "44"], "5"] });
   t.is(resp2, "335");
 });
@@ -37,11 +29,21 @@ test('insert a task in global queue, tag is symbol', async (t) => {
   t.is(resp, "12");
 });
 
+test('insert a task in global queue with invalid empty tag', async (t) => {
+  let error; // eslint-disable-line
+  try {
+    await D4C.wrap(func, {});
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, "You should specify queueTag in option when using share queues");
+});
+
 test('insert a task in object queue', async (t) => {
   const d4c = new D4C();
   t.is(await d4c.iwrap(func)(fixture, fixture2), "12");
 
-  /** gwrap_exec */
+  /** apply */
   const resp2 = await d4c.iapply(func, { tag: "abc", args: [["33", "44"], "5"] });
   t.is(resp2, "335");
 });
@@ -52,11 +54,8 @@ test('insert a task in object queue, use symbol case', async (t) => {
   t.is(await job, "12");
 });
 
-test('insert a task in object queue, use null as tag case', async (t) => {
+test('insert a task in object queue, use a invalid null/empty tag case', async (t) => {
   const d4c = new D4C();
-  const job = d4c.iwrap(func, { tag: Symbol("123") })(fixture, fixture2);
-  t.is(await job, "12");
-
   let error; // eslint-disable-line
   try {
     await d4c.iwrap(func, { tag: null });
@@ -67,7 +66,7 @@ test('insert a task in object queue, use null as tag case', async (t) => {
 });
 
 
-test('insert a class\'s method and use decorator to make a task in global queue', async (t) => {
+test('insert a class\'s method via decorator to make a task in global queue', async (t) => {
   @D4C.classRegister("cat") // eslint-disable-line
   class TestController {
     greeting: string; // eslint-disable-line
@@ -86,19 +85,6 @@ test('insert a class\'s method and use decorator to make a task in global queue'
       return "abc" + text
     }
 
-    /**
-     * below are arrow function property 
-     */
-
-    // since a property decorator (on arrow function) can not get its descriptor (function)
-    // ref: https://stackoverflow.com/questions/49928260/typescript-decorators-not-working-with-arrow-functions
-    // this does not work
-    // @D4C.methodDecorator() //
-    // greet2 = async (text: string) => { // eslint-disable-line
-    //   const str = "Hello, " + text + this.greeting; // eslint-disable-line
-    //   return str
-    // }
-
     // workaround working way for a arrow function
     greet2 = D4C.wrap(async (text: string) => { // eslint-disable-line
       const str = "Hello, " + text + this.greeting; // eslint-disable-line
@@ -109,9 +95,6 @@ test('insert a class\'s method and use decorator to make a task in global queue'
   /** instance method  */
   const test = new TestController("kitty");
   const job = test.greet(fixture2);
-  // NOTE: can not use below way since this will be not found. 
-  // const new_func = test.greet;
-  // const job = new_func(fixture2);
   const resp = await job;
   t.is(resp, "Hello, 2kitty");
 
@@ -128,6 +111,10 @@ test('insert a class\'s method and use decorator to make a task in global queue'
   const resp3 = await job3;
   t.is(resp3, "abc2");
 
+
+});
+
+test('insert a class\'s method via decorator with a invalid empty tag', async (t) => {
   let error; // eslint-disable-line
   try {
     @D4C.classRegister("") // eslint-disable-line
@@ -143,7 +130,8 @@ test('insert a class\'s method and use decorator to make a task in global queue'
   t.is(error.message, "You should specify non-null or non-empty string queueTag in option when using share queues");
 });
 
-test('special case: insert a class\'s method as a task in global queue', async (t) => {
+
+test('insert a class\'s method as a task by manually using global queue', async (t) => {
   class TestController { // eslint-disable-line
     greeting: string; // eslint-disable-line
     constructor(message: string) {
