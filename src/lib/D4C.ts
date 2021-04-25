@@ -4,7 +4,6 @@
 import Denque from "Denque";
 import 'reflect-metadata'
 
-
 interface TaskQueue {
   queue: Denque,
   isRunning: Boolean
@@ -16,6 +15,15 @@ interface Task {
   inheritPreErr?: boolean
 }
 
+// https://www.jpwilliams.dev/how-to-unpack-the-return-type-of-a-promise-in-typescript
+type Unwrap<T> =
+  T extends Promise<infer U> ? U :
+  T extends (...args: any) => Promise<infer U> ? U :
+  T extends (...args: any) => infer U ? U :
+  T
+
+// Parameters: https://stackoverflow.com/questions/55386842/typescript-copying-only-function-arguments-and-not-return-type  
+
 type QueueTag = string | symbol;
 type isInheritPreErr = boolean;
 
@@ -26,7 +34,7 @@ type isInheritPreErr = boolean;
 
 type TaskQueuesType = Map<string | symbol, TaskQueue>;
 
-type IAsyncFn = (...args: any[]) => Promise<any>;
+type IAsyncFn = (...args: any[]) => Promise<any> | any;
 
 class PreviousError extends Error {
   constructor(message) {
@@ -77,7 +85,7 @@ export default class D4C {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
     args?: Parameters<typeof async_func>
-  }): ReturnType<typeof async_func> {
+  }): Promise<Unwrap<typeof async_func>> {
     const res = D4C.wrap(async_func, option).apply(null, option.args);
     return res;
   }
@@ -85,7 +93,7 @@ export default class D4C {
   public static wrap<T extends IAsyncFn>(async_func: T, option: {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
-  }): T {
+  }): (...args: Parameters<typeof async_func>) => Promise<Unwrap<typeof async_func>> {
     if (!option?.tag) {
       throw new Error('You should specify queueTag in option when using share queues');
     }
@@ -96,7 +104,7 @@ export default class D4C {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
     args?: Parameters<typeof async_func>
-  }): ReturnType<typeof async_func> {
+  }): Promise<Unwrap<typeof async_func>> {
     const resp = this.iwrap(async_func, option).apply(null, option.args);
     return resp;
   }
@@ -104,7 +112,7 @@ export default class D4C {
   public iwrap<T extends IAsyncFn>(async_func: T, option?: {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
-  }): T {
+  }): (...args: Parameters<typeof async_func>) => Promise<Unwrap<typeof async_func>> {
     if (option && (option.tag === null || option.tag === "")) {
       throw new Error('queueTag can not be null or empty string');
     }
@@ -114,7 +122,7 @@ export default class D4C {
   static _q<T extends IAsyncFn>(queues: TaskQueuesType, async_func: T, option?: {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
-  }, prototype?: any): T {
+  }, prototype?: any): (...args: Parameters<typeof async_func>) => Promise<Unwrap<typeof async_func>> {
     return (async function (...args: any[]): Promise<any> {
 
       /** Assign queues */
@@ -181,7 +189,14 @@ export default class D4C {
         err = new PreviousError(task.preError.message ?? task.preError)
       } else {
         try {
-          result = await async_func.apply(this, arguments);
+          const value = async_func.apply(this, arguments);
+          /** Detect if it is a async/promise function or not */
+          // ref: https://lsm.ai/posts/7-ways-to-detect-javascript-async-function/
+          if (value && typeof value.then === "function") {
+            result = await value;
+          } else {
+            result = value;
+          }
         } catch (error) {
           err = error;
         }
@@ -204,7 +219,7 @@ export default class D4C {
       }
 
       return result;
-    }) as T;
+    }) as (...args: Parameters<typeof async_func>) => Promise<Unwrap<typeof async_func>>;
   }
 }
 

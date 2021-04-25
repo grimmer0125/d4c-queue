@@ -1,5 +1,7 @@
 # D4C
 
+Pass a `aync` function, a function returning a promise, or a normal function into task queues. Do them sequentially.
+
 ## Features:
 
 1. Three ways to use
@@ -8,9 +10,10 @@
    3. Decorator.
 2. Use third party library Denque to implement a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter to inherit previous error
-4. Able to pass arguents and get return value for each task function
-5. Support browser/node.js
+4. Able to pass arguments and get return value for each task function
+5. \*Support browser/node.js [need testing]
 6. Typescript typing
+7. Support `async function`, a function to return `promise`, and a normal function.
 
 ## Tutorial & Usage
 
