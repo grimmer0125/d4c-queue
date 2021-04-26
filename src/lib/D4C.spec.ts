@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import D4C, { errMsg } from './D4C';
+import { D4C, errMsg } from './D4C';
 
 const fixture = ['1'];
 const fixture2 = '2';

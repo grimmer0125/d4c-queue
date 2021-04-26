@@ -1,5 +1,4 @@
-/** Using Denque is to get O(1) queue speed, using built-in array as FIFO queue will result in O(n) */
-import Denque from 'Denque';
+import Denque from 'denque';
 import 'reflect-metadata';
 
 type TaskQueue = {
@@ -51,7 +50,7 @@ class PreviousError extends Error {
 }
 
 const classDecoratorKey = Symbol('D4C');
-export default class D4C {
+export class D4C {
   static queues: TaskQueuesType = new Map<string | symbol, TaskQueue>();
 
   queues: TaskQueuesType;
