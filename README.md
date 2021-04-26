@@ -1,4 +1,4 @@
-# D4C
+# D4C Queue
 
 Pass a `aync` function, a function returning a promise, or a normal function into task queues. Do them sequentially.
 
