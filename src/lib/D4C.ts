@@ -6,7 +6,7 @@ import 'reflect-metadata'
 
 interface TaskQueue {
   queue: Denque,
-  isRunning: Boolean
+  isRunning: boolean,
 }
 
 interface Task {
@@ -36,6 +36,12 @@ type TaskQueuesType = Map<string | symbol, TaskQueue>;
 
 type IAsyncFn = (...args: any[]) => Promise<any> | any;
 
+export const errMsg = {
+  ClassDecorator: 'You should specify non-null or non-empty string queueTag in option when using share queues',
+  WrapNotag: 'You should specify queueTag in option when using share queues',
+  iWraWrongTag: 'queueTag can not be null or empty string'
+}
+
 class PreviousError extends Error {
   constructor(message) {
     super(message);
@@ -55,7 +61,7 @@ export default class D4C {
 
   public static classRegister(tag: QueueTag): ClassDecorator {
     if (!tag) {
-      throw new Error('You should specify non-null or non-empty string queueTag in option when using share queues');
+      throw new Error(errMsg.ClassDecorator);
     }
 
     return (target) => {
@@ -63,20 +69,22 @@ export default class D4C {
     };
   }
 
-  public static staticMethodDecorator(inheritPreErr?: isInheritPreErr) {
+  public static staticMethodDecorator(inheritPreErr?: isInheritPreErr, nonBlockCurr?: boolean
+  ) {
     // target = constructor 
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
       const originalMethod = descriptor.value;
-      const newFunc = D4C._q(null, originalMethod, { inheritPreErr }, target.prototype);
+      const newFunc = D4C._q(null, originalMethod, { inheritPreErr, nonBlockCurr }, target.prototype);
       descriptor.value = newFunc;
     };
   }
 
-  public static methodDecorator(inheritPreErr?: isInheritPreErr) {
+  public static methodDecorator(inheritPreErr?: isInheritPreErr, nonBlockCurr?: boolean
+  ) {
     // target = prototype
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
       const originalMethod = descriptor.value;
-      const newFunc = D4C._q(null, originalMethod, { inheritPreErr }, target);
+      const newFunc = D4C._q(null, originalMethod, { inheritPreErr, nonBlockCurr }, target);
       descriptor.value = newFunc;
     };
   }
@@ -84,6 +92,7 @@ export default class D4C {
   public static apply<T extends IAsyncFn>(async_func: T, option: {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
+    nonBlockCurr?: boolean,
     args?: Parameters<typeof async_func>
   }): Promise<Unwrap<typeof async_func>> {
     const res = D4C.wrap(async_func, option).apply(null, option.args);
@@ -93,9 +102,10 @@ export default class D4C {
   public static wrap<T extends IAsyncFn>(async_func: T, option: {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
+    nonBlockCurr?: boolean
   }): (...args: Parameters<typeof async_func>) => Promise<Unwrap<typeof async_func>> {
     if (!option?.tag) {
-      throw new Error('You should specify queueTag in option when using share queues');
+      throw new Error(errMsg.WrapNotag);
     }
     return D4C._q(null, async_func, option);
   }
@@ -103,6 +113,7 @@ export default class D4C {
   public iapply<T extends IAsyncFn>(async_func: T, option?: {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
+    nonBlockCurr?: boolean,
     args?: Parameters<typeof async_func>
   }): Promise<Unwrap<typeof async_func>> {
     const resp = this.iwrap(async_func, option).apply(null, option.args);
@@ -112,9 +123,10 @@ export default class D4C {
   public iwrap<T extends IAsyncFn>(async_func: T, option?: {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
+    nonBlockCurr?: boolean
   }): (...args: Parameters<typeof async_func>) => Promise<Unwrap<typeof async_func>> {
     if (option && (option.tag === null || option.tag === "")) {
-      throw new Error('queueTag can not be null or empty string');
+      throw new Error(errMsg.iWraWrongTag);
     }
     return D4C._q(this.queues, async_func, option);
   }
@@ -122,9 +134,9 @@ export default class D4C {
   static _q<T extends IAsyncFn>(queues: TaskQueuesType, async_func: T, option?: {
     tag?: QueueTag,
     inheritPreErr?: isInheritPreErr,
+    nonBlockCurr?: boolean
   }, prototype?: any): (...args: Parameters<typeof async_func>) => Promise<Unwrap<typeof async_func>> {
     return (async function (...args: any[]): Promise<any> {
-
       /** Assign queues */
       let taskQueue: TaskQueue;
       let currTaskQueues: TaskQueuesType
@@ -182,6 +194,9 @@ export default class D4C {
         await promise;
       } else {
         taskQueue.isRunning = true;
+        if (option?.nonBlockCurr) {
+          await Promise.resolve();
+        }
       }
 
       /** Run the task */
@@ -190,6 +205,7 @@ export default class D4C {
       } else {
         try {
           const value = async_func.apply(this, arguments);
+
           /** Detect if it is a async/promise function or not */
           // ref: https://lsm.ai/posts/7-ways-to-detect-javascript-async-function/
           if (value && typeof value.then === "function") {

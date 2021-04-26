@@ -1,11 +1,12 @@
 import test from 'ava';
 
-import D4C from "./D4C";
+import D4C, { errMsg } from "./D4C";
 
 const fixture = ["1"];
-const fixture2 = "2"
+const fixture2 = "2";
+const queueTag = "abc";
 
-const funcAsync = async (input: string[], input2: string): Promise<string> => {
+const funcAsync = async (input?: string[], input2?: string): Promise<string> => {
   return input[0] + input2;
 };
 
@@ -17,22 +18,38 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
   return Promise.resolve(input[0] + input2);
 };
 
+test('insert a non-async function task in global queue to test nonBlockCurr', async (t) => {
+  let testStr = ""  // eslint-disable-line
+  const funcSync2 = (input: string[], input2: string) => {
+    testStr += "inFuncSyn"
+  };
+  testStr += "1";
+  const newFunc = D4C.wrap(funcSync2, { tag: queueTag, nonBlockCurr: true });
+  testStr += "2";
+  const job = newFunc(fixture, fixture2);
+  testStr += "3";
+  await job;
+  testStr += "4";
+  // console.log(testStr)
+  t.is(testStr, "123inFuncSyn4");
+});
+
 test('insert a function returning a promise as a task in global queue', async (t) => {
-  const newFunc = D4C.wrap(funcPromise, { tag: "abc" });
+  const newFunc = D4C.wrap(funcPromise, { tag: queueTag });
   const job = newFunc(fixture, fixture2);
   const resp = await job;
   t.is(resp, "12");
 });
 
 test('insert a non-async function task in global queue', async (t) => {
-  const newFunc = D4C.wrap(funcSync, { tag: "abc" });
+  const newFunc = D4C.wrap(funcSync, { tag: queueTag });
   const job = newFunc(fixture, fixture2);
   const resp = await job;
   t.is(resp, "12");
 });
 
 test('insert a task in global queue', async (t) => {
-  const newFunc = D4C.wrap(funcAsync, { tag: "abc" });
+  const newFunc = D4C.wrap(funcAsync, { tag: queueTag });
   const job = newFunc(fixture, fixture2);
   const resp = await job;
   t.is(resp, "12");
@@ -40,14 +57,14 @@ test('insert a task in global queue', async (t) => {
 
 test('insert a task in global queue and directly apply', async (t) => {
   /** apply */
-  const resp2 = await D4C.apply(funcAsync, { tag: "abc", args: [["33", "44"], "5"] });
+  const resp2 = await D4C.apply(funcAsync, { args: [["33", "44"], "5"], tag: queueTag, });
   t.is(resp2, "335");
 });
 
 
 test('insert a task in global queue, tag is symbol', async (t) => {
   const newFunc = D4C.wrap(funcAsync, {
-    tag: Symbol("abc")
+    tag: Symbol(queueTag)
   });
   const job = newFunc(fixture, fixture2);
   const resp = await job;
@@ -61,7 +78,7 @@ test('insert a task in global queue with invalid empty tag', async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, "You should specify queueTag in option when using share queues");
+  t.is(error.message, errMsg.WrapNotag);
 });
 
 test('insert a task in object queue', async (t) => {
@@ -73,7 +90,7 @@ test('insert a task in object queue and directly apply', async (t) => {
   const d4c = new D4C();
 
   /** apply */
-  const resp2 = await d4c.iapply(funcAsync, { tag: "abc", args: [["33", "44"], "5"] });
+  const resp2 = await d4c.iapply(funcAsync, { tag: queueTag, args: [["33", "44"], "5"] });
   t.is(resp2, "335");
 });
 
@@ -91,7 +108,7 @@ test('insert a task in object queue, use a invalid null/empty tag case', async (
   } catch (err) {
     error = err;
   }
-  t.is(error.message, "queueTag can not be null or empty string");
+  t.is(error.message, errMsg.iWraWrongTag);
 });
 
 
@@ -111,7 +128,7 @@ test('insert a class\'s method via decorator to make a task in global queue', as
 
     @D4C.staticMethodDecorator()
     static async staticMethod(text: string) {
-      return "abc" + text
+      return queueTag + text
     }
 
     // workaround working way for a arrow function
@@ -156,7 +173,7 @@ test('insert a class\'s method via decorator with a invalid empty tag', async (t
   } catch (err) {
     error = err;
   }
-  t.is(error.message, "You should specify non-null or non-empty string queueTag in option when using share queues");
+  t.is(error.message, errMsg.ClassDecorator);
 });
 
 
@@ -173,13 +190,13 @@ test('insert a class\'s method as a task by manually using global queue', async 
     }
   }
   const test = new TestController("kitty");
-  const newFunc = D4C.wrap(test.greet, { tag: "abc" });
+  const newFunc = D4C.wrap(test.greet, { tag: queueTag });
   const job = newFunc(fixture2);
   const resp = await job;
   t.is(resp, "Hello, 2kitty");
 
   /** wrap_exec part */
-  const resp2 = await D4C.apply(test.greet, { tag: "abc", args: [fixture2] });
+  const resp2 = await D4C.apply(test.greet, { tag: queueTag, args: [fixture2] });
   t.is(resp2, "Hello, 2kitty");
 });
 
