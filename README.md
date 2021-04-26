@@ -26,17 +26,12 @@ WIP
   1. typescript import
   2. javascript node.js require(CommonJS ??) ? https ://eddychang.me/node-es6-module
   3. javascript browser/TypeScript browser.js import. (....ref: comlink)
-- fix linter part:
-  1. Handle eslint readonly arrays error, about `"test:lint": "eslint src --ext .ts"`,
-  2. prettier / spelling
 
-Currently the below is removed
+Currently the below is removed sine they will make errors on `yarn test`
 
 ```
-1. "test:prettier": "prettier \"src/\*\*/\_.ts\" --list-different"
+1. "test:prettier": "prettier \"src/**/*.ts\" --list-different"
 2. "test:spelling": "cspell \"{README.md,.github/\_.md,src/\*\*/\*.ts}\"",
-3. "test:lint": "eslint src --ext .ts",
-
 ```
 
 ## Bootstrap tool
