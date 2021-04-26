@@ -1,19 +1,19 @@
 
-/* eslint-disable */
 /** Using Denque is to get O(1) queue speed, using built-in array as FIFO queue will result in O(n) */
 import Denque from "Denque";
 import 'reflect-metadata'
 
-interface TaskQueue {
+type TaskQueue = {
   queue: Denque,
   isRunning: boolean,
 }
 
-interface Task {
+type Task = {
   unlock: (value?: unknown) => void,
-  preError?: Error
+  preError?: Error,
   inheritPreErr?: boolean
 }
+
 
 // https://www.jpwilliams.dev/how-to-unpack-the-return-type-of-a-promise-in-typescript
 type Unwrap<T> =
@@ -204,7 +204,7 @@ export default class D4C {
         err = new PreviousError(task.preError.message ?? task.preError)
       } else {
         try {
-          const value = async_func.apply(this, arguments);
+          const value = async_func.apply(this, args);
 
           /** Detect if it is a async/promise function or not */
           // ref: https://lsm.ai/posts/7-ways-to-detect-javascript-async-function/

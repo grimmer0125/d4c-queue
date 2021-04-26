@@ -19,7 +19,7 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
 };
 
 test('insert a non-async function task in global queue to test nonBlockCurr', async (t) => {
-  let testStr = ""  // eslint-disable-line
+  let testStr = ""
   const funcSync2 = (input: string[], input2: string) => {
     testStr += "inFuncSyn"
   };
@@ -30,7 +30,6 @@ test('insert a non-async function task in global queue to test nonBlockCurr', as
   testStr += "3";
   await job;
   testStr += "4";
-  // console.log(testStr)
   t.is(testStr, "123inFuncSyn4");
 });
 
@@ -72,7 +71,7 @@ test('insert a task in global queue, tag is symbol', async (t) => {
 });
 
 test('insert a task in global queue with invalid empty tag', async (t) => {
-  let error; // eslint-disable-line
+  let error;
   try {
     await D4C.wrap(funcAsync, {});
   } catch (err) {
@@ -102,7 +101,7 @@ test('insert a task in object queue, use symbol case', async (t) => {
 
 test('insert a task in object queue, use a invalid null/empty tag case', async (t) => {
   const d4c = new D4C();
-  let error; // eslint-disable-line
+  let error;
   try {
     await d4c.iwrap(funcAsync, { tag: null });
   } catch (err) {
@@ -113,16 +112,16 @@ test('insert a task in object queue, use a invalid null/empty tag case', async (
 
 
 test('insert a class\'s method via decorator to make a task in global queue', async (t) => {
-  @D4C.classRegister("cat") // eslint-disable-line
+  @D4C.classRegister("cat")
   class TestController {
-    greeting: string; // eslint-disable-line
+    greeting: string;
     constructor(message: string) {
-      this.greeting = message; // eslint-disable-line
+      this.greeting = message;
     }
 
     @D4C.methodDecorator()
     async greet(text: string) {
-      const str = "Hello, " + text + this.greeting; // eslint-disable-line
+      const str = "Hello, " + text + this.greeting;
       return str
     }
 
@@ -132,8 +131,8 @@ test('insert a class\'s method via decorator to make a task in global queue', as
     }
 
     // workaround working way for a arrow function
-    greet2 = D4C.wrap(async (text: string) => { // eslint-disable-line
-      const str = "Hello, " + text + this.greeting; // eslint-disable-line
+    greet2 = D4C.wrap(async (text: string) => {
+      const str = "Hello, " + text + this.greeting;
       return str;
     }, { tag: Symbol("") });
   }
@@ -156,18 +155,16 @@ test('insert a class\'s method via decorator to make a task in global queue', as
   const job3 = TestController.staticMethod(fixture2);
   const resp3 = await job3;
   t.is(resp3, "abc2");
-
-
 });
 
 test('insert a class\'s method via decorator with a invalid empty tag', async (t) => {
-  let error; // eslint-disable-line
+  let error;
   try {
-    @D4C.classRegister("") // eslint-disable-line
+    @D4C.classRegister("")
     class TestController2 {
-      greeting: string; // eslint-disable-line
+      greeting: string;
       constructor(message: string) {
-        this.greeting = message; // eslint-disable-line
+        this.greeting = message;
       }
     }
   } catch (err) {
@@ -178,14 +175,14 @@ test('insert a class\'s method via decorator with a invalid empty tag', async (t
 
 
 test('insert a class\'s method as a task by manually using global queue', async (t) => {
-  class TestController { // eslint-disable-line
-    greeting: string; // eslint-disable-line
+  class TestController {
+    greeting: string;
     constructor(message: string) {
-      this.greeting = message; // eslint-disable-line
+      this.greeting = message;
     }
 
-    greet = async (text: string) => { // eslint-disable-line
-      const str = "Hello, " + text + this.greeting; // eslint-disable-line
+    greet = async (text: string) => {
+      const str = "Hello, " + text + this.greeting;
       return str
     }
   }
@@ -201,14 +198,13 @@ test('insert a class\'s method as a task by manually using global queue', async 
 });
 
 test('test if queue really work', async (t) => {
-  let testStr = ""  // eslint-disable-line
+  let testStr = ""
   const timeout = (seconds: number) => {
     return new Promise((resolve, _) => setTimeout(() => {
       testStr += seconds
       resolve("")
     }, seconds * 1000));
   }
-
 
   const immediateFun = (seconds: number) => {
     testStr += seconds
@@ -256,7 +252,7 @@ test('test task2 inherit task1\'s error in object queue', async (t) => {
 
   fun1ErrorProducer();
 
-  let error; // eslint-disable-line
+  let error;
   try {
     await d4c.iwrap(fun2, { inheritPreErr: true })();
   } catch (err) {

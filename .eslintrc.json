@@ -17,13 +17,23 @@
   "globals": { "BigInt": true, "console": true, "WebAssembly": true },
   "rules": {
     "functional/prefer-readonly-type":0,
+    "functional/no-return-void":0,
+    "functional/no-class":0,
+    "functional/no-this-expression":0,
+    "functional/no-throw-statement":0,
+    "functional/immutable-data":0,
+    "functional/functional-parameters":0,
+    "functional/no-let":0,
+    "@typescript-eslint/no-explicit-any":0,
+    "@typescript-eslint/no-unused-vars":0,
+    "prefer-spread":0,
     "eslint-comments/no-unlimited-disable": 0,
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "eslint-comments/disable-enable-pair": [
       "error",
       { "allowWholeFile": true }
     ],
-    "eslint-comments/no-unused-disable": "error",
+    "eslint-comments/no-unused-disable": "warn",
     "import/order": [
       "error",
       { "newlines-between": "always", "alphabetize": { "order": "asc" } }
