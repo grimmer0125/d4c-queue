@@ -119,10 +119,10 @@ A class will use a unique tag queue of global share queues under the hood
 ```typescript
 @D4C.register(Symbol('jojo'))
 class ServiceAdapter {
-  /** no parentheses if omit parameters
+  /** no parentheses if omit parameters */
   @D4C.synchronized
   client_send_message() {
-  // ...
+    // ...
   }
 
   //** optional parameters inheritPreErr, nonBlockCurr */
