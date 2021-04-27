@@ -10,9 +10,9 @@ Pass a `async` function, a function returning a promise, or a normal non-async f
    3. Class and method decorator (also for static methods)
 2. Use third party library [Denque](https://www.npmjs.com/package/denque) to implement a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError), if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
-4. Optional parameter, `nonBlockCurr` to forcely execute the first task in the queue in the next tick of the event loop. This is useful if you pass a normal non-async function as the first task but do not want it to block the current event loop.
+4. Optional parameter, `nonBlockCurr` to forcibly execute the first task in the queue in the next tick of the event loop. This is useful if you pass a normal non-async function as the first task but do not want it to block the current event loop.
 5. Able to pass arguments and get return value for each task function.
-6. Support Browser and Node.js. 
+6. Support Browser and Node.js.
 7. Support TypeScript and JavaScript. Written in TypeScript and its `.d.ts` typing is out of box.
 8. Support `async function`, a function to return `promise`, and a `normal non-async` function.
 
@@ -25,13 +25,13 @@ Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package
 ES6:
 
 ```typescript
-import { D4C } from "d4c-queue";
+import { D4C } from 'd4c-queue';
 ```
 
 CommonJS :
 
 ```typescript
-const D4C = require("d4c-queue").D4C;
+const D4C = require('d4c-queue').D4C;
 ```
 
 ### Use latest GitHub code of this library
@@ -57,35 +57,34 @@ For TypeScript users, modify your tsconfig.json to include the following setting
 }
 ```
 
-Then install [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mention the the list of `polyfill for the Reflect API`, besides reflect-metadata. Then put `import "reflect-metadata` only once in your code. 
+Then install [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mention the the list of `polyfill for the Reflect API`, besides reflect-metadata. Then put `import "reflect-metadata` only once in your code.
 
-For JavaScript users, you can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing babel.config.json and I use `babel-node index.js` to test 
+For JavaScript users, you can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing babel.config.json and I use `babel-node index.js` to test
 
 ```json
 {
-    "presets": ["@babel/preset-env"],
-    "plugins": [
-        [
-            "@babel/plugin-proposal-decorators",
-            {
-                "legacy": true
-            }
-        ],
-        [
-            "@babel/plugin-proposal-class-properties",
-            {
-                "loose": true
-            }
-        ],
-        [
-            "babel-plugin-transform-typescript-metadata"
-        ]
-    ]
+  "presets": ["@babel/preset-env"],
+  "plugins": [
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ],
+    [
+      "@babel/plugin-proposal-class-properties",
+      {
+        "loose": true
+      }
+    ],
+    ["babel-plugin-transform-typescript-metadata"]
+  ]
 }
 ```
+
 For the users using Create React App JavaScript version, you need `eject` and customize your babel setting. Using create React App TypeScript just needs to modify `tsconfig.json.`
 
-While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` and `reflect-metadata` are not needed somehow. Please setup them if this library does not work after installation and try again. 
+While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` and `reflect-metadata` are not needed somehow. Please setup them if this library does not work after installation and try again.
 
 ## Usage example:
 
@@ -95,10 +94,10 @@ Keep in mind that a function will be passed into a task queue even it becomes a 
 
 ```typescript
 // in place 1
-D4C.wrap(asyncFun, { tag: "queue1" })("asyncFun_arg1", "asyncFun_arg2");
+D4C.wrap(asyncFun, { tag: 'queue1' })('asyncFun_arg1', 'asyncFun_arg2');
 
 // in place 2, even another event in event loop
-const asyncResult = D4C.wrap(syncFun, { tag: "queue1"})("syncFun_arg1");
+const asyncResult = D4C.wrap(syncFun, { tag: 'queue1' })('syncFun_arg1');
 // you can choose to await this asyncResult (promise) or not
 ```
 
@@ -113,14 +112,13 @@ const d4c = new D4C();
 
 The only difference is `tag` is a optional parameter, rather than the other usages.
 
-### Class and method decorators usage 
+### Class and method decorators usage
 
 A class will use a unique tag queue of global share queues under the hood
 
 ```typescript
-@D4C.register(Symbol("jojo"))
+@D4C.register(Symbol('jojo'))
 class ServiceAdapter {
-
   /** no parentheses if omit parameters
   @D4C.synchronized
   client_send_message() {
@@ -128,7 +126,7 @@ class ServiceAdapter {
   }
 
   //** optional parameters inheritPreErr, nonBlockCurr */
-  @D4C.synchronized(true, true) 
+  @D4C.synchronized(true, true)
   static async staticMethod(text: string) {
     return text;
   }
@@ -136,7 +134,7 @@ class ServiceAdapter {
   arrowFunc_property = D4C.wrap(
     async (text: string) => {
       const str = 'Hello, ' + text + this.greeting;
-       return str;
+      return str;
     },
     { tag: Symbol('') }
   );
@@ -171,11 +169,11 @@ D4C instance queues:
 Sometimes a task function is better to be executed after the previous task function is finished. For example, if you are writing a adapter to use a network client library to connect to a service, either happening in a React frontend or a Node.js program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so call `client_connect` first, later `client_send_message` is executed in another event. In your adapter code, usually we can use a flag and do something like
 
 ```typescript
-if (connectingStatus === "Connected") {
+if (connectingStatus === 'Connected') {
   // send message
-} else if (connectingStatus === "Disconnected") {
+} else if (connectingStatus === 'Disconnected') {
   // try to re-connected, but how ?
-} else if (connectingStatus === "Connecting") {
+} else if (connectingStatus === 'Connecting') {
   // Um...how to wait for connecting successfully?
 }
 ```
@@ -209,31 +207,31 @@ It is similar to causality. Sometimes two function which access same data within
 const func1 = async () => {
   // console.log("func1 start, event1 in event loop")
   await func3();
-  console.log("func1 end, should not be same event1")
+  console.log('func1 end, should not be same event1');
 };
 
 const func2 = async () => {
-  console.log("func2")
+  console.log('func2');
 };
 
 async function testRaceCondition() {
-  func1() // if add await will result in no race condition
-  func2()
+  func1(); // if add await will result in no race condition
+  func2();
 }
-testRaceCondition()
+testRaceCondition();
 ```
 
 `func2` will be executed when `fun1` is not finished.
 
-In backend, the practical example is to compare `Async/await` in [Express](https://expressjs.com/) framework and [Apollo](https://www.apollographql.com/docs/apollo-server/)/[NestJS](https://nestjs.com/) frameworks. NestJS is using Apollo and they have a different implementation than ExpressJS. 
+In backend, the practical example is to compare `Async/await` in [Express](https://expressjs.com/) framework and [Apollo](https://www.apollographql.com/docs/apollo-server/)/[NestJS](https://nestjs.com/) frameworks. NestJS is using Apollo and they have a different implementation than ExpressJS.
 
-No race condition on two API call in `Express`, any API will be executed one by one. After async handler callback function is finished, another starts to be callbacked. 
+No race condition on two API call in `Express`, any API will be executed one by one. After async handler callback function is finished, another starts to be executed.
 
 ```typescript
 /** express case*/
 app.post('/testing', async (req, res) => {
   // Do something here
-})
+});
 ```
 
 However, race condition may happen on two API call in `Apollo`/`NestJS`:
@@ -241,8 +239,7 @@ However, race condition may happen on two API call in `Apollo`/`NestJS`:
 ```typescript
 const resolvers = {
   Mutation: {
-    orderBook: async (_, { email, book }, { dataSources }) => {
-    },
+    orderBook: async (_, { email, book }, { dataSources }) => {},
   },
   Query: {
     books: async () => books,
@@ -250,7 +247,7 @@ const resolvers = {
 };
 ```
 
-Two Apollo GraphQL queries/mutations may be executed cocurrently, not like Express. This has advantage and disadvantage. If you need to worry about the possible race condition, you can consider this `d4c-queue` library, or `Database transaction` or [async-mutex](https://www.npmjs.com/package/async-mutex).
+Two Apollo GraphQL queries/mutations may be executed concurrently, not like Express. This has advantage and disadvantage. If you need to worry about the possible race condition, you can consider this `d4c-queue` library, or `Database transaction` or [async-mutex](https://www.npmjs.com/package/async-mutex).
 
 #### Need multiple concurrency tasks?
 
@@ -279,13 +276,12 @@ current_function()
 Use this library can easily achieve, becomes
 
 ```typescript
-current_function()
+current_function();
 {
   const d4c = new D4C();
   d4c.apply(async_fun1);
   d4c.apply(async_fun1);
 }
-
 ```
 
 ## Function list
@@ -293,10 +289,13 @@ current_function()
 ### Decorators:
 
 - public static register(tag: string | symbol)
+
 ```typescript
 @D4C.register(Symbol("jojo")) or @D4C.register("jojo")
 ```
+
 - public static synchronized( inheritPreErr?: boolean, nonBlockCurr?: boolean)
+
 ```typescript
 @D4C.synchronized or @D4C.synchronized(true, false)
 ```
@@ -334,7 +333,7 @@ public static apply<T extends IAnyFn>(
   })
 ```
 
-Almost the same as `D4C.wrap` but just directly executing the original function call, e.g. 
+Almost the same as `D4C.wrap` but just directly executing the original function call, e.g.
 
 ```typescript
 const newFunc = D4C.wrap(asyncFun, { tag: "queue1" })
@@ -344,12 +343,12 @@ newFunc("asyncFun_arg1", "asyncFun_arg2");)
 becomes
 
 ```typescript
-D4C.apply(asyncFun, { args:["asyncFun_arg1"], tag: "queue1"})
+D4C.apply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' });
 ```
 
 ### Instance usage
 
-Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional. 
+Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional.
 
 ```typescript
 const d4c = new D4C();
