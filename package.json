@@ -1,6 +1,6 @@
 {
   "name": "d4c-queue",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "A task queue receives any function with arguments and do it sequentially, get the return value by await. Support async function, decorators, TypeScript, JavaScript, browser and Node.js.",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
@@ -51,9 +51,7 @@
     "node": ">=10"
   },
   "dependencies": {
-    "@types/node": "^14.14.41",
-    "denque": "^1.5.0",
-    "reflect-metadata": "^0.1.13"
+    "denque": "^1.5.0"
   },
   "devDependencies": {
     "@ava/typescript": "^1.1.1",
@@ -77,7 +75,9 @@
     "standard-version": "^9.0.0",
     "ts-node": "^9.0.0",
     "typedoc": "^0.19.0",
-    "typescript": "4.2.3"
+    "typescript": "4.2.3",
+    "@types/node": "^14.14.41",
+    "reflect-metadata": "^0.1.13"
   },
   "files": [
     "build/main",

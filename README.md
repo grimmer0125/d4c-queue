@@ -57,7 +57,7 @@ For TypeScript users, modify your tsconfig.json to include the following setting
 }
 ```
 
-Then install [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mention the the list of `polyfill for the Reflect API`, besides reflect-metadata. Then put `import "reflect-metadata` only once in your code.
+Then install [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mention the the list of `polyfill for the Reflect API`, besides reflect-metadata. Then put `import 'reflect-metadata'` only once in your code.
 
 For JavaScript users, you can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing babel.config.json and I use `babel-node index.js` to test
 
@@ -84,7 +84,7 @@ For JavaScript users, you can use Babel to support decorators, install `@babel/p
 
 For the users using Create React App JavaScript version, you need `eject` and customize your babel setting. Using create React App TypeScript just needs to modify `tsconfig.json.`
 
-While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` and `reflect-metadata` are not needed somehow. Please setup them if this library does not work after installation and try again.
+While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` are not needed. Also, explicitly import 'reflect-metadata' is needed when developing this library but using this library seems not (just install). Anyway, please setup them if this library does not work after installation and try again.
 
 ## Usage example:
 
