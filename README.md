@@ -301,7 +301,7 @@ current_function()
 @D4C.synchronized or @D4C.synchronized(true, false)
 ```
 
-See [usage-example](#usage-example)
+See [class-and-method-decorators-usage](#class-and-method-decorators-usage)
 
 ### Global usage
 
@@ -347,7 +347,7 @@ becomes
 D4C.apply(asyncFun, { args:["asyncFun_arg1"], tag: "queue1"})
 ```
 
-### instance usage
+### Instance usage
 
 Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional. 
 
