@@ -32,8 +32,9 @@ type isInheritPreErr = boolean;
 // }
 
 type TaskQueuesType = Map<string | symbol, TaskQueue>;
-
 type IAnyFn = (...args: any[]) => Promise<any> | any;
+type MethodDecoratoerParameter = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
+
 
 export const errMsg = {
   ClassDecorator:
@@ -69,25 +70,57 @@ export class D4C {
     };
   }
 
+
   public static synchronized(
-    inheritPreErr?: isInheritPreErr,
-    nonBlockCurr?: boolean
-  ) {
-    // target = prototype
-    return function (
-      target: any,
-      propertyKey: string,
-      descriptor: PropertyDescriptor
-    ) {
+    target: any, // 
+    propertyKey: string,
+    descriptor: PropertyDescriptor): void;
+  public static synchronized(
+    inheritPreErr?: boolean,
+    nonBlockCurr?: boolean): MethodDecoratoerParameter;
+  public static synchronized(
+    targetOrInheritPreErr?: any,
+    propertyKeyOrNonBlockCurr?: any,
+    descriptor?: PropertyDescriptor
+  ): void | MethodDecoratoerParameter {
+
+    const type = typeof targetOrInheritPreErr;
+    if (type == "boolean" || type === "undefined" || targetOrInheritPreErr === null) {
+      console.log("parentheses case")
+      console.log("synchronized()");
+      return function (
+        target: any,
+        propertyKey: string,
+        descriptor: PropertyDescriptor
+      ) {
+        const originalMethod = descriptor.value;
+        const newFunc = D4C._q(
+          null,
+          originalMethod,
+          { inheritPreErr: targetOrInheritPreErr, nonBlockCurr: propertyKeyOrNonBlockCurr },
+          // target = prototype when method decorator, use target
+          // target = constructor when static method decorator, use target.prototype
+          target.prototype ?? target
+        );
+        descriptor.value = newFunc;
+      };
+    } else {
+      console.log("no parentheses case")
+      console.log("@synchronized");
+      // targetOrInheritPreErr: 
+      // method decorator: 1. prototype 2. "greet"
+      // static method decorator: 1. constructor 2. "staticmethod"
       const originalMethod = descriptor.value;
       const newFunc = D4C._q(
         null,
         originalMethod,
-        { inheritPreErr, nonBlockCurr },
-        target.value ?? target
+        {},
+        // target = prototype when method decorator, use target
+        // target = constructor when static method decorator, use target.prototype
+        targetOrInheritPreErr.prototype ?? targetOrInheritPreErr
       );
-      descriptor.value = newFunc;
-    };
+      descriptor.value = newFunc
+    }
   }
 
   public static apply<T extends IAnyFn>(

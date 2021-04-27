@@ -21,6 +21,43 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
   return Promise.resolve(input[0] + input2);
 };
 
+// Todo:
+// - [major] add a test case for whether getMetadata really work 
+// - add tests for decorator with option {inheritPreErr, nonBlockCurr} has value case 
+// - add test for normal non async member/static method 
+
+test("insert a class's method via decorator to make a task in global queue - no parentheses", async (t) => {
+  @D4C.register("jojo")
+  class TestController {
+    greeting: string;
+    constructor(message: string) {
+      this.greeting = message;
+    }
+
+    @D4C.synchronized
+    async greet(text: string) {
+      const str = 'Hello, ' + text + this.greeting;
+      return str;
+    }
+
+    @D4C.synchronized
+    static async staticMethod(text: string) {
+      return queueTag + text;
+    }
+  }
+
+  /** instance method  */
+  const test = new TestController('kitty');
+  const job = test.greet(fixture2);
+  const resp = await job;
+  t.is(resp, 'Hello, 2kitty');
+
+  /** static method part */
+  const job3 = TestController.staticMethod(fixture2);
+  const resp3 = await job3;
+  t.is(resp3, 'abc2');
+});
+
 test('insert a non-async function task in global queue to test nonBlockCurr', async (t) => {
   let testStr = '';
   const funcSync2 = (input: string[], input2: string) => {
@@ -118,7 +155,7 @@ test('insert a task in object queue, use a invalid null/empty tag case', async (
 });
 
 test("insert a class's method via decorator to make a task in global queue", async (t) => {
-  @D4C.register('cat')
+  @D4C.register("jojo")
   class TestController {
     greeting: string;
     constructor(message: string) {
@@ -152,6 +189,11 @@ test("insert a class's method via decorator to make a task in global queue", asy
   const resp = await job;
   t.is(resp, 'Hello, 2kitty');
 
+  /** static method part */
+  const job3 = TestController.staticMethod(fixture2);
+  const resp3 = await job3;
+  t.is(resp3, 'abc2');
+
   /**
    * arrow function property part
    */
@@ -159,11 +201,6 @@ test("insert a class's method via decorator to make a task in global queue", asy
   const func2 = test2.greet2;
   const resp2 = await func2(fixture2);
   t.is(resp2, 'Hello, 2doraemon');
-
-  /** static method part */
-  const job3 = TestController.staticMethod(fixture2);
-  const resp3 = await job3;
-  t.is(resp3, 'abc2');
 });
 
 test("insert a class's method via decorator with a invalid empty tag", async (t) => {
