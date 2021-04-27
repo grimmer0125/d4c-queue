@@ -145,7 +145,7 @@ The way on `arrow function property` is a workaround since some issue happen whe
 
 ```typescript
 @autobind
-@D4C.synchronized()
+@D4C.synchronized
 client_send_message() {
   // ...
 }
