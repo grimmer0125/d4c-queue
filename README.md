@@ -34,6 +34,15 @@ CommonJS :
 const D4C = require("d4c-queue").D4C;
 ```
 
+### use latest GitHub code of this library 
+
+1. git clone this repo
+2. in cloned project folder, `yarn link` or `npm link`
+3. `yarn test`/`npm run test` or `yarn build`/`npm run build`
+4. in your project, `yarn link d4c-queue` or `npm link d4c-queue`, start to use. 
+5. in your project, `yarn unlink d4c-queue` or `npm unlink d4c-queue` to uninstall. 
+
+
 ### Extra optional steps if you want to use decorators from this library
 
 Keep in mind that `decorators` and `Metadata` are JavaScript proposals and may vary in the future.
