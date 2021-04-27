@@ -1,19 +1,19 @@
 # D4C Queue
 
-Pass a `aync` function, a function returning a promise, or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. Besides using a function as a parameter, it also supports to use [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) on your instance method or static methods.
+Pass a `async` function, a function returning a promise, or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. Besides using a function as a parameter, it also supports to use [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) on your instance method or static methods.
 
 ## Features:
 
 1. Three usages
    1. Instance
    2. Global
-   3. class and method decorator (also for static methods)
+   3. Class and method decorator (also for static methods)
 2. Use third party library [Denque](https://www.npmjs.com/package/denque) to implement a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError), if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
 4. Optional parameter, `nonBlockCurr` to forcely execute the first task in the queue in the next tick of the event loop. This is useful if you pass a normal non-async function as the first task but do not want it to block the current event loop.
 5. Able to pass arguments and get return value for each task function
 6. Support Browser and Node.js
-7. Written in TypeSript and its `.d.ts` typing is out of box.
+7. Support TypeScript and JavaScript. Written in TypeScript and its `.d.ts` typing is out of box.
 8. Support `async function`, a function to return `promise`, and a normal function.
 
 ## Installation
@@ -34,14 +34,15 @@ CommonJS :
 const D4C = require("d4c-queue").D4C;
 ```
 
-### use latest GitHub code of this library 
+### Use latest GitHub code of this library
 
 1. git clone this repo
-2. in cloned project folder, `yarn link` or `npm link`
-3. `yarn test`/`npm run test` or `yarn build`/`npm run build`
-4. in your project, `yarn link d4c-queue` or `npm link d4c-queue`. Do above ES6/CommonJS import to start to use. 
-5. in your project, `yarn unlink d4c-queue` or `npm unlink d4c-queue` to uninstall. 
+2. in cloned project folder, `yarn link`
+3. `yarn test` or `yarn build`
+4. in your project, `yarn link d4c-queue`. Do above ES6/CommonJS import to start to use.
+5. in your project, `yarn unlink d4c-queue` to uninstall.
 
+The development environment of this library is Node.js v15.14.0. TypeScript 4.2.3 is also used and will be automatically installed in node_modules.
 
 ### Extra optional steps if you want to use decorators from this library
 
@@ -56,7 +57,7 @@ For TypeScript users, modify your tsconfig.json to include the following setting
 }
 ```
 
-And install [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mention the the list of `polyfill for the Reflect API`, besides reflect-metadata. Then put `import "reflect-metadata` only once in your code.
+Then install [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mention the the list of `polyfill for the Reflect API`, besides reflect-metadata. Then put `import "reflect-metadata` only once in your code.
 
 For JavaScript users, you can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. This is my testing babel.config.json
 
@@ -85,6 +86,8 @@ For JavaScript users, you can use Babel to support decorators, install `@babel/p
 
 ## Usage example:
 
+Keep in mind that a function will be passed into a task queue even it becomes a new function after wrapping. A task will be enqueued only when it is executed.
+
 1. Global usage:
 
 ```
@@ -107,7 +110,7 @@ You can use `D4C.apply(someFun, { args:["someFun_arg1"], tag: "queue1"}) instead
 
 The only difference is `tag` is a optional parameter, rather than the other usages.
 
-3. Decorator usage (using global share queues under the hood):
+3. Decorator usage (using a unique tag queue of global share queues under the hood):
 
 ```
    @D4C.register(Symbol("jojo"))
@@ -117,7 +120,7 @@ The only difference is `tag` is a optional parameter, rather than the other usag
        // ...
      }
 
-     @D4C.staticSynchronized()
+     @D4C.synchronized()
      static async staticMethod(text: string) {
        return text;
      }
@@ -263,6 +266,18 @@ current_function()
 }
 ```
 
+Use this library can easily achieve, becomes
+
+```
+current_function()
+{
+  const d4c = new D4C();
+  d4c.apply(async_fun1);
+  d4c.apply(async_fun1);
+}
+
+```
+
 ## Function list
 
 May improve this later.
@@ -270,8 +285,7 @@ May improve this later.
 Decorators:
 
 - public static register(tag: string | symbol)
-- public static staticSynchronized( inheritPreErr?: boolean, nonBlockCurr?: boolean)
-- public static synchronized( inheritPreErr?: isInheritPreErr, nonBlockCurr?: boolean)
+- public static synchronized( inheritPreErr?: boolean, nonBlockCurr?: boolean)
 
 D4C.wrap:
 
@@ -280,7 +294,7 @@ public static wrap<T extends IAnyFn>(
   func: T,
   option: {
     tag?: boolean;
-    inheritPreErr?: isInheritPreErr;
+    inheritPreErr?: boolean;
     nonBlockCurr?: boolean;
   })
 ```
@@ -296,7 +310,7 @@ public static apply<T extends IAnyFn>(
   func: T,
     option: {
     tag?: string | symbol;
-    inheritPreErr?: isInheritPreErr;
+    inheritPreErr?: boolean;
     nonBlockCurr?: boolean;
     args?: Parameters<typeof async_func>;
   })
@@ -322,7 +336,7 @@ instance method: iwrap
     func: T,
     option?: {
       tag?: string | symbol;
-      inheritPreErr?: isInheritPreErr;
+      inheritPreErr?: boolean;
       nonBlockCurr?: boolean;
     }
   )
