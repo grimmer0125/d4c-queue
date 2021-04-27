@@ -11,10 +11,10 @@ Pass a `async` function, a function returning a promise, or a normal non-async f
 2. Use third party library [Denque](https://www.npmjs.com/package/denque) to implement a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError), if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
 4. Optional parameter, `nonBlockCurr` to forcely execute the first task in the queue in the next tick of the event loop. This is useful if you pass a normal non-async function as the first task but do not want it to block the current event loop.
-5. Able to pass arguments and get return value for each task function
+5. Able to pass arguments and get return value for each task function.
 6. Support Browser and Node.js. 
 7. Support TypeScript and JavaScript. Written in TypeScript and its `.d.ts` typing is out of box.
-8. Support `async function`, a function to return `promise`, and a normal function.
+8. Support `async function`, a function to return `promise`, and a `normal non-async` function.
 
 ## Installation
 
@@ -85,7 +85,7 @@ For JavaScript users, you can use Babel to support decorators, install `@babel/p
 ```
 For the users using Create React App JavaScript version, you need `eject` and customize your babel setting. Using create React App TypeScript just needs to modify `tsconfig.json.`
 
-While testing this D4C library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` and `reflect-metadata` are not needed somehow. Please setup them if this library does not work after installation and try again. 
+While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` and `reflect-metadata` are not needed somehow. Please setup them if this library does not work after installation and try again. 
 
 ## Usage example:
 
@@ -118,12 +118,15 @@ The only difference is `tag` is a optional parameter, rather than the other usag
 ```typescript
 @D4C.register(Symbol("jojo"))
 class ServiceAdapter {
-  @D4C.synchronized()
+
+  /** no parentheses if omit parameters
+  @D4C.synchronized
   client_send_message() {
   // ...
   }
 
-  @D4C.synchronized()
+  //** optional parameters inheritPreErr, nonBlockCurr */
+  @D4C.synchronized(true, true) 
   static async staticMethod(text: string) {
     return text;
   }
@@ -138,7 +141,7 @@ class ServiceAdapter {
 }
 ```
 
-The way on arrow function property is a workaround way since some issue happen when decorator apply on arrow function property. If you need the effect of arrow function, you can try to bind by yourself or you can consider https://www.npmjs.com/package/autobind-decorator
+The way on `arrow function property` is a workaround since some issue happen when decorator apply on arrow function property. If you need the effect of arrow function, you can try to bind by yourself or you can consider https://www.npmjs.com/package/autobind-decorator
 
 ```typescript
 @autobind
@@ -148,7 +151,7 @@ client_send_message() {
 }
 ```
 
-### D4C's queue system is
+### Designed queue system is
 
 ```
 D4C global share queues:
@@ -182,12 +185,12 @@ if (connectingStatus === "Connected") {
 @D4C.register(Symbol("jojo"))
 class ServiceAdapter {
 
-  @D4C.synchronized()
+  @D4C.synchronized
   client_connect(){
     ...
   }
 
-  @D4C.synchronized()
+  @D4C.synchronized
   client_send_message() {
     ...
   }
@@ -220,7 +223,7 @@ testRaceCondition()
 
 func2 will be executed when fun1 is not finished.
 
-In backend, the practical example is to compare `Async/await` in [`Express`](https://expressjs.com/) framework and [`Apollo`](https://www.apollographql.com/docs/apollo-server/)/[NestJS](https://nestjs.com/) frameworks. NestJS is using Apollo and they have a different implementation than ExpressJS. 
+In backend, the practical example is to compare `Async/await` in [Express](https://expressjs.com/) framework and [Apollo](https://www.apollographql.com/docs/apollo-server/)/[NestJS](https://nestjs.com/) frameworks. NestJS is using Apollo and they have a different implementation than ExpressJS. 
 
 No race condition on two API call in `Express`, any API will be executed one by one. After async handler callback function is finished, another starts to be callbacked. 
 
@@ -247,7 +250,7 @@ const resolvers = {
 
 Two Apollo GraphQL queries/mutations may be executed cocurrently, not like Express. This has advantage and disadvantage. If you need to worry about the possible race condition, you can consider this `d4c-queue` library, or `Database transaction` or [async-mutex](https://www.npmjs.com/package/async-mutex).
 
-#### Need multiple concurrency tasks
+#### Need multiple concurrency tasks?
 
 This library does not implement the mechanism about multiple tasks executed concurrently, if you want to have fine control on limited concurrency tasks, you can consider [p-queue](https://www.npmjs.com/package/p-queue).
 
@@ -290,7 +293,13 @@ May improve this later.
 Decorators:
 
 - public static register(tag: string | symbol)
+```
+@D4C.register(Symbol("jojo")) or @D4C.register("jojo")
+```
 - public static synchronized( inheritPreErr?: boolean, nonBlockCurr?: boolean)
+```
+@D4C.synchronized or @D4C.synchronized(true, false)
+```
 
 D4C.wrap:
 
@@ -337,14 +346,14 @@ D4C.apply(asyncFun, { args:["asyncFun_arg1"], tag: "queue1"})
 instance method: iwrap
 
 ```typescript
- public iwrap<T extends IAnyFn>(
-    func: T,
-    option?: {
-      tag?: string | symbol;
-      inheritPreErr?: boolean;
-      nonBlockCurr?: boolean;
-    }
-  )
+public iwrap<T extends IAnyFn>(
+  func: T,
+  option?: {
+    tag?: string | symbol;
+    inheritPreErr?: boolean;
+    nonBlockCurr?: boolean;
+  }
+)
 ```
 
 Same as static method D4C.wrap except `const d4c = new D4C()` first and use `d4c.iwrap`.
@@ -352,15 +361,15 @@ Same as static method D4C.wrap except `const d4c = new D4C()` first and use `d4c
 instance method: iwrap
 
 ```typescript
-  public iapply<T extends IAnyFn>(
-    func: T,
-    option?: {
-      tag?: string | symbol;
-      inheritPreErr?: boolean;
-      nonBlockCurr?: boolean;
-      args?: Parameters<typeof func>;
-    }
-  )
+public iapply<T extends IAnyFn>(
+  func: T,
+  option?: {
+    tag?: string | symbol;
+    inheritPreErr?: boolean;
+    nonBlockCurr?: boolean;
+    args?: Parameters<typeof func>;
+  }
+)
 ```
 
 Same as static method D4C.wrap except `const d4c = new D4C()` first and use `d4c.iapply`.
