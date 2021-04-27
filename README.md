@@ -88,7 +88,7 @@ While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metad
 
 ## Usage example:
 
-Keep in mind that a function will be passed into a task queue even it becomes a new function after wrapping. A task will be enqueued only when it is executed.
+Keep in mind that a function will not be enqueued into a task queue even it becomes a new function after wrapping. A task will be enqueued only when it is executed.
 
 ### Global usage:
 
