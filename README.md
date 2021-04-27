@@ -59,9 +59,9 @@ For TypeScript users, modify your tsconfig.json to include the following setting
 
 Then install [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mention the the list of `polyfill for the Reflect API`, besides reflect-metadata. Then put `import "reflect-metadata` only once in your code. 
 
-For JavaScript users, you can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. This is my testing babel.config.json
+For JavaScript users, you can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing babel.config.json and I use `babel-node index.js` to test 
 
-```
+```json
 {
     "presets": ["@babel/preset-env"],
     "plugins": [
@@ -91,7 +91,7 @@ While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metad
 
 Keep in mind that a function will be passed into a task queue even it becomes a new function after wrapping. A task will be enqueued only when it is executed.
 
-1. Global usage:
+### Global usage:
 
 ```typescript
 // in place 1
@@ -104,7 +104,7 @@ const asyncResult = D4C.wrap(syncFun, { tag: "queue1"})("syncFun_arg1");
 
 You can use `D4C.apply(someFun, { args:["someFun_arg1"], tag: "queue1"}) instead`.
 
-2. Instance usage:
+### Instance usage:
 
 ```typescript
 const d4c = new D4C();
@@ -113,7 +113,9 @@ const d4c = new D4C();
 
 The only difference is `tag` is a optional parameter, rather than the other usages.
 
-3. Decorator usage (using a unique tag queue of global share queues under the hood):
+### Class and method decorators usage 
+
+A class will use a unique tag queue of global share queues under the hood
 
 ```typescript
 @D4C.register(Symbol("jojo"))
@@ -154,7 +156,7 @@ client_send_message() {
 ### Designed queue system is
 
 ```
-D4C global share queues:
+D4C global share queues (global/decorator) :
   tag1: queue1
   tag2: queue2
 D4C instance queues:
@@ -288,20 +290,22 @@ current_function()
 
 ## Function list
 
-May improve this later.
-
-Decorators:
+### Decorators:
 
 - public static register(tag: string | symbol)
-```
+```typescript
 @D4C.register(Symbol("jojo")) or @D4C.register("jojo")
 ```
 - public static synchronized( inheritPreErr?: boolean, nonBlockCurr?: boolean)
-```
+```typescript
 @D4C.synchronized or @D4C.synchronized(true, false)
 ```
 
-D4C.wrap:
+See [usage-example](#usage-example)
+
+### Global usage
+
+- D4C.wrap
 
 ```typescript
 public static wrap<T extends IAnyFn>(
@@ -317,7 +321,7 @@ If original func is a async function, `D4C.wrap` will return `a async function` 
 
 If original func is a normal non async function, `D4C.wrap` will return `a async function` whose parameters are the same as the original function, and returned value's promise type is the same as original func. Which means it becomes a awaitable async function, besides queueing.
 
-D4C.apply:
+- D4C.apply
 
 ```typescript
 public static apply<T extends IAnyFn>(
@@ -330,7 +334,7 @@ public static apply<T extends IAnyFn>(
   })
 ```
 
-Almost the same as D4C.wrap but just directly executing the original function call.
+Almost the same as `D4C.wrap` but just directly executing the original function call, e.g. 
 
 ```typescript
 const newFunc = D4C.wrap(asyncFun, { tag: "queue1" })
@@ -343,7 +347,16 @@ becomes
 D4C.apply(asyncFun, { args:["asyncFun_arg1"], tag: "queue1"})
 ```
 
-instance method: iwrap
+### instance usage
+
+Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional. 
+
+```typescript
+const d4c = new D4C();
+/** then d4.iwrap or d4.iapply*/
+```
+
+- iwrap
 
 ```typescript
 public iwrap<T extends IAnyFn>(
@@ -356,9 +369,9 @@ public iwrap<T extends IAnyFn>(
 )
 ```
 
-Same as static method D4C.wrap except `const d4c = new D4C()` first and use `d4c.iwrap`.
+Same as static method `D4C.wrap` except making a instance first.
 
-instance method: iwrap
+- iapply
 
 ```typescript
 public iapply<T extends IAnyFn>(
@@ -372,4 +385,4 @@ public iapply<T extends IAnyFn>(
 )
 ```
 
-Same as static method D4C.wrap except `const d4c = new D4C()` first and use `d4c.iapply`.
+Same as static method `D4C.apply` except making a instance first.
