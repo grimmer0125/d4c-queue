@@ -131,7 +131,7 @@ test("insert a class's method via decorator to make a task in global queue", asy
       return str;
     }
 
-    @D4C.staticSynchronized()
+    @D4C.synchronized()
     static async staticMethod(text: string) {
       return queueTag + text;
     }

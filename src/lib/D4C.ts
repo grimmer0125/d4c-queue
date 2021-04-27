@@ -69,27 +69,6 @@ export class D4C {
     };
   }
 
-  public static staticSynchronized(
-    inheritPreErr?: isInheritPreErr,
-    nonBlockCurr?: boolean
-  ) {
-    // target = constructor
-    return function (
-      target: any,
-      propertyKey: string,
-      descriptor: PropertyDescriptor
-    ) {
-      const originalMethod = descriptor.value;
-      const newFunc = D4C._q(
-        null,
-        originalMethod,
-        { inheritPreErr, nonBlockCurr },
-        target.prototype
-      );
-      descriptor.value = newFunc;
-    };
-  }
-
   public static synchronized(
     inheritPreErr?: isInheritPreErr,
     nonBlockCurr?: boolean
@@ -105,7 +84,7 @@ export class D4C {
         null,
         originalMethod,
         { inheritPreErr, nonBlockCurr },
-        target
+        target.value ?? target
       );
       descriptor.value = newFunc;
     };
