@@ -39,7 +39,7 @@ const D4C = require("d4c-queue").D4C;
 1. git clone this repo
 2. in cloned project folder, `yarn link` or `npm link`
 3. `yarn test`/`npm run test` or `yarn build`/`npm run build`
-4. in your project, `yarn link d4c-queue` or `npm link d4c-queue`, start to use. 
+4. in your project, `yarn link d4c-queue` or `npm link d4c-queue`. Do above ES6/CommonJS import to start to use. 
 5. in your project, `yarn unlink d4c-queue` or `npm unlink d4c-queue` to uninstall. 
 
 
