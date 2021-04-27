@@ -223,7 +223,7 @@ async function testRaceCondition() {
 testRaceCondition()
 ```
 
-func2 will be executed when fun1 is not finished.
+`func2` will be executed when `fun1` is not finished.
 
 In backend, the practical example is to compare `Async/await` in [Express](https://expressjs.com/) framework and [Apollo](https://www.apollographql.com/docs/apollo-server/)/[NestJS](https://nestjs.com/) frameworks. NestJS is using Apollo and they have a different implementation than ExpressJS. 
 
@@ -386,3 +386,5 @@ public iapply<T extends IAnyFn>(
 ```
 
 Same as static method `D4C.apply` except making a instance first.
+
+You can checkout the unit test file, https://github.com/grimmer0125/d4c-queue/blob/master/src/lib/D4C.spec.ts.
