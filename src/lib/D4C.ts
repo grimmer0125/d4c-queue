@@ -12,7 +12,6 @@ type Task = {
   inheritPreErr?: boolean;
 };
 
-// https://www.jpwilliams.dev/how-to-unpack-the-return-type-of-a-promise-in-typescript
 type Unwrap<T> = T extends Promise<infer U>
   ? U
   : T extends (...args: any) => Promise<infer U>
@@ -21,20 +20,11 @@ type Unwrap<T> = T extends Promise<infer U>
   ? U
   : T;
 
-// Parameters: https://stackoverflow.com/questions/55386842/typescript-copying-only-function-arguments-and-not-return-type
-
 type QueueTag = string | symbol;
 type isInheritPreErr = boolean;
-
-// interface TaskOption {
-//   tag?: QueueTag,
-//   inheritPreErr?: isInheritPreErr,
-// }
-
 type TaskQueuesType = Map<string | symbol, TaskQueue>;
 type IAnyFn = (...args: any[]) => Promise<any> | any;
-type MethodDecoratoerParameter = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
-
+type MethodDecoratorParameter = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
 
 export const errMsg = {
   ClassDecorator:
@@ -72,22 +62,21 @@ export class D4C {
 
 
   public static synchronized(
-    target: any, // 
-    propertyKey: string,
+    target: any,
+    propertyKey: string, // usually it is the name of the method
     descriptor: PropertyDescriptor): void;
   public static synchronized(
     inheritPreErr?: boolean,
-    nonBlockCurr?: boolean): MethodDecoratoerParameter;
+    nonBlockCurr?: boolean): MethodDecoratorParameter;
   public static synchronized(
     targetOrInheritPreErr?: any,
     propertyKeyOrNonBlockCurr?: any,
     descriptor?: PropertyDescriptor
-  ): void | MethodDecoratoerParameter {
+  ): void | MethodDecoratorParameter {
 
     const type = typeof targetOrInheritPreErr;
     if (type == "boolean" || type === "undefined" || targetOrInheritPreErr === null) {
-      console.log("parentheses case")
-      console.log("synchronized()");
+      // console.log("parentheses case")
       return function (
         target: any,
         propertyKey: string,
@@ -105,18 +94,12 @@ export class D4C {
         descriptor.value = newFunc;
       };
     } else {
-      console.log("no parentheses case")
-      console.log("@synchronized");
-      // targetOrInheritPreErr: 
-      // method decorator: 1. prototype 2. "greet"
-      // static method decorator: 1. constructor 2. "staticmethod"
+      // console.log("no parentheses case")
       const originalMethod = descriptor.value;
       const newFunc = D4C._q(
         null,
         originalMethod,
         {},
-        // target = prototype when method decorator, use target
-        // target = constructor when static method decorator, use target.prototype
         targetOrInheritPreErr.prototype ?? targetOrInheritPreErr
       );
       descriptor.value = newFunc
@@ -217,7 +200,7 @@ export class D4C {
           queueTag = Reflect.getMetadata(classDecoratorKey, prototype);
         }
         if (queueTag) {
-          // console.log("decorator case !!!!")
+          // console.log("decorator case !!!!: " + queueTag.toString())
           tag = queueTag;
         } else {
           // console.log("instance case: use default tag")
@@ -264,7 +247,6 @@ export class D4C {
           const value = func.apply(this, args);
 
           /** Detect if it is a async/promise function or not */
-          // ref: https://lsm.ai/posts/7-ways-to-detect-javascript-async-function/
           if (value && typeof value.then === 'function') {
             result = await value;
           } else {
