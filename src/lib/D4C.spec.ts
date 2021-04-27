@@ -37,8 +37,7 @@ test('insert a non-async function task in global queue to test nonBlockCurr', as
 });
 
 test('insert a function returning a promise as a task in global queue', async (t) => {
-  const newFunc = D4C.wrap(funcPromise, { tag: queueTag });
-  const job = newFunc(fixture, fixture2);
+  const job = D4C.wrap(funcPromise, { tag: queueTag })(fixture, fixture2);
   const resp = await job;
   t.is(resp, '12');
 });
@@ -119,20 +118,20 @@ test('insert a task in object queue, use a invalid null/empty tag case', async (
 });
 
 test("insert a class's method via decorator to make a task in global queue", async (t) => {
-  @D4C.classRegister('cat')
+  @D4C.register('cat')
   class TestController {
     greeting: string;
     constructor(message: string) {
       this.greeting = message;
     }
 
-    @D4C.methodDecorator()
+    @D4C.synchronized()
     async greet(text: string) {
       const str = 'Hello, ' + text + this.greeting;
       return str;
     }
 
-    @D4C.staticMethodDecorator()
+    @D4C.staticSynchronized()
     static async staticMethod(text: string) {
       return queueTag + text;
     }
@@ -170,7 +169,7 @@ test("insert a class's method via decorator to make a task in global queue", asy
 test("insert a class's method via decorator with a invalid empty tag", async (t) => {
   let error;
   try {
-    @D4C.classRegister('')
+    @D4C.register('')
     class TestController2 {
       greeting: string;
       constructor(message: string) {

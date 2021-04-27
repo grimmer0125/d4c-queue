@@ -33,7 +33,7 @@ type isInheritPreErr = boolean;
 
 type TaskQueuesType = Map<string | symbol, TaskQueue>;
 
-type IAsyncFn = (...args: any[]) => Promise<any> | any;
+type IAnyFn = (...args: any[]) => Promise<any> | any;
 
 export const errMsg = {
   ClassDecorator:
@@ -59,7 +59,7 @@ export class D4C {
     this.queues = new Map<string | symbol, TaskQueue>();
   }
 
-  public static classRegister(tag: QueueTag): ClassDecorator {
+  public static register(tag: string | symbol): ClassDecorator {
     if (!tag) {
       throw new Error(errMsg.ClassDecorator);
     }
@@ -69,7 +69,7 @@ export class D4C {
     };
   }
 
-  public static staticMethodDecorator(
+  public static staticSynchronized(
     inheritPreErr?: isInheritPreErr,
     nonBlockCurr?: boolean
   ) {
@@ -90,7 +90,7 @@ export class D4C {
     };
   }
 
-  public static methodDecorator(
+  public static synchronized(
     inheritPreErr?: isInheritPreErr,
     nonBlockCurr?: boolean
   ) {
@@ -111,67 +111,67 @@ export class D4C {
     };
   }
 
-  public static apply<T extends IAsyncFn>(
-    async_func: T,
+  public static apply<T extends IAnyFn>(
+    func: T,
     option: {
-      tag?: QueueTag;
+      tag?: string | symbol;
       inheritPreErr?: isInheritPreErr;
       nonBlockCurr?: boolean;
-      args?: Parameters<typeof async_func>;
+      args?: Parameters<typeof func>;
     }
-  ): Promise<Unwrap<typeof async_func>> {
-    const res = D4C.wrap(async_func, option).apply(null, option.args);
+  ): Promise<Unwrap<typeof func>> {
+    const res = D4C.wrap(func, option).apply(null, option.args);
     return res;
   }
 
-  public static wrap<T extends IAsyncFn>(
-    async_func: T,
+  public static wrap<T extends IAnyFn>(
+    func: T,
     option: {
-      tag?: QueueTag;
+      tag?: string | symbol;
       inheritPreErr?: isInheritPreErr;
       nonBlockCurr?: boolean;
     }
   ): (
-      ...args: Parameters<typeof async_func>
-    ) => Promise<Unwrap<typeof async_func>> {
+      ...args: Parameters<typeof func>
+    ) => Promise<Unwrap<typeof func>> {
     if (!option?.tag) {
       throw new Error(errMsg.WrapNotag);
     }
-    return D4C._q(null, async_func, option);
+    return D4C._q(null, func, option);
   }
 
-  public iapply<T extends IAsyncFn>(
-    async_func: T,
+  public iapply<T extends IAnyFn>(
+    func: T,
     option?: {
-      tag?: QueueTag;
+      tag?: string | symbol;
       inheritPreErr?: isInheritPreErr;
       nonBlockCurr?: boolean;
-      args?: Parameters<typeof async_func>;
+      args?: Parameters<typeof func>;
     }
-  ): Promise<Unwrap<typeof async_func>> {
-    const resp = this.iwrap(async_func, option).apply(null, option.args);
+  ): Promise<Unwrap<typeof func>> {
+    const resp = this.iwrap(func, option).apply(null, option.args);
     return resp;
   }
 
-  public iwrap<T extends IAsyncFn>(
-    async_func: T,
+  public iwrap<T extends IAnyFn>(
+    func: T,
     option?: {
-      tag?: QueueTag;
+      tag?: string | symbol;
       inheritPreErr?: isInheritPreErr;
       nonBlockCurr?: boolean;
     }
   ): (
-      ...args: Parameters<typeof async_func>
-    ) => Promise<Unwrap<typeof async_func>> {
+      ...args: Parameters<typeof func>
+    ) => Promise<Unwrap<typeof func>> {
     if (option && (option.tag === null || option.tag === '')) {
       throw new Error(errMsg.iWraWrongTag);
     }
-    return D4C._q(this.queues, async_func, option);
+    return D4C._q(this.queues, func, option);
   }
 
-  static _q<T extends IAsyncFn>(
+  static _q<T extends IAnyFn>(
     queues: TaskQueuesType,
-    async_func: T,
+    func: T,
     option?: {
       tag?: QueueTag;
       inheritPreErr?: isInheritPreErr;
@@ -179,8 +179,8 @@ export class D4C {
     },
     prototype?: any
   ): (
-      ...args: Parameters<typeof async_func>
-    ) => Promise<Unwrap<typeof async_func>> {
+      ...args: Parameters<typeof func>
+    ) => Promise<Unwrap<typeof func>> {
     return async function (...args: any[]): Promise<any> {
       /** Assign queues */
       let taskQueue: TaskQueue;
@@ -249,7 +249,7 @@ export class D4C {
         err = new PreviousError(task.preError.message ?? task.preError);
       } else {
         try {
-          const value = async_func.apply(this, args);
+          const value = func.apply(this, args);
 
           /** Detect if it is a async/promise function or not */
           // ref: https://lsm.ai/posts/7-ways-to-detect-javascript-async-function/
@@ -281,7 +281,7 @@ export class D4C {
 
       return result;
     } as (
-        ...args: Parameters<typeof async_func>
-      ) => Promise<Unwrap<typeof async_func>>;
+        ...args: Parameters<typeof func>
+      ) => Promise<Unwrap<typeof func>>;
   }
 }
