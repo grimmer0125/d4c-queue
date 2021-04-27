@@ -60,11 +60,10 @@ test("insert a class's method via decorator to make a task in global queue - no 
 
 test('insert a non-async function task in global queue to test nonBlockCurr', async (t) => {
   let testStr = '';
-  const funcSync2 = (input: string[], input2: string) => {
-    testStr += 'inFuncSyn';
-  };
   testStr += '1';
-  const newFunc = D4C.wrap(funcSync2, { tag: queueTag, nonBlockCurr: true });
+  const newFunc = D4C.wrap((input: string[], input2: string) => {
+    testStr += 'inFuncSyn';
+  }, { tag: queueTag, nonBlockCurr: true });
   testStr += '2';
   const job = newFunc(fixture, fixture2);
   testStr += '3';
