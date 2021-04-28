@@ -30,7 +30,35 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
 //     3. {noBlockCurr: true} 
 //     4. {inheritPreErr: true}
 //     5. {x:3} <- invalid error case 
+//     6. {} with no class register case [below is tested]
 // - add test for normal non async member/static method 
+
+test("insert a class's method via decorator to make a task in global queue - no tag error", async (t) => {
+  let error;
+  try {
+    class TestController {
+      greeting: string;
+      constructor(message: string) {
+        this.greeting = message;
+      }
+
+      @D4C.synchronized
+      async greet(text: string) {
+        const str = 'Hello, ' + text + this.greeting;
+        return str;
+      }
+    }
+
+    /** instance method  */
+    const test = new TestController('kitty');
+    const job = test.greet(fixture2);
+    const resp = await job;
+    t.is(resp, 'Hello, 2kitty');
+  } catch (err) {
+    error = err
+  }
+  t.is(error.message, errMsg.noSynchronizedAvailableOK);
+});
 
 test("insert a class's method via decorator to make a task in global queue - no parentheses", async (t) => {
   @D4C.register("jojo")

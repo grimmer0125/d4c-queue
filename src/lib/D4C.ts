@@ -33,7 +33,7 @@ export const errMsg = {
   WrapNotag: 'queueTag needs to be passed in option when using share queues',
   iWraWrongTag: 'queueTag can not be null or empty string',
   wrongDecoratorOption: "not valid option when using decorators",
-  noClassRegisterOK: "noClassRegisterOK"
+  noSynchronizedAvailableOK: "noClassDefaultTagORdecoratorTagAvailable"
 };
 
 class PreviousError extends Error {
@@ -90,11 +90,15 @@ export class D4C {
       if (obj === undefined || obj === null) {
         return true;
       }
+
       /**
        * hasOwnProperty should be false since it is a literal object 
        */
       //eslint-disable-next-line
-      if (typeof targetOrOption === "object" && !targetOrOption.hasOwnProperty("constructor") && (Object.keys(obj).length === 0 || typeof targetOrOption.inheritPreErr === "boolean" || typeof targetOrOption.noBlockCurr === "boolean")) {
+      if (typeof obj === "object" && !obj.hasOwnProperty("constructor") && (Object.keys(obj).length === 0 ||
+        typeof obj.inheritPreErr === "boolean" ||
+        typeof obj.noBlockCurr === "boolean" ||
+        typeof obj.tag === "string" || typeof obj.tag === "symbol")) {
         return true
       }
       return false;
@@ -238,7 +242,7 @@ export class D4C {
           if (classDefaultTag) {
             tag = classDefaultTag;
           } else {
-            throw new Error(errMsg.noClassRegisterOK)
+            throw new Error(errMsg.noSynchronizedAvailableOK)
           }
         }
 
