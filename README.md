@@ -138,20 +138,19 @@ A class will use a unique tag queue of global share queues under the hood
 ```typescript
 @D4C.register(Symbol('jojo'))
 class ServiceAdapter {
-
   /** no parentheses if omit parameters */
   @D4C.synchronized
   async connect() {
     // ...
   }
-  
+
   @D4C.synchronized
   client_send_message_wait_connect(msg: string) {
     // ...
   }
 
   //** parameters are optional */
-  @D4C.synchronized({ inheritPreErr: true, noBlockCurr: true })
+  @D4C.synchronized({ tag: 'world', inheritPreErr: true, noBlockCurr: true })
   static async staticMethod(text: string) {
     return text;
   }
@@ -349,7 +348,7 @@ example:
 ```typescript
 @D4C.synchronized
 @D4C.synchronized()
-@D4C.synchronized({ inheritPreErr: true })
+@D4C.synchronized({ tag: "world", inheritPreErr: true })
 @D4C.synchronized({ inheritPreErr: true, noBlockCurr: true })
 
 ```
