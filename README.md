@@ -93,12 +93,22 @@ Keep in mind that a function will not be enqueued into a task queue even it beco
 ### Global usage:
 
 ```typescript
-// in place 1
-D4C.wrap(asyncFun, { tag: 'queue1' })('asyncFun_arg1', 'asyncFun_arg2');
-
-// in place 2, even another event in event loop
-const asyncResult = D4C.wrap(syncFun, { tag: 'queue1' })('syncFun_arg1');
-// you can choose to await this asyncResult (promise) or not
+/**
+ * in place 1
+ * you can choose to await the result or not.
+ */
+const asyncFunResult = await D4C.wrap(asyncFun, { tag: 'queue1' })(
+  'asyncFun_arg1',
+  'asyncFun_arg2'
+);
+/**
+ * in place 2, another event in event loop. Either async or normal sync function is ok.
+ * pass a normal non-async function first as a example, it will wait for asyncFun's finishing
+ * then use await to get the new wrapped async function's result.
+ */
+const syncFunFunResult = await D4C.wrap(syncFun, { tag: 'queue1' })(
+  'syncFun_arg1'
+);
 ```
 
 You can use `D4C.apply(someFun, { args:["someFun_arg1"], tag: "queue1"}) instead`.
@@ -166,15 +176,20 @@ D4C instance queues:
 
 ### Causality
 
-Sometimes a task function is better to be executed after the previous task function is finished. For example, if you are writing a adapter to use a network client library to connect to a service, either happening in a React frontend or a Node.js program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so call `client_connect` first, later `client_send_message` is executed in another event. In your adapter code, usually we can use a flag and do something like
+Sometimes a task function is better to be executed after the previous task function is finished. For example, if you are writing a adapter to use a network client library to connect to a service, either happening in a React frontend or a Node.js program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so call `connect` first, later `send_message` is executed in another event. In your adapter code, usually we can use a flag and do something like
+
+client_connect
+client_send_message
 
 ```typescript
-if (connectingStatus === 'Connected') {
-  // send message
-} else if (connectingStatus === 'Disconnected') {
-  // try to re-connected, but how ?
-} else if (connectingStatus === 'Connecting') {
-  // Um...how to wait for connecting successfully?
+send_message() {
+  if (this.connectingStatus === 'Connected') {
+    // send message
+  } else if (this.connectingStatus === 'Connecting') {
+    // Um...how to wait for connecting successfully?
+  } else (this.connectingStatus === 'Disconnected') {
+    // try to re-connected
+  }
 }
 ```
 
@@ -182,17 +197,32 @@ if (connectingStatus === 'Connected') {
 
 ```typescript
 /** using Symbol or string as parameter */
-@D4C.register(Symbol("jojo"))
+@D4C.register(Symbol('jojo'))
 class ServiceAdapter {
-
-  @D4C.synchronized
-  client_connect(){
-    ...
+  async send_message(msg: string) {
+    if (this.connectingStatus === 'Connected') {
+      /** send message */
+      await client_send_message_without_wait_connect(msg);
+    } else if (this.connectingStatus === 'Connecting') {
+      /** send message */
+      await client_send_message_wait_connect(msg);
+    } else {
+      //..
+    }
   }
 
   @D4C.synchronized
-  client_send_message() {
-    ...
+  async connect() {
+    // ...
+  }
+
+  @D4C.synchronized
+  async client_send_message_wait_connect(msg: string) {
+    // ...
+  }
+
+  async client_send_message_without_wait_connect(msg: string) {
+    // ...
   }
 }
 ```
