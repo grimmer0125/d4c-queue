@@ -1,15 +1,15 @@
 import Denque from 'denque';
 import 'reflect-metadata';
 
-type TaskQueue = {
-  queue: Denque;
-  isRunning: boolean;
-};
-
 type Task = {
   unlock: (value?: unknown) => void;
   preError?: Error;
   inheritPreErr?: boolean;
+};
+
+type TaskQueue = {
+  queue: Denque<Task>;
+  isRunning: boolean;
 };
 
 type Unwrap<T> = T extends Promise<infer U>
@@ -255,7 +255,7 @@ export class D4C {
       taskQueue = currTaskQueues.get(tag);
       if (!taskQueue) {
         taskQueue = {
-          queue: new Denque(),
+          queue: new Denque<Task>(),
           isRunning: false,
         };
         currTaskQueues.set(tag, taskQueue);
