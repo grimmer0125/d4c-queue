@@ -32,7 +32,8 @@ export const errMsg = {
     'Only non-null or non-empty string queueTag is valid in option when using share queues',
   WrapNotag: 'queueTag needs to be passed in option when using share queues',
   iWraWrongTag: 'queueTag can not be null or empty string',
-  wrongDecoratorOption: "not valid option when using decorators"
+  wrongDecoratorOption: "not valid option when using decorators",
+  noClassRegisterOK: "noClassRegisterOK"
 };
 
 class PreviousError extends Error {
@@ -228,21 +229,23 @@ export class D4C {
         tag = option.tag;
       } else {
         /**
-         * either static+decorator case OR instance case with no tag
-         *  Try to get tag from Reflect.getMetadata
+         *  either static+decorator case OR instance case with no tag
          */
-        let queueTag: QueueTag;
+        let classDefaultTag: QueueTag;
         if (prototype) {
-          queueTag = Reflect.getMetadata(classDecoratorKey, prototype);
-        }
-        if (queueTag) {
           /** decorator case */
-          tag = queueTag;
-        } else {
-          /** instance case: use default tag */
-          tag = classDecoratorKey;
+          classDefaultTag = Reflect.getMetadata(classDecoratorKey, prototype);
+          if (classDefaultTag) {
+            tag = classDefaultTag;
+          } else {
+            throw new Error(errMsg.noClassRegisterOK)
+          }
         }
+
+        /** instance case: use default tag */
+        tag = classDecoratorKey;
       }
+
 
       /** Get sub-queue */
       taskQueue = currTaskQueues.get(tag);
