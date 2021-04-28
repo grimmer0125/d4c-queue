@@ -65,7 +65,7 @@ Modify your tsconfig.json to include the following settings
 
 #### JavaScript users
 
-You can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing babel.config.json and I use `babel-node index.js` to test
+You can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing `babel.config.json` and I use `babel-node index.js` to test
 
 ```json
 {
@@ -88,7 +88,34 @@ You can use Babel to support decorators, install `@babel/plugin-proposal-decorat
 }
 ```
 
-For the users using **Create React App** JavaScript version, you need `eject` and customize your babel setting. Using create React App TypeScript just needs to modify `tsconfig.json.`
+For the users using **Create React App** JavaScript version, you can either use `eject` or [craco](https://github.com/gsoft-inc/craco) to customize your babel setting. Using create React App TypeScript Version just needs to modify `tsconfig.json.`
+
+To use **craco**, follow its site
+
+1. `yarn add @craco/craco`
+2. Replace `react-scripts` with `craco` in `package.json`
+3. `yarn add @babel/preset-env @babel/plugin-proposal-decorators @babel/plugin-proposal-class-properties babel-plugin-transform-typescript-metadata -D`
+4. Touch `craco.config.js` and modify its content as the following
+5. Then just `yarn start`.
+
+`craco.config.js` (roughly same as `babel.config.json`):
+
+```javascript
+module.exports = {
+  babel: {
+    presets: [['@babel/preset-env']],
+    plugins: [
+      ['@babel/plugin-proposal-decorators', { legacy: true }],
+      ['@babel/plugin-proposal-class-properties', { loose: true }],
+      ['babel-plugin-transform-typescript-metadata'],
+    ],
+    loaderOptions: {},
+    loaderOptions: (babelLoaderOptions, { env, paths }) => {
+      return babelLoaderOptions;
+    },
+  },
+};
+```
 
 #### Testing notes
 
