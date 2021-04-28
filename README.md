@@ -102,9 +102,10 @@ const asyncFunResult = await D4C.wrap(asyncFun, { tag: 'queue1' })(
   'asyncFun_arg2'
 );
 /**
- * in place 2, another event in event loop. Either async or normal sync function is ok.
- * pass a normal non-async function first as a example, it will wait for asyncFun's finishing
- * then use await to get the new wrapped async function's result.
+ * in place 2, another event in event loop. Either async or normal
+ * sync function is ok. E.g., pass a normal non-async function,
+ * it will wait for asyncFun's finishing, then use await to get
+ * the new wrapped async function's result.
  */
 const syncFunFunResult = await D4C.wrap(syncFun, { tag: 'queue1' })(
   'syncFun_arg1'
