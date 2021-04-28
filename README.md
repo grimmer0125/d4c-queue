@@ -341,7 +341,7 @@ This decorator is to supply defaultTag setting and is not necessary if you suppl
 @D4C.register("jojo")
 ```
 
-Keep in mind that using `string` has a little possibility that others use the same key string and will use the same queue. 
+Keep in mind that using `string` has a little possibility that others use the same key string and will use the same queue.
 
 - public static synchronized(option?: { inheritPreErr?: boolean; noBlockCurr?: boolean; tag?: string | symbol })
 
@@ -386,7 +386,7 @@ public static apply<T extends IAnyFn>(
     tag?: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
-    args?: Parameters<typeof async_func>;
+    args?: Parameters<typeof func>;
   })
 ```
 
