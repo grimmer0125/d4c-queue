@@ -27,8 +27,9 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
 //   - parentheses    
 //     1. ()
 //     2. {}
-//     3. {noBlockCurr:true} 
-//     4. {x:3} <- error case 
+//     3. {noBlockCurr: true} 
+//     4. {inheritPreErr: true}
+//     5. {x:3} <- invalid error case 
 // - add test for normal non async member/static method 
 
 test("insert a class's method via decorator to make a task in global queue - no parentheses", async (t) => {
@@ -39,7 +40,7 @@ test("insert a class's method via decorator to make a task in global queue - no 
       this.greeting = message;
     }
 
-    @D4C.synchronized
+    @D4C.synchronized({ tag: "world", inheritPreErr: true })
     async greet(text: string) {
       const str = 'Hello, ' + text + this.greeting;
       return str;

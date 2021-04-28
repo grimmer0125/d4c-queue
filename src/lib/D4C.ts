@@ -52,13 +52,13 @@ export class D4C {
     this.queues = new Map<string | symbol, TaskQueue>();
   }
 
-  public static register(tag: string | symbol): ClassDecorator {
-    if (!tag) {
+  public static register(defaultTag: string | symbol): ClassDecorator {
+    if (!defaultTag) {
       throw new Error(errMsg.ClassDecorator);
     }
 
     return (target) => {
-      Reflect.defineMetadata(classDecoratorKey, tag, target.prototype);
+      Reflect.defineMetadata(classDecoratorKey, defaultTag, target.prototype);
     };
   }
 
@@ -68,6 +68,7 @@ export class D4C {
     descriptor: PropertyDescriptor): void;
   public static synchronized(
     option?: {
+      tag?: string | symbol;
       inheritPreErr?: boolean;
       noBlockCurr?: boolean;
     }): MethodDecoratorParameter;
@@ -92,7 +93,7 @@ export class D4C {
        * hasOwnProperty should be false since it is a literal object 
        */
       //eslint-disable-next-line
-      if (typeof targetOrOption === "object" && !targetOrOption.hasOwnProperty("constructor") && (Object.keys(obj).length === 0 || targetOrOption.inheritPreErr === "boolean" || typeof targetOrOption.noBlockCurr === "boolean")) {
+      if (typeof targetOrOption === "object" && !targetOrOption.hasOwnProperty("constructor") && (Object.keys(obj).length === 0 || typeof targetOrOption.inheritPreErr === "boolean" || typeof targetOrOption.noBlockCurr === "boolean")) {
         return true
       }
       return false;
@@ -223,7 +224,7 @@ export class D4C {
       /** Detect tag */
       let tag: QueueTag;
       if (option?.tag) {
-        /** static-global or instance */
+        /** static-global or instance or static-decorator-custom-tag*/
         tag = option.tag;
       } else {
         /**
