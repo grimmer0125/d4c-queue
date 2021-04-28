@@ -2,7 +2,7 @@
 
 Pass a `async` function, a function returning a promise, or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. Besides using a function as a parameter, it also supports to use [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) on your instance method or static methods.
 
-## Features:
+## Features
 
 1. Three usages
    1. Instance
@@ -48,7 +48,13 @@ The development environment of this library is Node.js v15.14.0. TypeScript 4.2.
 
 Keep in mind that `decorators` and `Metadata` are JavaScript proposals and may vary in the future.
 
-For TypeScript users, modify your tsconfig.json to include the following settings
+#### Install reflect-metadata
+
+[reflect-metadata](https://www.npmjs.com/package/reflect-metadata) is used to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mentions the the list of `polyfill for the Reflect API`, besides reflect-metadata. After `yarn add reflect-metadata`/`npm install reflect-metadata`, put `import 'reflect-metadata'` only once in your code.
+
+#### TypeScript users
+
+Modify your tsconfig.json to include the following settings
 
 ```
 {
@@ -57,9 +63,9 @@ For TypeScript users, modify your tsconfig.json to include the following setting
 }
 ```
 
-Then install [reflect-metadata](https://www.npmjs.com/package/reflect-metadata) to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mention the the list of `polyfill for the Reflect API`, besides reflect-metadata. Then put `import 'reflect-metadata'` only once in your code.
+#### JavaScript users
 
-For JavaScript users, you can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing babel.config.json and I use `babel-node index.js` to test
+You can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing babel.config.json and I use `babel-node index.js` to test
 
 ```json
 {
@@ -82,15 +88,17 @@ For JavaScript users, you can use Babel to support decorators, install `@babel/p
 }
 ```
 
-For the users using Create React App JavaScript version, you need `eject` and customize your babel setting. Using create React App TypeScript just needs to modify `tsconfig.json.`
+For the users using **Create React App** JavaScript version, you need `eject` and customize your babel setting. Using create React App TypeScript just needs to modify `tsconfig.json.`
 
-While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` are not needed. Also, explicitly import 'reflect-metadata' is needed when developing this library but using this library seems not (just install). Anyway, please setup them if this library does not work after installation and try again.
+#### Testing notes
 
-## Usage example:
+While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` are not needed. Also, explicitly `import 'reflect-metadata'` is needed when developing this library but using this library seems not (just need installation). It suppose that `D4C` already import it once and reflect-metadata is a singleton. Anyway, please setup them if this library does not work after installation and try again.
+
+## Usage example
 
 Keep in mind that a function will not be enqueued into a task queue even it becomes a new function after wrapping. A task will be enqueued only when it is executed.
 
-### Global usage:
+### Global usage
 
 ```typescript
 /**
@@ -114,7 +122,7 @@ const syncFunFunResult = await D4C.wrap(syncFun, { tag: 'queue1' })(
 
 You can use `D4C.apply(someFun, { args:["someFun_arg1"], tag: "queue1"}) instead`.
 
-### Instance usage:
+### Instance usage
 
 ```typescript
 const d4c = new D4C();
