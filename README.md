@@ -334,12 +334,14 @@ current_function();
 
 - public static register(defaultTag: string | symbol)
 
+This decorator is to supply defaultTag setting and is not necessary if you supply the optional tag in `@D4C.synchronized`.
+
 ```typescript
 @D4C.register(Symbol("jojo"))
 @D4C.register("jojo")
 ```
 
-keep in mind that using string has a little possibility that others use the same key string and will use the same queue
+Keep in mind that using `string` has a little possibility that others use the same key string and will use the same queue. 
 
 - public static synchronized(option?: { inheritPreErr?: boolean; noBlockCurr?: boolean; tag?: string | symbol })
 
