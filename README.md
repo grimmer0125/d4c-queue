@@ -332,7 +332,7 @@ current_function();
 
 ### Decorators:
 
-- public static register(tag: string | symbol)
+- public static register(defaultTag: string | symbol)
 
 ```typescript
 @D4C.register(Symbol("jojo"))
@@ -341,7 +341,9 @@ current_function();
 
 keep in mind that using string has a little possibility that others use the same key string and will use the same queue
 
-- public static synchronized(option?: { inheritPreErr?: boolean; noBlockCurr?: boolean; })
+- public static synchronized(option?: { inheritPreErr?: boolean; noBlockCurr?: boolean; tag?: string | symbol })
+
+The tag here can overwrite the default tag from class and applied different queue tag for this method.
 
 example:
 
@@ -363,7 +365,7 @@ See [class-and-method-decorators-usage](#class-and-method-decorators-usage)
 public static wrap<T extends IAnyFn>(
   func: T,
   option: {
-    tag?: boolean;
+    tag?: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
   })
