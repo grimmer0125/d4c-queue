@@ -188,7 +188,7 @@ send_message() {
   } else if (this.connectingStatus === 'Connecting') {
     // Um...how to wait for connecting successfully?
   } else (this.connectingStatus === 'Disconnected') {
-    // try to re-connected
+    // try to re-connect
   }
 }
 ```
