@@ -138,9 +138,15 @@ A class will use a unique tag queue of global share queues under the hood
 ```typescript
 @D4C.register(Symbol('jojo'))
 class ServiceAdapter {
+
   /** no parentheses if omit parameters */
   @D4C.synchronized
-  client_send_message_wait_connect() {
+  async connect() {
+    // ...
+  }
+  
+  @D4C.synchronized
+  client_send_message_wait_connect(msg: string) {
     // ...
   }
 
@@ -165,7 +171,7 @@ The way on `arrow function property` is a workaround since some issue happen whe
 ```typescript
 @autobind
 @D4C.synchronized
-client_send_message() {
+client_send_message_wait_connect(msg: string) {
   // ...
 }
 ```
