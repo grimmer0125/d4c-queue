@@ -56,7 +56,7 @@ Keep in mind that `decorators` and `Metadata` are JavaScript proposals and may v
 
 Modify your tsconfig.json to include the following settings
 
-```
+```json
 {
   "experimentalDecorators": true,
   "emitDecoratorMetadata": true
@@ -196,7 +196,7 @@ client_connect
 client_send_message
 
 ```typescript
-send_message() {
+send_message(msg: string) {
   if (this.connectingStatus === 'Connected') {
     // send message
   } else if (this.connectingStatus === 'Connecting') {
@@ -382,12 +382,13 @@ If original func is a normal non async function, `D4C.wrap` will return `a async
 ```typescript
 public static apply<T extends IAnyFn>(
   func: T,
-    option: {
+  option: {
     tag?: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
     args?: Parameters<typeof func>;
-  })
+  }
+)
 ```
 
 Almost the same as `D4C.wrap` but just directly executing the original function call, e.g.
