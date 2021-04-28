@@ -92,7 +92,7 @@ For the users using **Create React App** JavaScript version, you need `eject` an
 
 #### Testing notes
 
-While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` are not needed. Also, explicitly `import 'reflect-metadata'` is needed when developing this library but using this library seems not (just need installation). It suppose that `D4C` already import it once and reflect-metadata is a singleton. Anyway, please setup them if this library does not work after installation and try again.
+While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` are not needed. Also, explicitly `import 'reflect-metadata'` is needed when developing this library but using this library seems not (just need installation). The reason might be that `D4C` already import it once and reflect-metadata is a singleton. Anyway, please setup them if this library does not work after installation and try again.
 
 ## Usage example
 
