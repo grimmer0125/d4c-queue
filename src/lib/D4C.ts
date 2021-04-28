@@ -21,16 +21,18 @@ type Unwrap<T> = T extends Promise<infer U>
   : T;
 
 type QueueTag = string | symbol;
-type isInheritPreErr = boolean;
 type TaskQueuesType = Map<string | symbol, TaskQueue>;
 type IAnyFn = (...args: any[]) => Promise<any> | any;
 type MethodDecoratorParameter = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
 
+
+
 export const errMsg = {
   ClassDecorator:
-    'You should specify non-null or non-empty string queueTag in option when using share queues',
-  WrapNotag: 'You should specify queueTag in option when using share queues',
+    'Only non-null or non-empty string queueTag is valid in option when using share queues',
+  WrapNotag: 'queueTag needs to be passed in option when using share queues',
   iWraWrongTag: 'queueTag can not be null or empty string',
+  wrongDecoratorOption: "not valid option when using decorators"
 };
 
 class PreviousError extends Error {
@@ -60,23 +62,43 @@ export class D4C {
     };
   }
 
-
   public static synchronized(
     target: any,
     propertyKey: string, // usually it is the name of the method
     descriptor: PropertyDescriptor): void;
   public static synchronized(
-    inheritPreErr?: boolean,
-    nonBlockCurr?: boolean): MethodDecoratorParameter;
+    option?: {
+      inheritPreErr?: boolean;
+      noBlockCurr?: boolean;
+    }): MethodDecoratorParameter;
   public static synchronized(
-    targetOrInheritPreErr?: any,
-    propertyKeyOrNonBlockCurr?: any,
+    targetOrOption?: any,
+    propertyKey?: string,
     descriptor?: PropertyDescriptor
   ): void | MethodDecoratorParameter {
 
-    const type = typeof targetOrInheritPreErr;
-    if (type == "boolean" || type === "undefined" || targetOrInheritPreErr === null) {
-      // console.log("parentheses case")
+    /**
+     * problem is target in instance method & option both are object 
+     * so the below check is complicated
+     */
+
+    /** if class has a static member call inheritPreErr, even no using parentheses, 
+     * targetOrOption will have targetOrOption property but its type is function */
+    function checkIfOptionObject(obj: any): boolean {
+      if (obj === undefined || obj === null) {
+        return true;
+      }
+      /**
+       * hasOwnProperty should be false since it is a literal object 
+       */
+      //eslint-disable-next-line
+      if (typeof targetOrOption === "object" && !targetOrOption.hasOwnProperty("constructor") && (Object.keys(obj).length === 0 || targetOrOption.inheritPreErr === "boolean" || typeof targetOrOption.noBlockCurr === "boolean")) {
+        return true
+      }
+      return false;
+    }
+    if (checkIfOptionObject(targetOrOption)) {
+      /** parentheses case */
       return function (
         target: any,
         propertyKey: string,
@@ -86,23 +108,33 @@ export class D4C {
         const newFunc = D4C._q(
           null,
           originalMethod,
-          { inheritPreErr: targetOrInheritPreErr, nonBlockCurr: propertyKeyOrNonBlockCurr },
-          // target = prototype when method decorator, use target
-          // target = constructor when static method decorator, use target.prototype
+          targetOrOption,
           target.prototype ?? target
         );
         descriptor.value = newFunc;
       };
     } else {
-      // console.log("no parentheses case")
-      const originalMethod = descriptor.value;
-      const newFunc = D4C._q(
-        null,
-        originalMethod,
-        {},
-        targetOrInheritPreErr.prototype ?? targetOrInheritPreErr
-      );
-      descriptor.value = newFunc
+      /** no parentheses case */
+      const type = typeof targetOrOption;
+
+      /** static method decorator case: target type is constructor function. use target.prototype
+       * method decorator case: target is a prototype object, not literally object. use target 
+       * descriptor.value.name === propertyKey is really needed & always correct? */
+      if ((type === "function" || targetOrOption.hasOwnProperty("constructor")) && // eslint-disable-line
+        typeof propertyKey === "string" &&
+        typeof descriptor === "object" && typeof descriptor.value === "function" &&
+        descriptor.value.name === propertyKey) {
+        const originalMethod = descriptor.value;
+        const newFunc = D4C._q(
+          null,
+          originalMethod,
+          {},
+          targetOrOption.prototype ?? targetOrOption
+        );
+        descriptor.value = newFunc
+      } else {
+        throw new Error(errMsg.wrongDecoratorOption);
+      }
     }
   }
 
@@ -110,8 +142,8 @@ export class D4C {
     func: T,
     option: {
       tag?: string | symbol;
-      inheritPreErr?: isInheritPreErr;
-      nonBlockCurr?: boolean;
+      inheritPreErr?: boolean;
+      noBlockCurr?: boolean;
       args?: Parameters<typeof func>;
     }
   ): Promise<Unwrap<typeof func>> {
@@ -123,8 +155,8 @@ export class D4C {
     func: T,
     option: {
       tag?: string | symbol;
-      inheritPreErr?: isInheritPreErr;
-      nonBlockCurr?: boolean;
+      inheritPreErr?: boolean;
+      noBlockCurr?: boolean;
     }
   ): (
       ...args: Parameters<typeof func>
@@ -139,8 +171,8 @@ export class D4C {
     func: T,
     option?: {
       tag?: string | symbol;
-      inheritPreErr?: isInheritPreErr;
-      nonBlockCurr?: boolean;
+      inheritPreErr?: boolean;
+      noBlockCurr?: boolean;
       args?: Parameters<typeof func>;
     }
   ): Promise<Unwrap<typeof func>> {
@@ -152,8 +184,8 @@ export class D4C {
     func: T,
     option?: {
       tag?: string | symbol;
-      inheritPreErr?: isInheritPreErr;
-      nonBlockCurr?: boolean;
+      inheritPreErr?: boolean;
+      noBlockCurr?: boolean;
     }
   ): (
       ...args: Parameters<typeof func>
@@ -169,8 +201,8 @@ export class D4C {
     func: T,
     option?: {
       tag?: QueueTag;
-      inheritPreErr?: isInheritPreErr;
-      nonBlockCurr?: boolean;
+      inheritPreErr?: boolean;
+      noBlockCurr?: boolean;
     },
     prototype?: any
   ): (
@@ -181,34 +213,37 @@ export class D4C {
       let taskQueue: TaskQueue;
       let currTaskQueues: TaskQueuesType;
       if (!queues) {
-        // console.log("static case (global/decorator)")
+        /** static case (global/decorator) */
         currTaskQueues = D4C.queues;
       } else {
-        // console.log("instance case")
+        /** instance case */
         currTaskQueues = queues;
       }
 
       /** Detect tag */
       let tag: QueueTag;
       if (option?.tag) {
-        // console.log("static-global or instance")
+        /** static-global or instance */
         tag = option.tag;
       } else {
-        //** either static+decorator case OR instance case with no tag. Try to get tag from Reflect.getMetadata*/
+        /**
+         * either static+decorator case OR instance case with no tag
+         *  Try to get tag from Reflect.getMetadata
+         */
         let queueTag: QueueTag;
         if (prototype) {
           queueTag = Reflect.getMetadata(classDecoratorKey, prototype);
         }
         if (queueTag) {
-          // console.log("decorator case !!!!: " + queueTag.toString())
+          /** decorator case */
           tag = queueTag;
         } else {
-          // console.log("instance case: use default tag")
+          /** instance case: use default tag */
           tag = classDecoratorKey;
         }
       }
 
-      /** Get sub-queue  */
+      /** Get sub-queue */
       taskQueue = currTaskQueues.get(tag);
       if (!taskQueue) {
         taskQueue = {
@@ -234,7 +269,7 @@ export class D4C {
         await promise;
       } else {
         taskQueue.isRunning = true;
-        if (option?.nonBlockCurr) {
+        if (option?.noBlockCurr) {
           await Promise.resolve();
         }
       }

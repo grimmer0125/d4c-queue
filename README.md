@@ -10,7 +10,7 @@ Pass a `async` function, a function returning a promise, or a normal non-async f
    3. Class and method decorator (also for static methods)
 2. Use third party library [Denque](https://www.npmjs.com/package/denque) to implement a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError), if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
-4. Optional parameter, `nonBlockCurr` to forcibly execute the first task in the queue in the next tick of the event loop. This is useful if you pass a normal non-async function as the first task but do not want it to block the current event loop.
+4. Optional parameter, `noBlockCurr` to forcibly execute the first task in the queue in the next tick of the event loop. This is useful if you pass a normal non-async function as the first task but do not want it to block the current event loop.
 5. Able to pass arguments and get return value for each task function.
 6. Support Browser and Node.js.
 7. Support TypeScript and JavaScript. Written in TypeScript and its `.d.ts` typing is out of box.
@@ -125,8 +125,8 @@ class ServiceAdapter {
     // ...
   }
 
-  //** optional parameters inheritPreErr, nonBlockCurr */
-  @D4C.synchronized(true, true)
+  //** parameters are optional */
+  @D4C.synchronized({ inheritPreErr: true, noBlockCurr: true })
   static async staticMethod(text: string) {
     return text;
   }
@@ -284,20 +284,29 @@ current_function();
 }
 ```
 
-## Function list
+## API
 
 ### Decorators:
 
 - public static register(tag: string | symbol)
 
 ```typescript
-@D4C.register(Symbol("jojo")) or @D4C.register("jojo")
+@D4C.register(Symbol("jojo"))
+@D4C.register("jojo")
 ```
 
-- public static synchronized( inheritPreErr?: boolean, nonBlockCurr?: boolean)
+keep in mind that using string has a little possibility that others use the same key string and will use the same queue
+
+- public static synchronized(option?: { inheritPreErr?: boolean; noBlockCurr?: boolean; })
+
+example:
 
 ```typescript
-@D4C.synchronized or @D4C.synchronized(true, false)
+@D4C.synchronized
+@D4C.synchronized()
+@D4C.synchronized({ inheritPreErr: true })
+@D4C.synchronized({ inheritPreErr: true, noBlockCurr: true })
+
 ```
 
 See [class-and-method-decorators-usage](#class-and-method-decorators-usage)
@@ -312,7 +321,7 @@ public static wrap<T extends IAnyFn>(
   option: {
     tag?: boolean;
     inheritPreErr?: boolean;
-    nonBlockCurr?: boolean;
+    noBlockCurr?: boolean;
   })
 ```
 
@@ -328,7 +337,7 @@ public static apply<T extends IAnyFn>(
     option: {
     tag?: string | symbol;
     inheritPreErr?: boolean;
-    nonBlockCurr?: boolean;
+    noBlockCurr?: boolean;
     args?: Parameters<typeof async_func>;
   })
 ```
@@ -363,7 +372,7 @@ public iwrap<T extends IAnyFn>(
   option?: {
     tag?: string | symbol;
     inheritPreErr?: boolean;
-    nonBlockCurr?: boolean;
+    noBlockCurr?: boolean;
   }
 )
 ```
@@ -378,7 +387,7 @@ public iapply<T extends IAnyFn>(
   option?: {
     tag?: string | symbol;
     inheritPreErr?: boolean;
-    nonBlockCurr?: boolean;
+    noBlockCurr?: boolean;
     args?: Parameters<typeof func>;
   }
 )

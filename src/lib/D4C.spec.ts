@@ -22,8 +22,13 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
 };
 
 // Todo:
-// - [major] add a test case for whether getMetadata really work 
-// - add tests for decorator with option {inheritPreErr, nonBlockCurr} has value case 
+// - add tests for method decorator with valid option (also getMetadata really work)
+//   - no parentheses
+//   - parentheses    
+//     1. ()
+//     2. {}
+//     3. {noBlockCurr:true} 
+//     4. {x:3} <- error case 
 // - add test for normal non async member/static method 
 
 test("insert a class's method via decorator to make a task in global queue - no parentheses", async (t) => {
@@ -58,12 +63,12 @@ test("insert a class's method via decorator to make a task in global queue - no 
   t.is(resp3, 'abc2');
 });
 
-test('insert a non-async function task in global queue to test nonBlockCurr', async (t) => {
+test('insert a non-async function task in global queue to test noBlockCurr', async (t) => {
   let testStr = '';
   testStr += '1';
   const newFunc = D4C.wrap((input: string[], input2: string) => {
     testStr += 'inFuncSyn';
-  }, { tag: queueTag, nonBlockCurr: true });
+  }, { tag: queueTag, noBlockCurr: true });
   testStr += '2';
   const job = newFunc(fixture, fixture2);
   testStr += '3';
@@ -172,7 +177,7 @@ test("insert a class's method via decorator to make a task in global queue", asy
       return queueTag + text;
     }
 
-    // workaround working way for a arrow function
+    /** workaround working way for a arrow function */
     greet2 = D4C.wrap(
       async (text: string) => {
         const str = 'Hello, ' + text + this.greeting;
