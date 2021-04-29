@@ -167,13 +167,13 @@ export class D4C {
       /** no parentheses case */
       const type = typeof targetOrOption;
 
-      /** static method decorator case: target type is constructor function. use target.prototype
-       * method decorator case: target is a prototype object, not literally object. use target 
-       * descriptor.value.name === propertyKey is really needed & always correct? */
+      /** 
+       * static method decorator case: target type is constructor function. use target.prototype
+       * method decorator case: target is a prototype object, not literally object. use target       
+       */
       if ((type === "function" || targetOrOption.hasOwnProperty("constructor")) && // eslint-disable-line
         typeof propertyKey === "string" &&
-        typeof descriptor === "object" && typeof descriptor.value === "function" &&
-        descriptor.value.name === propertyKey) {
+        typeof descriptor === "object" && typeof descriptor.value === "function") {
         const originalMethod = descriptor.value;
         const newFunc = D4C._q(
           null,

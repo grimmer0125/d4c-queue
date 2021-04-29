@@ -2,7 +2,7 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "incremental": true,
-    "target": "es6", 
+    "target": "es5", 
     "outDir": "build/main",
     "rootDir": "src",
     "moduleResolution": "node",

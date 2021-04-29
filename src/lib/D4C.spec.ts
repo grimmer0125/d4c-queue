@@ -26,11 +26,11 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
 //   - no parentheses
 //   - parentheses    
 //     1. ()
-//     2. {}
-//     3. {noBlockCurr: true} 
-//     4. {inheritPreErr: true}
-//     5. {x:3} <- invalid error case 
-//     6. {} with no class register case [below is tested]
+//     2. ({})
+//     3. ({noBlockCurr: true}) 
+//     4. ({inheritPreErr: true})
+//     5. ({x:3}) <- invalid error case 
+//     6. with no class register case [below is tested]
 // - add test for normal non async member/static method 
 
 test("insert a class's method via decorator to make a task in global queue - no tag error", async (t) => {

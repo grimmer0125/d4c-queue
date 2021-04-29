@@ -18,21 +18,26 @@ Pass a `async` function, a promise-returning function or a normal non-async func
 
 ## Installation
 
-Support: ES6 (ES2015) and above.
+Support:
+
+- ES5 build with CommonJS module for `main` build in package.json.
+- ES6 build (ES2015) with ES6 module for `module` build. Some tools will follow the `module` field in package.json, like Rollup, Webpack, or Parcel and it is good to let the build tools can tree-shake your module build to import only the code they need.
 
 Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package.
 
-ES6:
+**ES6 import**
 
 ```typescript
 import { D4C, dApply, defaultTag, dWrap, synchronized } from 'd4c-queue';
 ```
 
-CommonJS :
+**CommonJS**
 
 ```typescript
 const { D4C, dApply, defaultTag, dWrap, synchronized } = require('d4c-queue');
 ```
+
+It is possible to use the `module` build with CommonJS require syntax in TypeScript or other build tools.
 
 ### Use latest GitHub code of this library
 
@@ -42,7 +47,7 @@ const { D4C, dApply, defaultTag, dWrap, synchronized } = require('d4c-queue');
 4. in your project, `yarn link d4c-queue`. Do above ES6/CommonJS import to start to use.
 5. in your project, `yarn unlink d4c-queue` to uninstall.
 
-The development environment of this library is Node.js v15.14.0 & Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules.
+The development environment of this library is Node.js v15.14.0 & Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules. [typescript-starter](https://github.com/bitjson/typescript-starter) is used to generate two builds, `main` and `module` via its setting.
 
 ### Extra optional steps if you want to use decorators from this library
 
