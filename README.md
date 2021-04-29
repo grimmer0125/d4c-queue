@@ -18,7 +18,7 @@ Pass a `async` function, a promise-returning function or a normal non-async func
 
 ## Installation
 
-Support:
+This package includes two builds.
 
 - ES5 build with CommonJS module for `main` build in package.json.
 - ES6 build (ES2015) with ES6 module for `module` build. Some tools will follow the `module` field in package.json, like Rollup, Webpack, or Parcel and it is good to let the build tools can tree-shake your module build to import only the code they need.
