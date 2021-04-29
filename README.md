@@ -359,7 +359,7 @@ current_function();
 - defaultTag
 
 ```typescript
-function defaultTag(tag: string | symbol)`
+function defaultTag(tag: string | symbol);
 ```
 
 Example:
