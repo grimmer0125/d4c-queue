@@ -42,7 +42,7 @@ const { D4C, dApply, defaultTag, dWrap, synchronized } = require('d4c-queue');
 4. in your project, `yarn link d4c-queue`. Do above ES6/CommonJS import to start to use.
 5. in your project, `yarn unlink d4c-queue` to uninstall.
 
-The development environment of this library is Node.js v15.14.0. TypeScript 4.2.3 is also used and will be automatically installed in node_modules.
+The development environment of this library is Node.js v15.14.0 & Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules.
 
 ### Extra optional steps if you want to use decorators from this library
 
@@ -119,7 +119,7 @@ module.exports = {
 
 #### Testing notes
 
-While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` are not needed. Also, explicitly `import 'reflect-metadata'` is needed when developing this library but using this library seems not (just need installation). The reason might be that `D4C` already import it once and reflect-metadata is a singleton. Anyway, please setup them if this library does not work after installation and try again.
+While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` are not needed. Also, explicitly `import 'reflect-metadata'` is needed when developing this library but using this library seems not (just need installation). The reason might be that `D4C` already import it once and reflect-metadata is a singleton. Anyway, please setup them in case some issues happen.
 
 ## Usage example
 
@@ -217,10 +217,7 @@ D4C instance queues:
 
 ### Causality
 
-Sometimes a task function is better to be executed after the previous task function is finished. For example, if you are writing a adapter to use a network client library to connect to a service, either happening in a React frontend or a Node.js program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so call `connect` first, later `send_message` is executed in another event. In your adapter code, usually we can use a flag and do something like
-
-client_connect
-client_send_message
+Sometimes a task function is better to be executed after the previous task function is finished. For example, assume you are writing a adapter to use a network client library to connect to a service, either in a React frontend or a Node.js backend program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so `connect` is called first, later `send_message` is executed in another event. In the adapter code, usually a flag can be used and do something like
 
 ```typescript
 send_message(msg: string) {
@@ -359,22 +356,36 @@ current_function();
 
 ### Decorators:
 
-- function defaultTag(tag: string | symbol)
+- defaultTag
 
-This decorator is to supply defaultTag setting and is not necessary if you supply the optional tag in `@synchronized`.
+```typescript
+function defaultTag(tag: string | symbol)`
+```
+
+Example:
 
 ```typescript
 @defaultTag(Symbol("jojo"))
 @defaultTag("jojo")
 ```
 
+This decorator is to supply defaultTag setting and is not necessary if you supply the optional tag in `@synchronized`.
+
 Keep in mind that using `string` has a little possibility that others use the same key string and will use the same queue.
 
-- function synchronized(option?: { inheritPreErr?: boolean; noBlockCurr?: boolean; tag?: string | symbol })
+- synchronized
+
+```typescript
+function synchronized(option?: {
+  inheritPreErr?: boolean;
+  noBlockCurr?: boolean;
+  tag?: string | symbol;
+});
+```
 
 The tag here can overwrite the default tag from class and applied different queue tag for this method.
 
-example:
+Example:
 
 ```typescript
 @synchronized
