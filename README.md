@@ -163,9 +163,9 @@ The only difference is `tag` is a optional parameter, rather than the other usag
 A class will use a unique tag queue of global share queues under the hood
 
 ```typescript
-@defaultTag(Symbol('jojo'))
+@defaultTag('jojo')
 class ServiceAdapter {
-  /** no parentheses if omit parameters */
+  /** no parentheses if omit parameters. will use defaultTag */
   @synchronized
   async connect() {
     // ...
@@ -187,7 +187,9 @@ class ServiceAdapter {
       const str = 'Hello, ' + text + this.greeting;
       return str;
     },
-    { tag: Symbol('') }
+    /** need to apply same tag if you want to use same queue.
+     * no default tag in this case */
+    { tag: 'jojo' }
   );
 }
 ```
