@@ -1,6 +1,6 @@
 # D4C Queue
 
-Pass a `async` function, a function returning a promise, or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. Besides using a function as a parameter, it also supports to use [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) on your instance method or static methods.
+Pass a `async` function, a promise-returning function or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. Besides using a function as a parameter, it also supports to use [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html)(`@synchronized`) on your instance method or static methods.
 
 ## Features
 
@@ -14,7 +14,7 @@ Pass a `async` function, a function returning a promise, or a normal non-async f
 5. Able to pass arguments and get return value for each task function.
 6. Support Browser and Node.js.
 7. Support TypeScript and JavaScript. Written in TypeScript and its `.d.ts` typing is out of box.
-8. Support `async function`, a function to return `promise`, and a `normal non-async` function.
+8. Support `async function`, a `promise-returning` function, and a `normal non-async` function.
 
 ## Installation
 
@@ -25,13 +25,13 @@ Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package
 ES6:
 
 ```typescript
-import { D4C } from 'd4c-queue';
+import { D4C, dApply, defaultTag, dWrap, synchronized } from 'd4c-queue';
 ```
 
 CommonJS :
 
 ```typescript
-const D4C = require('d4c-queue').D4C;
+const { D4C, dApply, defaultTag, dWrap, synchronized } = require('d4c-queue');
 ```
 
 ### Use latest GitHub code of this library
@@ -132,7 +132,7 @@ Keep in mind that a function will not be enqueued into a task queue even it beco
  * in place 1
  * you can choose to await the result or not.
  */
-const asyncFunResult = await D4C.wrap(asyncFun, { tag: 'queue1' })(
+const asyncFunResult = await dWrap(asyncFun, { tag: 'queue1' })(
   'asyncFun_arg1',
   'asyncFun_arg2'
 );
@@ -142,18 +142,18 @@ const asyncFunResult = await D4C.wrap(asyncFun, { tag: 'queue1' })(
  * it will wait for asyncFun's finishing, then use await to get
  * the new wrapped async function's result.
  */
-const syncFunFunResult = await D4C.wrap(syncFun, { tag: 'queue1' })(
+const syncFunFunResult = await dWrap(syncFun, { tag: 'queue1' })(
   'syncFun_arg1'
 );
 ```
 
-You can use `D4C.apply(someFun, { args:["someFun_arg1"], tag: "queue1"}) instead`.
+You can use `dApply(someFun, { args:["someFun_arg1"], tag: "queue1"}) instead`.
 
 ### Instance usage
 
 ```typescript
 const d4c = new D4C();
-/** then use d4c.iwrap or d4c.iapply like global usage */
+/** then use d4c.wrap or d4c.apply like global usage */
 ```
 
 The only difference is `tag` is a optional parameter, rather than the other usages.
@@ -163,26 +163,26 @@ The only difference is `tag` is a optional parameter, rather than the other usag
 A class will use a unique tag queue of global share queues under the hood
 
 ```typescript
-@D4C.register(Symbol('jojo'))
+@defaultTag(Symbol('jojo'))
 class ServiceAdapter {
   /** no parentheses if omit parameters */
-  @D4C.synchronized
+  @synchronized
   async connect() {
     // ...
   }
 
-  @D4C.synchronized
+  @synchronized
   client_send_message_wait_connect(msg: string) {
     // ...
   }
 
   //** parameters are optional */
-  @D4C.synchronized({ tag: 'world', inheritPreErr: true, noBlockCurr: true })
+  @synchronized({ tag: 'world', inheritPreErr: true, noBlockCurr: true })
   static async staticMethod(text: string) {
     return text;
   }
 
-  arrowFunc_property = D4C.wrap(
+  arrowFunc_property = dWrap(
     async (text: string) => {
       const str = 'Hello, ' + text + this.greeting;
       return str;
@@ -196,7 +196,7 @@ The way on `arrow function property` is a workaround since some issue happen whe
 
 ```typescript
 @autobind
-@D4C.synchronized
+@synchronized
 client_send_message_wait_connect(msg: string) {
   // ...
 }
@@ -238,7 +238,7 @@ send_message(msg: string) {
 
 ```typescript
 /** using Symbol or string as parameter */
-@D4C.register(Symbol('jojo'))
+@defaultTag(Symbol('jojo'))
 class ServiceAdapter {
   async send_message(msg: string) {
     if (this.connectingStatus === 'Connected') {
@@ -252,12 +252,12 @@ class ServiceAdapter {
     }
   }
 
-  @D4C.synchronized
+  @synchronized
   async connect() {
     // ...
   }
 
-  @D4C.synchronized
+  @synchronized
   async client_send_message_wait_connect(msg: string) {
     // ...
   }
@@ -359,28 +359,28 @@ current_function();
 
 ### Decorators:
 
-- public static register(defaultTag: string | symbol)
+- function defaultTag(tag: string | symbol)
 
-This decorator is to supply defaultTag setting and is not necessary if you supply the optional tag in `@D4C.synchronized`.
+This decorator is to supply defaultTag setting and is not necessary if you supply the optional tag in `@synchronized`.
 
 ```typescript
-@D4C.register(Symbol("jojo"))
-@D4C.register("jojo")
+@defaultTag(Symbol("jojo"))
+@defaultTag("jojo")
 ```
 
 Keep in mind that using `string` has a little possibility that others use the same key string and will use the same queue.
 
-- public static synchronized(option?: { inheritPreErr?: boolean; noBlockCurr?: boolean; tag?: string | symbol })
+- function synchronized(option?: { inheritPreErr?: boolean; noBlockCurr?: boolean; tag?: string | symbol })
 
 The tag here can overwrite the default tag from class and applied different queue tag for this method.
 
 example:
 
 ```typescript
-@D4C.synchronized
-@D4C.synchronized()
-@D4C.synchronized({ tag: "world", inheritPreErr: true })
-@D4C.synchronized({ inheritPreErr: true, noBlockCurr: true })
+@synchronized
+@synchronized()
+@synchronized({ tag: "world", inheritPreErr: true })
+@synchronized({ inheritPreErr: true, noBlockCurr: true })
 
 ```
 
@@ -388,26 +388,27 @@ See [class-and-method-decorators-usage](#class-and-method-decorators-usage)
 
 ### Global usage
 
-- D4C.wrap
+- dWrap
 
 ```typescript
-public static wrap<T extends IAnyFn>(
+function dWrap<T extends IAnyFn>(
   func: T,
   option: {
     tag?: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
-  })
+  }
+);
 ```
 
-If original func is a async function, `D4C.wrap` will return `a async function` whose parameters and returned value's type (a.k.a. `Promise`) and value are same as original func.
+If original func is a async function, `dWrap` will return `a async function` whose parameters and returned value's type (a.k.a. `Promise`) and value are same as original func.
 
-If original func is a normal non async function, `D4C.wrap` will return `a async function` whose parameters are the same as the original function, and returned value's promise type is the same as original func. Which means it becomes a awaitable async function, besides queueing.
+If original func is a normal non async function, `dWrap` will return `a async function` whose parameters are the same as the original function, and returned value's promise generic type is the same as original func. Which means it becomes a awaitable async function, besides queueing.
 
-- D4C.apply
+- dApply
 
 ```typescript
-public static apply<T extends IAnyFn>(
+function dApply<T extends IAnyFn>(
   func: T,
   option: {
     tag?: string | symbol;
@@ -415,20 +416,20 @@ public static apply<T extends IAnyFn>(
     noBlockCurr?: boolean;
     args?: Parameters<typeof func>;
   }
-)
+);
 ```
 
-Almost the same as `D4C.wrap` but just directly executing the original function call, e.g.
+Almost the same as `dWrap` but just directly executing the original function call, e.g.
 
 ```typescript
-const newFunc = D4C.wrap(asyncFun, { tag: "queue1" })
+const newFunc = dWrap(asyncFun, { tag: "queue1" })
 newFunc("asyncFun_arg1", "asyncFun_arg2");)
 ```
 
 becomes
 
 ```typescript
-D4C.apply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' });
+dApply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' });
 ```
 
 ### Instance usage
@@ -437,13 +438,13 @@ Make a instance first, there is a default tag so that setting a unique tag for a
 
 ```typescript
 const d4c = new D4C();
-/** then d4.iwrap or d4.iapply*/
+/** then d4.wrap or d4.apply*/
 ```
 
-- iwrap
+- wrap
 
 ```typescript
-public iwrap<T extends IAnyFn>(
+public wrap<T extends IAnyFn>(
   func: T,
   option?: {
     tag?: string | symbol;
@@ -453,12 +454,12 @@ public iwrap<T extends IAnyFn>(
 )
 ```
 
-Same as static method `D4C.wrap` except making a instance first.
+Same as public function `dWrap` except making a instance first.
 
-- iapply
+- apply
 
 ```typescript
-public iapply<T extends IAnyFn>(
+public apply<T extends IAnyFn>(
   func: T,
   option?: {
     tag?: string | symbol;
@@ -469,6 +470,6 @@ public iapply<T extends IAnyFn>(
 )
 ```
 
-Same as static method `D4C.apply` except making a instance first.
+Same as public function `dApply` except making a instance first.
 
 You can checkout the unit test file, https://github.com/grimmer0125/d4c-queue/blob/master/src/lib/D4C.spec.ts.

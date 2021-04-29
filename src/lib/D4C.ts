@@ -25,8 +25,6 @@ type TaskQueuesType = Map<string | symbol, TaskQueue>;
 type IAnyFn = (...args: any[]) => Promise<any> | any;
 type MethodDecoratorParameter = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
 
-
-
 export const errMsg = {
   ClassDecorator:
     'Only non-null or non-empty string queueTag is valid in option when using share queues',
@@ -43,6 +41,52 @@ class PreviousError extends Error {
   }
 }
 
+export function defaultTag(tag: string | symbol): ClassDecorator {
+  return D4C.register(tag);
+}
+export function synchronized(
+  target: any,
+  propertyKey: string, // usually it is the name of the method
+  descriptor: PropertyDescriptor): void;
+export function synchronized(
+  option?: {
+    tag?: string | symbol;
+    inheritPreErr?: boolean;
+    noBlockCurr?: boolean;
+  }): MethodDecoratorParameter;
+export function synchronized(
+  targetOrOption?: any,
+  propertyKey?: string,
+  descriptor?: PropertyDescriptor
+): void | MethodDecoratorParameter {
+  return D4C.synchronized(targetOrOption, propertyKey, descriptor);
+}
+
+export function dWrap<T extends IAnyFn>(
+  func: T,
+  option: {
+    tag?: string | symbol;
+    inheritPreErr?: boolean;
+    noBlockCurr?: boolean;
+  }
+): (
+    ...args: Parameters<typeof func>
+  ) => Promise<Unwrap<typeof func>> {
+  return D4C.wrap(func, option);
+}
+
+export function dApply<T extends IAnyFn>(
+  func: T,
+  option: {
+    tag?: string | symbol;
+    inheritPreErr?: boolean;
+    noBlockCurr?: boolean;
+    args?: Parameters<typeof func>;
+  }
+): Promise<Unwrap<typeof func>> {
+  return D4C.apply(func, option);
+}
+
 const classDecoratorKey = Symbol('D4C');
 export class D4C {
   static queues: TaskQueuesType = new Map<string | symbol, TaskQueue>();
@@ -53,7 +97,7 @@ export class D4C {
     this.queues = new Map<string | symbol, TaskQueue>();
   }
 
-  public static register(defaultTag: string | symbol): ClassDecorator {
+  static register(defaultTag: string | symbol): ClassDecorator {
     if (!defaultTag) {
       throw new Error(errMsg.ClassDecorator);
     }
@@ -63,17 +107,17 @@ export class D4C {
     };
   }
 
-  public static synchronized(
+  static synchronized(
     target: any,
     propertyKey: string, // usually it is the name of the method
     descriptor: PropertyDescriptor): void;
-  public static synchronized(
+  static synchronized(
     option?: {
       tag?: string | symbol;
       inheritPreErr?: boolean;
       noBlockCurr?: boolean;
     }): MethodDecoratorParameter;
-  public static synchronized(
+  static synchronized(
     targetOrOption?: any,
     propertyKey?: string,
     descriptor?: PropertyDescriptor
@@ -144,7 +188,7 @@ export class D4C {
     }
   }
 
-  public static apply<T extends IAnyFn>(
+  static apply<T extends IAnyFn>(
     func: T,
     option: {
       tag?: string | symbol;
@@ -157,7 +201,7 @@ export class D4C {
     return res;
   }
 
-  public static wrap<T extends IAnyFn>(
+  static wrap<T extends IAnyFn>(
     func: T,
     option: {
       tag?: string | symbol;
@@ -173,7 +217,7 @@ export class D4C {
     return D4C._q(null, func, option);
   }
 
-  public iapply<T extends IAnyFn>(
+  apply<T extends IAnyFn>(
     func: T,
     option?: {
       tag?: string | symbol;
@@ -182,11 +226,11 @@ export class D4C {
       args?: Parameters<typeof func>;
     }
   ): Promise<Unwrap<typeof func>> {
-    const resp = this.iwrap(func, option).apply(null, option.args);
+    const resp = this.wrap(func, option).apply(null, option.args);
     return resp;
   }
 
-  public iwrap<T extends IAnyFn>(
+  wrap<T extends IAnyFn>(
     func: T,
     option?: {
       tag?: string | symbol;
@@ -202,7 +246,7 @@ export class D4C {
     return D4C._q(this.queues, func, option);
   }
 
-  static _q<T extends IAnyFn>(
+  private static _q<T extends IAnyFn>(
     queues: TaskQueuesType,
     func: T,
     option?: {
