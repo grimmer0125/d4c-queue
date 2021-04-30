@@ -1,12 +1,12 @@
 # D4C Queue
 
-Pass a `async` function, a promise-returning function or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. Besides using a function as a parameter, it also supports to use [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html)(`@synchronized`) on your instance method or static methods.
+Pass a `async` function, a promise-returning function or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. You can use global function or instance of D4C (e.g, `const d4c = new D4C(); d4c.apply(async_fun1);`). Even it support [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) (`@synchronized`) on your instance method or static methods.
 
 ## Features
 
 1. Three usages
-   1. Instance
-   2. Global
+   1. Global
+   2. Instance
    3. Class and method decorator (also for static methods)
 2. Use third party library [Denque](https://www.npmjs.com/package/denque) to implement a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError), if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
@@ -39,16 +39,6 @@ const { D4C, dApply, dWrap, synchronized } = require('d4c-queue');
 
 It is possible to use the `module` build with CommonJS require syntax in TypeScript or other build tools.
 
-### Use latest GitHub code of this library
-
-1. git clone this repo
-2. in cloned project folder, `yarn link`
-3. `yarn test` or `yarn build`
-4. in your project, `yarn link d4c-queue`. Do above ES6/CommonJS import to start to use.
-5. in your project, `yarn unlink d4c-queue` to uninstall.
-
-The development environment of this library is Node.js v15.14.0 & Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules. [typescript-starter](https://github.com/bitjson/typescript-starter) is used to generate two builds, `main` and `module` via its setting.
-
 ### Extra optional steps if you want to use decorators from this library
 
 Keep in mind that `decorators` and `Metadata` are JavaScript proposals and may vary in the future.
@@ -74,19 +64,9 @@ You can use Babel to support decorators, install `@babel/plugin-proposal-decorat
 
 For the users using **Create React App** JavaScript version, you can either use `eject` or [craco](https://github.com/gsoft-inc/craco) to customize your babel setting. Using create React App TypeScript Version just needs to modify `tsconfig.json.`
 
-See [babel.config.json](#babel.config.json) in [Appendix](#Appendix)
+See [babel.config.json](#babelconfigjson) in [Appendix](#Appendix)
 
-To use **craco**, follow its site
-
-1. `yarn add @craco/craco`
-2. Replace `react-scripts` with `craco` in `package.json`
-3. `yarn add @babel/preset-env @babel/plugin-proposal-decorators @babel/plugin-proposal-class-properties babel-plugin-transform-typescript-metadata -D`
-4. Touch `craco.config.js` and modify its content as the following
-5. Then just `yarn start`.
-
-`craco.config.js` (roughly same as `babel.config.json`):
-
-See [craco.config.js](#craco.config.js) in [Appendix](#Appendix)
+To use **craco**, see [CRACO Setting](#craco-setting) in [Appendix](#Appendix)
 
 #### Testing notes
 
@@ -102,7 +82,7 @@ Keep in mind that a function will not be enqueued into a task queue even it beco
 D4C global share queues (global/decorator) :
   tag1: queue1
   tag2: queue2
-D4C instance queues:
+D4C instance queues (1 D4C object):
   tag1: queue1
   tag2: queue2
 ```
@@ -110,6 +90,8 @@ D4C instance queues:
 For decorator case, it is using global share queue since we need to support static method.
 
 ### Global usage
+
+You need to explicitly specify the tag field, not like the other usages.
 
 ```typescript
 /**
@@ -135,12 +117,13 @@ You can use `dApply(someFun, { args:["someFun_arg1"], tag: "queue1"}) instead`.
 
 ### Instance usage
 
+The API is almost the same as global usage, except its tag is optional and their queue system.
+
 ```typescript
 const d4c = new D4C();
-/** then use d4c.wrap or d4c.apply like global usage */
+d4c.apply(func);
+d4c.wrap(func2)();
 ```
-
-The only difference is `tag` is a optional parameter, rather than the other usages.
 
 ### Class and method decorators usage
 
@@ -152,7 +135,7 @@ class ServiceAdapter {
   async connect() {}
 
   @synchronized
-  client_send_message_wait_connect(msg: string) {
+  async client_send_message_wait_connect(msg: string) {
     // ...
   }
 
@@ -398,7 +381,7 @@ function synchronized(option?: {
 });
 ```
 
-The tag here can overwrite the default tag from class and applied different queue tag for this method.
+The tag here can overwrite the default tag from class and **specify different queue** for this method.
 
 Example:
 
@@ -420,7 +403,7 @@ See [class-and-method-decorators-usage](#class-and-method-decorators-usage)
 function dWrap<T extends IAnyFn>(
   func: T,
   option: {
-    tag?: string | symbol;
+    tag: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
   }
@@ -437,7 +420,7 @@ If original func is a normal non async function, `dWrap` will return `a async fu
 function dApply<T extends IAnyFn>(
   func: T,
   option: {
-    tag?: string | symbol;
+    tag: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
     args?: Parameters<typeof func>;
@@ -523,7 +506,17 @@ Same as public function `dApply` except making a instance first.
 }
 ```
 
-### craco.config.js
+### CRACO setting
+
+Follow its site, [craco](https://github.com/gsoft-inc/craco).
+
+1. `yarn add @craco/craco`
+2. Replace `react-scripts` with `craco` in `package.json`
+3. `yarn add @babel/preset-env @babel/plugin-proposal-decorators @babel/plugin-proposal-class-properties babel-plugin-transform-typescript-metadata -D`
+4. Touch `craco.config.js` and modify its content as the following
+5. Then just `yarn start`.
+
+`craco.config.js` (roughly same as `babel.config.json`):
 
 ```javascript
 module.exports = {
@@ -541,3 +534,13 @@ module.exports = {
   },
 };
 ```
+
+### Use latest GitHub code of this library
+
+1. git clone this repo
+2. in cloned project folder, `yarn link`
+3. `yarn test` or `yarn build`
+4. in your project, `yarn link d4c-queue`. Do above ES6/CommonJS import to start to use.
+5. in your project, `yarn unlink d4c-queue` to uninstall.
+
+The development environment of this library is Node.js v15.14.0 & Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules. [typescript-starter](https://github.com/bitjson/typescript-starter) is used to generate two builds, `main` and `module` via its setting.
