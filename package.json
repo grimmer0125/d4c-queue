@@ -1,6 +1,6 @@
 {
   "name": "d4c-queue",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "A task queue enenques sync/async/promise-returning functions with arguments and does them sequentially. Get return value by await. Support decorator, TypeScript, JavaScript, browser & Node.js.",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
