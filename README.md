@@ -272,7 +272,7 @@ testRaceCondition();
 
 `func2` will be executed when `fun1` is not finished.
 
-In backend, the practical example is to compare `Async/await` in [Express](https://expressjs.com/) framework and [Apollo](https://www.apollographql.com/docs/apollo-server/)/[NestJS](https://nestjs.com/) frameworks. NestJS is using Apollo and they have a different implementation than ExpressJS.
+In backend, the practical example is to compare `Async/await` in [Express](https://expressjs.com/) framework and [Apollo](https://www.apollographql.com/docs/apollo-server/)/[NestJS](https://nestjs.com/) frameworks. [NestJS' GraphQL part](https://docs.nestjs.com/graphql/quick-start) is using Apollo and they have a different implementation than ExpressJS. [NestJS' Restful part](https://docs.nestjs.com/controllers) is the same as ExpressJS.
 
 No race condition on two API call in `Express`, any API will be executed one by one. After async handler callback function is finished, another starts to be executed.
 
@@ -297,7 +297,38 @@ const resolvers = {
 };
 ```
 
-Two Apollo GraphQL queries/mutations may be executed concurrently, not like Express. This has advantage and disadvantage. If you need to worry about the possible race condition, you can consider this `d4c-queue` library, or `Database transaction` or [async-mutex](https://www.npmjs.com/package/async-mutex).
+Two Apollo GraphQL queries/mutations may be executed concurrently, not like Express. This has advantage and disadvantage. If you need to worry about the possible race condition, you can consider this `d4c-queue` library, or `Database transaction` or [async-mutex](https://www.npmjs.com/package/async-mutex). **Of course you do not need to apply this library on top API endpoint always, just apply on the place you worry about.**
+
+#### NestJS GraphQL synchronized resolver example with this d4c-queue
+
+The below shows how to make `hello query` become `synchronized`. Keep in mind that `@synchronized` should be below `@Query`.
+
+```typescript
+import { Query } from '@nestjs/graphql';
+import { synchronized } from 'd4c-queue';
+
+function delay() {
+  return new Promise<string>(function (resolve, reject) {
+    setTimeout(function () {
+      resolve('world');
+    }, 10 * 1000);
+  });
+}
+
+export class TestsResolver {
+  @Query((returns) => String)
+  /** without @synchronized, two resolver may print 1/2 1/2 2/2 2/2
+   *  with @synchronized, it prints: 1/2 2/2 2/2 2/2
+   */
+  @synchronized
+  async hello() {
+    console.log('hello graphql resolver part: 1/2');
+    const resp = await delay();
+    console.log('hello graphql resolver part: 2/2');
+    return resp;
+  }
+}
+```
 
 #### Need multiple concurrency tasks?
 
