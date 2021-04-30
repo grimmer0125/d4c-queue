@@ -41,6 +41,7 @@ class PreviousError extends Error {
   }
 }
 
+// TODO: add some deprecated note in comment (maybel typedoc?), only useful for arrow function 
 export function defaultTag(tag: string | symbol): ClassDecorator {
   return D4C.register(tag);
 }
@@ -88,9 +89,9 @@ export function dApply<T extends IAnyFn>(
 }
 
 const classDecoratorKey = Symbol('D4C');
+const methodDecoratorKey = Symbol('SBR');
 export class D4C {
   static queues: TaskQueuesType = new Map<string | symbol, TaskQueue>();
-
   queues: TaskQueuesType;
 
   constructor() {
@@ -123,6 +124,14 @@ export class D4C {
     descriptor?: PropertyDescriptor
   ): void | MethodDecoratorParameter {
 
+    function injectMethodDefaultTag(prototype) {
+      const tag = Reflect.getMetadata(methodDecoratorKey, prototype);
+      if (!tag) {
+        const defaultTag = Symbol("jojo");
+        Reflect.defineMetadata(methodDecoratorKey, defaultTag, prototype);
+      }
+    }
+
     /**
      * problem is target in instance method & option both are object 
      * so the below check is complicated
@@ -147,6 +156,7 @@ export class D4C {
       }
       return false;
     }
+
     if (checkIfOptionObject(targetOrOption)) {
       /** parentheses case */
       return function (
@@ -154,18 +164,24 @@ export class D4C {
         propertyKey: string,
         descriptor: PropertyDescriptor
       ) {
+
+        const prototype = target.prototype ?? target;
+        injectMethodDefaultTag(prototype);
         const originalMethod = descriptor.value;
         const newFunc = D4C._q(
           null,
           originalMethod,
           targetOrOption,
-          target.prototype ?? target
+          prototype
         );
         descriptor.value = newFunc;
       };
     } else {
       /** no parentheses case */
       const type = typeof targetOrOption;
+
+      const prototype = targetOrOption.prototype ?? targetOrOption
+      injectMethodDefaultTag(prototype);
 
       /** 
        * static method decorator case: target type is constructor function. use target.prototype
@@ -179,7 +195,7 @@ export class D4C {
           null,
           originalMethod,
           {},
-          targetOrOption.prototype ?? targetOrOption
+          prototype
         );
         descriptor.value = newFunc
       } else {
@@ -286,12 +302,17 @@ export class D4C {
           if (classDefaultTag) {
             tag = classDefaultTag;
           } else {
-            throw new Error(errMsg.noSynchronizedAvailableOK)
+            const defaultClassTag = Reflect.getMetadata(methodDecoratorKey, prototype);
+            if (!defaultClassTag) {
+              console.log("noSynchronizedAvailableOK, should not happen")
+              throw new Error(errMsg.noSynchronizedAvailableOK)
+            }
+            tag = defaultClassTag;
           }
+        } else {
+          /** instance case: use default tag */
+          tag = classDecoratorKey;
         }
-
-        /** instance case: use default tag */
-        tag = classDecoratorKey;
       }
 
 

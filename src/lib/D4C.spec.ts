@@ -33,31 +33,44 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
 //     6. with no class register case [below is tested]
 // - add test for normal non async member/static method 
 
-test("insert a class's method via decorator to make a task in global queue - no tag error", async (t) => {
-  let error;
-  try {
-    class TestController {
-      greeting: string;
-      constructor(message: string) {
-        this.greeting = message;
-      }
 
-      @synchronized
-      async greet(text: string) {
-        const str = 'Hello, ' + text + this.greeting;
-        return str;
-      }
+test("insert a class's method via decorator, two class w/ no defaultTag decorator", async (t) => {
+  class TestController {
+    greeting: string;
+    constructor(message: string) {
+      this.greeting = message;
     }
 
-    /** instance method  */
-    const test = new TestController('kitty');
-    const job = test.greet(fixture2);
-    const resp = await job;
-    t.is(resp, 'Hello, 2kitty');
-  } catch (err) {
-    error = err
+    @synchronized
+    async greet(text: string) {
+      const str = 'Hello, ' + text + this.greeting;
+      return str;
+    }
   }
-  t.is(error.message, errMsg.noSynchronizedAvailableOK);
+
+  class TestController2 {
+    greeting: string;
+    constructor(message: string) {
+      this.greeting = message;
+    }
+
+    @synchronized
+    async greet(text: string) {
+      const str = 'Hello, ' + text + this.greeting;
+      return str;
+    }
+  }
+
+  /** instance method  */
+  const test = new TestController('kitty');
+  const job = test.greet(fixture2);
+  const resp = await job;
+  t.is(resp, 'Hello, 2kitty');
+
+  const test2 = new TestController2('kitty');
+  const job2 = test2.greet(fixture2);
+  const resp2 = await job2;
+  t.is(resp2, 'Hello, 2kitty');
 });
 
 test("insert a class's method via decorator to make a task in global queue - no parentheses", async (t) => {

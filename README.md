@@ -28,13 +28,13 @@ Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package
 **ES6 import**
 
 ```typescript
-import { D4C, dApply, defaultTag, dWrap, synchronized } from 'd4c-queue';
+import { D4C, dApply, dWrap, synchronized } from 'd4c-queue';
 ```
 
 **CommonJS**
 
 ```typescript
-const { D4C, dApply, defaultTag, dWrap, synchronized } = require('d4c-queue');
+const { D4C, dApply, dWrap, synchronized } = require('d4c-queue');
 ```
 
 It is possible to use the `module` build with CommonJS require syntax in TypeScript or other build tools.
@@ -72,28 +72,9 @@ Modify your tsconfig.json to include the following settings
 
 You can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing `babel.config.json` and I use `babel-node index.js` to test
 
-```json
-{
-  "presets": ["@babel/preset-env"],
-  "plugins": [
-    [
-      "@babel/plugin-proposal-decorators",
-      {
-        "legacy": true
-      }
-    ],
-    [
-      "@babel/plugin-proposal-class-properties",
-      {
-        "loose": true
-      }
-    ],
-    ["babel-plugin-transform-typescript-metadata"]
-  ]
-}
-```
-
 For the users using **Create React App** JavaScript version, you can either use `eject` or [craco](https://github.com/gsoft-inc/craco) to customize your babel setting. Using create React App TypeScript Version just needs to modify `tsconfig.json.`
+
+See [babel.config.json](#babel.config.json) in [Appendix](#Appendix)
 
 To use **craco**, follow its site
 
@@ -105,22 +86,7 @@ To use **craco**, follow its site
 
 `craco.config.js` (roughly same as `babel.config.json`):
 
-```javascript
-module.exports = {
-  babel: {
-    presets: [['@babel/preset-env']],
-    plugins: [
-      ['@babel/plugin-proposal-decorators', { legacy: true }],
-      ['@babel/plugin-proposal-class-properties', { loose: true }],
-      ['babel-plugin-transform-typescript-metadata'],
-    ],
-    loaderOptions: {},
-    loaderOptions: (babelLoaderOptions, { env, paths }) => {
-      return babelLoaderOptions;
-    },
-  },
-};
-```
+See [craco.config.js](#craco.config.js) in [Appendix](#Appendix)
 
 #### Testing notes
 
@@ -303,15 +269,16 @@ In backend, the practical example is to compare `Async/await` in [Express](https
 No race condition on two API call in `Express`, any API will be executed one by one. After async handler callback function is finished, another starts to be executed.
 
 ```typescript
-/** express case*/
+/** Express case */
 app.post('/testing', async (req, res) => {
   // Do something here
 });
 ```
 
-However, race condition may happen on two API call in `Apollo`/`NestJS`:
+However, race condition may happen on two API call in `Apollo`/`NestJS`.
 
 ```typescript
+/** Apollo server case */
 const resolvers = {
   Mutation: {
     orderBook: async (_, { email, book }, { dataSources }) => {},
@@ -490,4 +457,46 @@ public apply<T extends IAnyFn>(
 
 Same as public function `dApply` except making a instance first.
 
-You can checkout the unit test file, https://github.com/grimmer0125/d4c-queue/blob/master/src/lib/D4C.spec.ts.
+## Appendix
+
+### babel.config.json
+
+```json
+{
+  "presets": ["@babel/preset-env"],
+  "plugins": [
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ],
+    [
+      "@babel/plugin-proposal-class-properties",
+      {
+        "loose": true
+      }
+    ],
+    ["babel-plugin-transform-typescript-metadata"]
+  ]
+}
+```
+
+### craco.config.js
+
+```javascript
+module.exports = {
+  babel: {
+    presets: [['@babel/preset-env']],
+    plugins: [
+      ['@babel/plugin-proposal-decorators', { legacy: true }],
+      ['@babel/plugin-proposal-class-properties', { loose: true }],
+      ['babel-plugin-transform-typescript-metadata'],
+    ],
+    loaderOptions: {},
+    loaderOptions: (babelLoaderOptions, { env, paths }) => {
+      return babelLoaderOptions;
+    },
+  },
+};
+```
