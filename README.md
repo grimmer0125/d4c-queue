@@ -1,6 +1,6 @@
 # D4C Queue
 
-Pass a `async` function, a promise-returning function or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. You can use global function or instance of D4C (e.g, `const d4c = new D4C(); d4c.apply(async_fun1);`). Even it support [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) (`@synchronized`) on your instance method or static methods.
+Pass a `async` function, a promise-returning function or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. You can use global function or instance of D4C (e.g, `const d4c = new D4C(); d4c.apply(async_fun1);`). It also supports [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) (`@synchronized`) on your instance method or static methods.
 
 ## Features
 
@@ -168,7 +168,7 @@ class ServiceAdapter {
 }
 ```
 
-Using decorators on `arrow function property` does not work so the current way is a workaround. If you need the effect of arrow function, you can try to bind by yourself or you can consider [autobind-decorator](https://www.npmjs.com/package/autobind-decorator)
+Using decorators on `arrow function property` does not work so the current way is a workaround. If you need the effect of arrow function, alternatively you can try to bind by yourself or consider [autobind-decorator](https://www.npmjs.com/package/autobind-decorator)
 
 ```typescript
 @autobind
