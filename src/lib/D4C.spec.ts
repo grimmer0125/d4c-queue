@@ -160,7 +160,7 @@ test('insert a task in global queue, tag is symbol', async (t) => {
 test('insert a task in global queue with invalid empty tag', async (t) => {
   let error;
   try {
-    await dWrap(funcAsync, {});
+    await dWrap(funcAsync, { tag: "" });
   } catch (err) {
     error = err;
   }

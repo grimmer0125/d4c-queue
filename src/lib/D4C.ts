@@ -66,7 +66,7 @@ export function synchronized(
 export function dWrap<T extends IAnyFn>(
   func: T,
   option: {
-    tag?: string | symbol;
+    tag: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
   }
@@ -79,7 +79,7 @@ export function dWrap<T extends IAnyFn>(
 export function dApply<T extends IAnyFn>(
   func: T,
   option: {
-    tag?: string | symbol;
+    tag: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
     args?: Parameters<typeof func>;
@@ -207,7 +207,7 @@ export class D4C {
   static apply<T extends IAnyFn>(
     func: T,
     option: {
-      tag?: string | symbol;
+      tag: string | symbol;
       inheritPreErr?: boolean;
       noBlockCurr?: boolean;
       args?: Parameters<typeof func>;
@@ -220,7 +220,7 @@ export class D4C {
   static wrap<T extends IAnyFn>(
     func: T,
     option: {
-      tag?: string | symbol;
+      tag: string | symbol;
       inheritPreErr?: boolean;
       noBlockCurr?: boolean;
     }
