@@ -96,6 +96,19 @@ While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metad
 
 Keep in mind that a function will not be enqueued into a task queue even it becomes a new function after wrapping. A task will be enqueued only when it is executed.
 
+### Designed queue system is
+
+```
+D4C global share queues (global/decorator) :
+  tag1: queue1
+  tag2: queue2
+D4C instance queues:
+  tag1: queue1
+  tag2: queue2
+```
+
+For decorator case, it is using global share queue since we need to support static method.
+
 ### Global usage
 
 ```typescript
@@ -131,16 +144,12 @@ The only difference is `tag` is a optional parameter, rather than the other usag
 
 ### Class and method decorators usage
 
-A class will use a unique tag queue of global share queues under the hood
+A class will use a unique tag queue of global share queues under the hood. Its default tag is hidden and will be automatically specified by the library.
 
 ```typescript
-@defaultTag('jojo')
 class ServiceAdapter {
-  /** no parentheses if omit parameters. will use defaultTag */
   @synchronized
-  async connect() {
-    // ...
-  }
+  async connect() {}
 
   @synchronized
   client_send_message_wait_connect(msg: string) {
@@ -152,20 +161,31 @@ class ServiceAdapter {
   static async staticMethod(text: string) {
     return text;
   }
+}
+```
 
+To use arrow function property, you must use `@defaultTag(someUniqueKey)` and use the same key in `arrowFunc_property = dWrap(func, {tag: someUniqueKey})` like below,
+
+```typescript
+const uniqueKey = Symbol('jojo');
+/**
+ * only use @defaultTag when you need arrow function property,
+ * otherwise it is deprecated.
+ */
+@defaultTag(uniqueKey)
+class ServiceAdapter {
   arrowFunc_property = dWrap(
     async (text: string) => {
-      const str = 'Hello, ' + text + this.greeting;
+      const str = 'Hello, ' + text;
       return str;
     },
-    /** need to apply same tag if you want to use same queue.
-     * no default tag in this case */
-    { tag: 'jojo' }
+    /** need to apply same tag if you want to use same queue. */
+    { tag: uniqueKey }
   );
 }
 ```
 
-The way on `arrow function property` is a workaround since some issue happen when decorator apply on arrow function property. If you need the effect of arrow function, you can try to bind by yourself or you can consider https://www.npmjs.com/package/autobind-decorator
+Using decorators on `arrow function property` does not work so the current way is a workaround. If you need the effect of arrow function, you can try to bind by yourself or you can consider [autobind-decorator](https://www.npmjs.com/package/autobind-decorator)
 
 ```typescript
 @autobind
@@ -173,17 +193,6 @@ The way on `arrow function property` is a workaround since some issue happen whe
 client_send_message_wait_connect(msg: string) {
   // ...
 }
-```
-
-### Designed queue system is
-
-```
-D4C global share queues (global/decorator) :
-  tag1: queue1
-  tag2: queue2
-D4C instance queues:
-  tag1: queue1
-  tag2: queue2
 ```
 
 ## Motivation and more detailed user scenario
@@ -208,7 +217,6 @@ send_message(msg: string) {
 
 ```typescript
 /** using Symbol or string as parameter */
-@defaultTag(Symbol('jojo'))
 class ServiceAdapter {
   async send_message(msg: string) {
     if (this.connectingStatus === 'Connected') {
@@ -328,9 +336,13 @@ current_function();
 
 ## API
 
+Keep in mind that using `string` for a `tag` has a little possibility that others use the same key string and will use the same queue.
+
 ### Decorators:
 
 - defaultTag
+
+**It is deprecated**. Only use @defaultTag when you need arrow function property. A class does not need to explicitly specify a defaultTag anymore.
 
 ```typescript
 function defaultTag(tag: string | symbol);
@@ -343,9 +355,7 @@ Example:
 @defaultTag("jojo")
 ```
 
-This decorator is to supply defaultTag setting and is not necessary if you supply the optional tag in `@synchronized`.
-
-Keep in mind that using `string` has a little possibility that others use the same key string and will use the same queue.
+This decorator is to supply defaultTag setting manually.
 
 - synchronized
 
