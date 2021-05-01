@@ -77,7 +77,7 @@ Keep in mind that a function will not be enqueued into a task queue even it beco
 
 ### Designed queue system is
 
-Each queue is isolated with the others.
+Each queue is isolated with the others. The default queue in instance method queues is something like `@synchronized(self)` in other language.
 
 ```
 D4C queues (decorator) injected into your class:
