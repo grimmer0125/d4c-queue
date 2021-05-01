@@ -1,13 +1,12 @@
 # D4C Queue
 
-Pass a `async` function, a promise-returning function or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await` if need. You can use global function or instance of D4C (e.g, `const d4c = new D4C(); d4c.apply(async_fun1);`). It also supports [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) (`@synchronized`) on your instance method or static methods.
+Pass a `async` function, a promise-returning function or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await`. It also supports [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) (`@synchronized`) on your instance method or static methods.
 
 ## Features
 
-1. Three usages
-   1. Global
-   2. Instance
-   3. Class and method decorator (also for static methods)
+1. Two usages
+   1. D4C Instance
+   2. Class and method decorator (also for static methods) on your classes
 2. Use third party library [Denque](https://www.npmjs.com/package/denque) to implement a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError), if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
 4. Optional parameter, `noBlockCurr` to forcibly execute the first task in the queue in the next tick of the event loop. This is useful if you pass a normal non-async function as the first task but do not want it to block the current event loop.
@@ -28,13 +27,13 @@ Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package
 **ES6 import**
 
 ```typescript
-import { D4C, dApply, dWrap, synchronized } from 'd4c-queue';
+import { D4C, injectQ, synchronized } from 'd4c-queue';
 ```
 
 **CommonJS**
 
 ```typescript
-const { D4C, dApply, dWrap, synchronized } = require('d4c-queue');
+const { D4C, injectQ, synchronized } = require('d4c-queue');
 ```
 
 It is possible to use the `module` build with CommonJS require syntax in TypeScript or other build tools.
@@ -62,11 +61,11 @@ Modify your tsconfig.json to include the following settings
 
 You can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing `babel.config.json` and I use `babel-node index.js` to test
 
-For the users using **Create React App** JavaScript version, you can either use `eject` or [craco](https://github.com/gsoft-inc/craco) to customize your babel setting. Using create React App TypeScript Version just needs to modify `tsconfig.json.`
+For the users using **Create React App** JavaScript version, you can either use `eject` or [CRACO](https://github.com/gsoft-inc/craco) to customize your babel setting. Using create React App TypeScript Version just needs to modify `tsconfig.json.`
 
 See [babel.config.json](#babelconfigjson) in [Appendix](#Appendix)
 
-To use **craco**, see [CRACO Setting](#craco-setting) in [Appendix](#Appendix)
+To use **CRACO**, see [CRACO Setting](#craco-setting) in [Appendix](#Appendix)
 
 #### Testing notes
 
@@ -78,27 +77,34 @@ Keep in mind that a function will not be enqueued into a task queue even it beco
 
 ### Designed queue system is
 
+Each queue is isolated with the others.
+
 ```
-D4C global share queues (global/decorator) :
-  tag1: queue1
-  tag2: queue2
-D4C instance queues (1 D4C object):
-  tag1: queue1
-  tag2: queue2
+D4C queues (decorator) injected into your class:
+  - instance method queues:
+      - default queue
+      - tag1 queue
+      - tag2 queue
+  - static method queues
+      - default queue
+      - tag1 queue
+      - tag2 queue
+D4C instance queues (per D4C object):
+  - default queue
+  - tag1 queue
+  - tag2 queue
 ```
 
-For decorator case, it is using global share queue since we need to support static method.
-
-### Global usage
-
-You need to explicitly specify the tag field, not like the other usages.
+### Instance usage
 
 ```typescript
+const d4c = new D4C();
+
 /**
  * in place 1
  * you can choose to await the result or not.
  */
-const asyncFunResult = await dWrap(asyncFun, { tag: 'queue1' })(
+const asyncFunResult = await d4c.wrap(asyncFun)(
   'asyncFun_arg1',
   'asyncFun_arg2'
 );
@@ -108,28 +114,19 @@ const asyncFunResult = await dWrap(asyncFun, { tag: 'queue1' })(
  * it will wait for asyncFun's finishing, then use await to get
  * the new wrapped async function's result.
  */
-const syncFunFunResult = await dWrap(syncFun, { tag: 'queue1' })(
-  'syncFun_arg1'
-);
+const syncFunFunResult = await d4c.wrap(syncFun)('syncFun_arg1');
 ```
 
-You can use `dApply(someFun, { args:["someFun_arg1"], tag: "queue1"}) instead`.
-
-### Instance usage
-
-The API is almost the same as global usage, except its tag is optional and their queue system.
+Alternatively, you can use below
 
 ```typescript
-const d4c = new D4C();
-d4c.apply(func);
-d4c.wrap(func2)();
+d4c.apply(syncFun, { args: ['syncFun_arg1'] });
 ```
 
 ### Class and method decorators usage
 
-A class will use a unique tag queue of global share queues under the hood. Its default tag is hidden and will be automatically specified by the library.
-
 ```typescript
+@injectQ
 class ServiceAdapter {
   @synchronized
   async connect() {}
@@ -147,32 +144,13 @@ class ServiceAdapter {
 }
 ```
 
-To use arrow function property, you must use `@defaultTag(someUniqueKey)` and use the same key in `arrowFunc_property = dWrap(func, {tag: someUniqueKey})` like below,
+#### Arrow function
 
-```typescript
-const uniqueKey = Symbol('jojo');
-/**
- * only use @defaultTag when you need arrow function property,
- * otherwise it is deprecated.
- */
-@defaultTag(uniqueKey)
-class ServiceAdapter {
-  arrowFunc_property = dWrap(
-    async (text: string) => {
-      const str = 'Hello, ' + text;
-      return str;
-    },
-    /** need to apply same tag if you want to use same queue. */
-    { tag: uniqueKey }
-  );
-}
-```
-
-Using decorators on `arrow function property` does not work so the current way is a workaround. If you need the effect of arrow function, alternatively you can try to bind by yourself or consider [autobind-decorator](https://www.npmjs.com/package/autobind-decorator)
+Using decorators on `arrow function property` does not work since some limitation. If you need the effect of arrow function, you can bind by yourself (e.g. `this.handleChange = this.handleChange.bind(this);`) or consider [autobind-decorator](https://www.npmjs.com/package/autobind-decorator)
 
 ```typescript
 @autobind
-@synchronized
+@synchronized // should be the second line
 client_send_message_wait_connect(msg: string) {
   // ...
 }
@@ -199,7 +177,7 @@ send_message(msg: string) {
 `Connecting` status is more ambiguous then `Disconnected` status. Now you can use a task queue to solve them. E.g.,
 
 ```typescript
-/** using Symbol or string as parameter */
+@injectQ
 class ServiceAdapter {
   async send_message(msg: string) {
     if (this.connectingStatus === 'Connected') {
@@ -350,26 +328,18 @@ current_function();
 
 ## API
 
-Keep in mind that using `string` for a `tag` has a little possibility that others use the same key string and will use the same queue.
-
 ### Decorators:
 
-- defaultTag
+- @injectQ
 
-**It is deprecated**. Only use @defaultTag when you need arrow function property. A class does not need to explicitly specify a defaultTag anymore.
-
-```typescript
-function defaultTag(tag: string | symbol);
-```
+It is used to inject two D4C queue system in your class.
 
 Example:
 
 ```typescript
-@defaultTag(Symbol("jojo"))
-@defaultTag("jojo")
+@injectQ
+class TestController {}
 ```
-
-This decorator is to supply defaultTag setting manually.
 
 - synchronized
 
@@ -395,52 +365,6 @@ Example:
 
 See [class-and-method-decorators-usage](#class-and-method-decorators-usage)
 
-### Global usage
-
-- dWrap
-
-```typescript
-function dWrap<T extends IAnyFn>(
-  func: T,
-  option: {
-    tag: string | symbol;
-    inheritPreErr?: boolean;
-    noBlockCurr?: boolean;
-  }
-);
-```
-
-If original func is a async function, `dWrap` will return `a async function` whose parameters and returned value's type (a.k.a. `Promise`) and value are same as original func.
-
-If original func is a normal non async function, `dWrap` will return `a async function` whose parameters are the same as the original function, and returned value's promise generic type is the same as original func. Which means it becomes a awaitable async function, besides queueing.
-
-- dApply
-
-```typescript
-function dApply<T extends IAnyFn>(
-  func: T,
-  option: {
-    tag: string | symbol;
-    inheritPreErr?: boolean;
-    noBlockCurr?: boolean;
-    args?: Parameters<typeof func>;
-  }
-);
-```
-
-Almost the same as `dWrap` but just directly executing the original function call, e.g.
-
-```typescript
-const newFunc = dWrap(asyncFun, { tag: "queue1" })
-newFunc("asyncFun_arg1", "asyncFun_arg2");)
-```
-
-becomes
-
-```typescript
-dApply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' });
-```
-
 ### Instance usage
 
 Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional.
@@ -463,7 +387,9 @@ public wrap<T extends IAnyFn>(
 )
 ```
 
-Same as public function `dWrap` except making a instance first.
+If original func is a async function, `wrap` will return `a async function` whose parameters and returned value's type (a.k.a. `Promise`) and value are same as original func.
+
+If original func is a normal non async function, `wrap` will return `a async function` whose parameters are the same as the original function, and returned value's promise generic type is the same as original func. Which means it becomes a awaitable async function, besides queueing.
 
 - apply
 
@@ -479,7 +405,18 @@ public apply<T extends IAnyFn>(
 )
 ```
 
-Same as public function `dApply` except making a instance first.
+Almost the same as `wrap` but just directly executing the original function call, e.g.
+
+```typescript
+const newFunc = d4c.wrap(asyncFun, { tag: "queue1" })
+newFunc("asyncFun_arg1", "asyncFun_arg2");)
+```
+
+becomes
+
+```typescript
+d4c.apply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' });
+```
 
 ## Appendix
 

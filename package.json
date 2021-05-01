@@ -13,7 +13,7 @@
     "queue",
     "async",
     "async function",
-    "arrow function",    
+    "arrow function",
     "await",
     "synchronized",
     "synchronization",
@@ -21,16 +21,17 @@
     "mutex",
     "decorators",
     "typescript",
-    "promise", 
-    "sync", 
+    "promise",
+    "sync",
     "javascript",
     "sequential",
     "job",
     "node",
-    "browser", 
-    "apollo", 
+    "browser",
+    "apollo",
     "nestjs"
-  ],  "scripts": {
+  ],
+  "scripts": {
     "build": "run-p build:*",
     "build:main": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
@@ -68,8 +69,10 @@
   "devDependencies": {
     "@ava/typescript": "^1.1.1",
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
+    "@types/node": "^14.14.41",
     "@typescript-eslint/eslint-plugin": "^4.0.1",
     "@typescript-eslint/parser": "^4.0.1",
+    "autobind-decorator": "^2.4.0",
     "ava": "^3.12.1",
     "codecov": "^3.5.0",
     "cspell": "^4.1.0",
@@ -84,12 +87,11 @@
     "nyc": "^15.1.0",
     "open-cli": "^6.0.1",
     "prettier": "^2.1.1",
+    "reflect-metadata": "^0.1.13",
     "standard-version": "^9.0.0",
     "ts-node": "^9.0.0",
     "typedoc": "^0.19.0",
-    "typescript": "4.2.3",
-    "@types/node": "^14.14.41",
-    "reflect-metadata": "^0.1.13"
+    "typescript": "4.2.3"
   },
   "files": [
     "build/main",
