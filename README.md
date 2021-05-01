@@ -19,7 +19,7 @@ Pass a `async` function, a promise-returning function or a normal non-async func
 
 This package includes two builds.
 
-- ES5 build with CommonJS module for `main` build in package.json.
+- ES6 build (ES2015) with CommonJS module for `main` build in package.json.
 - ES6 build (ES2015) with ES6 module for `module` build. Some tools will follow the `module` field in `package.json`, like Rollup, Webpack, or Parcel. It is good to let build tools can tree-shake your module build to import only the code they need.
 
 Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package.
@@ -75,7 +75,7 @@ While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metad
 
 Keep in mind that a function will not be enqueued into a task queue even it becomes a new function after wrapping. A task will be enqueued only when it is executed.
 
-### Designed queue system is
+### Designed queue system
 
 Each queue is isolated with the others. The default queue in instance method queues is something like `@synchronized(self)` in other language.
 
@@ -258,7 +258,7 @@ const resolvers = {
 };
 ```
 
-Two Apollo GraphQL queries/mutations may be executed concurrently, not like Express. This has advantage and disadvantage. If you need to worry about the possible race condition, you can consider this `d4c-queue` library, or `Database transaction` or [async-mutex](https://www.npmjs.com/package/async-mutex). **Of course you do not need to apply this library on top API endpoint always, just apply on the place you worry about.**
+Two Apollo GraphQL queries/mutations may be executed concurrently, not like Express. This has advantage and disadvantage. If you need to worry about the possible race condition, you can consider this `d4c-queue` library, or `Database transaction` or [async-mutex](https://www.npmjs.com/package/async-mutex). You do not need to apply `d4c-queue` library on top API endpoint always, just apply on the place you worry about.
 
 #### NestJS GraphQL synchronized resolver example with this d4c-queue
 
@@ -341,7 +341,7 @@ Example:
 class TestController {}
 ```
 
-- synchronized
+- @synchronized
 
 ```typescript
 function synchronized(option?: {
