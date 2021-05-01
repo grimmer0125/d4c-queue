@@ -149,8 +149,13 @@ function _q<T extends IAnyFn>(
     if (queues) {
       /** D4C instance case */
       currTaskQueues = queues;
-    } else if (this && this[queueSymbol]) {
+    } else if (this && (this[queueSymbol] || this[queueSymbol] === null)) {
+
       /** Decorator case, using injected queues in user defined objects*/
+      if (this[queueSymbol] === null) {
+        this[queueSymbol] = new Map<string | symbol, TaskQueue>();
+      }
+
       currTaskQueues = this[queueSymbol];
     } else {
       throw new Error(errMsg.missingClassDecoratorError);
@@ -236,13 +241,11 @@ function _q<T extends IAnyFn>(
     ) => Promise<Unwrap<typeof func>>;
 }
 
-export function injectQ<T extends { new(...args: any[]): any }>(constructor: T) {
-  return class extends constructor {
-    static [queueSymbol]: TaskQueuesType = new Map<string | symbol, TaskQueue>();
-    [queueSymbol]: TaskQueuesType = new Map<string | symbol, TaskQueue>();
-  };
+export function injectQ(target: any) {
+  target[queueSymbol] = new Map<string | symbol, TaskQueue>();
+  target.prototype[queueSymbol] = null;
+  return target;
 }
-
 export class D4C {
   queues: TaskQueuesType;
 

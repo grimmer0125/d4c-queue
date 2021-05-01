@@ -276,6 +276,7 @@ function delay() {
   });
 }
 
+@injectQ
 export class TestsResolver {
   @Query((returns) => String)
   /** without @synchronized, two resolver may print 1/2 1/2 2/2 2/2
