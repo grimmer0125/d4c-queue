@@ -445,7 +445,7 @@ d4c.apply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' });
 
 ### CRACO setting
 
-Follow its site, [craco](https://github.com/gsoft-inc/craco).
+Follow its site, [CRACO](https://github.com/gsoft-inc/craco).
 
 1. `yarn add @craco/craco`
 2. Replace `react-scripts` with `craco` in `package.json`
