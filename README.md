@@ -1,5 +1,5 @@
 # D4C Queue
-[![npm version](https://img.shields.io/npm/v/d4c-queue.svg)](https://www.npmjs.com/package/d4c-queue)
+[![npm version](https://img.shields.io/npm/v/d4c-queue.svg)](https://www.npmjs.com/package/d4c-queue) ![example workflow](https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg)
 
 Pass a `async` function, a promise-returning function or a normal non-async function into task queues, with their arguments. Do them sequentially, and get their values by `await`. It also supports [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) (`@synchronized`) on your instance method or static methods.
 
