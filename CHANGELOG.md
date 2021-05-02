@@ -2,4 +2,50 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [1.3.4](https://github.com/grimmer0125/d4c-queue/compare/v1.3.1...v1.3.4) (2021-05-02)
+### 1.3.4 Improve documentation and tests
+### 1.3.0 [Breaking] Improve queue system & API breaking change & back to es6 for main build
+
+Improve the queue system, no more global usage and static queues
+
+Each instance/class is isolated with the others. API is breaking change.
+
+### 1.2.6 Inject default tag, and fix decorator defaultTag not take effect bug
+
+Inject a default tag when class and method decorators both do not assign tag
+
+Also fix a bug that class decorator defaultTag will be overwritten by
+some default tag.
+### 1.2.3 Try to build es5 package for main build
+
+### 1.2.2 Fix exporting
+### 1.2.0 [Breaking] Refactor API and instance method renaming
+
+Change static method to public function:
+```
+D4C.apply -> dApply
+D4C.wrap -> dWrap
+D4C.synchronized -> synchronized
+D4C.register -> defaultTag
+```
+Change instance method naming:
+```
+iapply -> apply
+iwrap -> wrap
+```
+
+### 1.1.5 Fix the bug about optional tag in @D4C.synchronized
+
+### 1.1.4 Add optional tag in @D4C.synchronized and fix 1.1.0 API change bug
+### 1.1.0 [Breaking] API Change 
+
+Change API to let method decorator receive an option object, like global/instance usage.
+Also rename parameter, `nonBlockCurr` to `noBlockCurr`.
+
+### 1.0.0 First release
+
+https://www.npmjs.com/package/d4c-queue/v/1.0.0
+
+Features
+- global usage
+- instance usage
+- decorator usage.
