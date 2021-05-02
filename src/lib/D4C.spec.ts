@@ -31,12 +31,20 @@ const timeout = (seconds: number, target: { str: string }) => {
   );
 };
 
+const timeoutError = (seconds: number, result) => {
+  return new Promise((_, reject) =>
+    setTimeout(() => {
+      reject(result);
+    }, seconds * 1000)
+  );
+};
+
 const immediateFun = (seconds: number, target: { str: string }) => {
   target.str += seconds;
 };
 
 const immediateFunPromise = (seconds: number, target: { str: string }) => {
-  Promise.resolve((target.str += seconds));
+  return Promise.resolve((target.str += seconds));
 };
 
 
@@ -68,7 +76,6 @@ test("Instance usage: pass a class arrow function property", async (t) => {
   t.is(resp2, 'Hello, world!!');
 });
 
-// TODO: add remaining tests for option inheritPreErr, noBlockCurr
 test("Decorator usage", async (t) => {
   @injectQ
   class TestController {
@@ -95,18 +102,28 @@ test("Decorator usage", async (t) => {
       return text;
     }
 
-    @synchronized({})
+    @synchronized
     static async timeout(seconds: number, obj: { str: string }) {
       await timeout(seconds, obj)
     }
 
-    @synchronized({})
+    @synchronized({ inheritPreErr: true })
     async instanceTimeout(seconds: number, obj: { str: string }) {
       await timeout(seconds, obj)
     }
+
+    @synchronized({})
+    async instanceTimeoutError(seconds: number, obj) {
+      await timeoutError(seconds, obj)
+    }
+
+    @synchronized({ noBlockCurr: true })
+    testNoBlockCurr(seconds: number, obj: { str: string }) {
+      obj.str += seconds;
+    }
   }
 
-  /** instance method  */
+  // /** instance method  */
   const testController = new TestController('!!');
   t.is(await testController.greet(fixture2), 'Hello, world!!');
 
@@ -156,7 +173,6 @@ test("Decorator usage", async (t) => {
   await Promise.all([TestController.timeout(0.5, test), TestController2.timeout(0.1, test)]);
   t.is(test.str, '0.10.5')
 
-
   /** test missingClassDecoratorError */
   let error;
   try {
@@ -175,6 +191,7 @@ test("Decorator usage", async (t) => {
   /** test invalid decorator */
   error = null
   try {
+    @injectQ
     class TestController4 {
       @synchronized(({ x: 3 } as any))
       static async greet(text: string) {
@@ -186,6 +203,29 @@ test("Decorator usage", async (t) => {
     error = err;
   }
   t.is(error.message, errMsg.invalidDecoratorOption);
+
+  /** test if option inheritPreErr works on decorator */
+  (async () => {
+    try {
+      await testController.instanceTimeoutError(1, new Error('some_error'))
+    } catch (err) {
+      // console.log(" err by purpose")
+    }
+  })();
+  error = null;
+  try {
+    await testController.instanceTimeout(0.1, { str: "" })
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, 'some_error');
+
+  /** test if option noBlockCurr works on decorator */
+  test = { str: '' }
+  const job = testController.testNoBlockCurr(2, test)
+  test.str = test.str + "1"
+  await job;
+  t.is(test.str, '12');
 });
 
 test('Instance usage: funcAsync, symbol tag', async (t) => {
@@ -253,7 +293,6 @@ test('Instance usage: test if queue really work, execute one by one', async (t) 
   await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
   t.is(test.str, '210.50.20.05');
 
-  // TODO: draw the promise timeout later 
   test = { str: '' };
   const d4c2 = new D4C();
   const fn11 = d4c2.wrap(timeout, { tag: "1" });
@@ -267,7 +306,7 @@ test('Instance usage: test if queue really work, execute one by one', async (t) 
   const fn22 = new D4C().wrap(immediateFun);
   const fn32 = new D4C().wrap(immediateFunPromise);
   await Promise.all([fn12(2, test), fn22(1, test), fn12(0.5, test), fn32(0.2, test), fn12(0.05, test)]);
-  t.is(test.str, '10.220.50.05') // 10.220.50.05
+  t.is(test.str, '10.220.50.05')
 });
 
 test('Instance usage: option noBlockCurr enable, with non-async function', async (t) => {
@@ -293,17 +332,9 @@ test("Instance usage: option inheritPreErr enable: task2 inherit task1's error i
     console.log('dummy fun2');
   };
 
-  const timeout = (seconds, result) => {
-    return new Promise((_, reject) =>
-      setTimeout(() => {
-        reject(result);
-      }, seconds * 1000)
-    );
-  };
-
   const fun1ErrorProducer = async () => {
     try {
-      await d4c.wrap(timeout)(1, new Error('some_error'));
+      await d4c.wrap(timeoutError)(1, new Error('some_error'));
     } catch (_) {
       // console.log(" err by purpose")
     }

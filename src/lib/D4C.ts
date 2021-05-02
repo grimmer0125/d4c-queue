@@ -105,7 +105,6 @@ export function synchronized(
     const type = typeof targetOrOption;
 
     const prototype = targetOrOption?.prototype ?? targetOrOption
-    // injectMethodDefaultTag(prototype);
 
     /** 
      * static method decorator case: target type is constructor function. use target.prototype
