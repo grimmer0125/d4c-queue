@@ -5,10 +5,10 @@ Pass a `async` function, a promise-returning function or a normal non-async func
 ## Features
 
 1. Two usages
-   1. D4C Instance
+   1. D4C instance
    2. Class and method decorator (also for static methods) on your classes
 2. Use third party library [Denque](https://www.npmjs.com/package/denque) to implement a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
-3. Optional parameter, `inheritPreErr` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError), if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
+3. Optional parameter, `inheritPreErr` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`, if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
 4. Optional parameter, `noBlockCurr` to forcibly execute the first task in the queue in the next tick of the event loop. This is useful if you pass a normal non-async function as the first task but do not want it to block the current event loop.
 5. Able to pass arguments and get return value for each task function.
 6. Support Browser and Node.js.
@@ -95,7 +95,7 @@ D4C instance queues (per D4C object):
   - tag2 queue
 ```
 
-### Instance usage
+### D4C instance usage
 
 ```typescript
 const d4c = new D4C();
@@ -366,7 +366,7 @@ Example:
 
 See [class-and-method-decorators-usage](#class-and-method-decorators-usage)
 
-### Instance usage
+### D4C instance usage
 
 Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional.
 
@@ -481,4 +481,4 @@ module.exports = {
 4. in your project, `yarn link d4c-queue`. Do above ES6/CommonJS import to start to use.
 5. in your project, `yarn unlink d4c-queue` to uninstall.
 
-The development environment of this library is Node.js v15.14.0 & Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules. [typescript-starter](https://github.com/bitjson/typescript-starter) is used to generate two builds, `main` and `module` via its setting.
+The development environment of this library is Node.js v15.14.0 & Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules. [typescript-starter](https://github.com/bitjson/typescript-starter) is used to generate two builds, `main` and `module` via its setting. Some example code is in [tests](https://github.com/grimmer0125/d4c-queue/blob/master/src/lib/D4C.spec.ts)

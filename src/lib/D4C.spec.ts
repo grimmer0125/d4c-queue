@@ -49,6 +49,7 @@ const immediateFunPromise = (seconds: number, target: { str: string }) => {
 
 
 test("Instance usage: pass a class arrow function property", async (t) => {
+
   @injectQ
   class TestController {
     greeting: string;
@@ -77,6 +78,7 @@ test("Instance usage: pass a class arrow function property", async (t) => {
 });
 
 test("Decorator usage", async (t) => {
+
   @injectQ
   class TestController {
     greeting: string;
@@ -127,7 +129,7 @@ test("Decorator usage", async (t) => {
   const testController = new TestController('!!');
   t.is(await testController.greet(fixture2), 'Hello, world!!');
 
-  /** test auto bind */
+  /** test if this lib working with auto bind */
   const testAutoBind = testController.testAutoBind;
   t.is(await testAutoBind(fixture2), 'Hello, world!!')
 
