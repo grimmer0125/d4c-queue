@@ -28,7 +28,7 @@ type MethodDecoratorParameter = (target: any, propertyKey: string, descriptor: P
 export const errMsg = {
   instanceWrongTag: 'instanceWrongTag can not be null',
   invalidDecoratorOption: "not valid option when using decorators",
-  missingClassDecoratorError: "missingClassDecoratorError",
+  missingThisDueNoClassDecoratorErrorOrBindIssue: "missingThisDueNoClassDecoratorErrorOrBindIssue",
 };
 
 const queueSymbol = Symbol("d4cQueues");
@@ -157,7 +157,7 @@ function _q<T extends IAnyFn>(
 
       currTaskQueues = this[queueSymbol];
     } else {
-      throw new Error(errMsg.missingClassDecoratorError);
+      throw new Error(errMsg.missingThisDueNoClassDecoratorErrorOrBindIssue);
     }
 
     /** Detect tag */
@@ -261,7 +261,7 @@ export class D4C {
       args?: Parameters<typeof func>;
     }
   ): Promise<Unwrap<typeof func>> {
-    const resp = this.wrap(func, option).apply(null, option.args);
+    const resp = this.wrap(func, option).apply(null, option?.args);
     return resp;
   }
 

@@ -78,7 +78,6 @@ test("Instance usage: pass a class arrow function property", async (t) => {
 });
 
 test("Decorator usage", async (t) => {
-
   @injectQ
   class TestController {
     greeting: string;
@@ -123,6 +122,12 @@ test("Decorator usage", async (t) => {
     testNoBlockCurr(seconds: number, obj: { str: string }) {
       obj.str += seconds;
     }
+
+    @autobind
+    autobindMethodNoQueue(text: string) {
+      const str = 'Hello, ' + text + this.greeting;
+      return str;
+    }
   }
 
   // /** instance method  */
@@ -158,6 +163,23 @@ test("Decorator usage", async (t) => {
   await Promise.all([fn(0.5, test), testController.instanceTimeout(0.1, test)]);
   t.is(test.str, '0.10.5')
 
+  /** composite case: D4C instance on no autobind decorated method */
+  try {
+    const d4c = new D4C();
+    const newFunc = d4c.wrap(testController.greet);
+    const resp = await newFunc("")
+  } catch (err) {
+    t.is(err.message, errMsg.missingThisDueNoClassDecoratorErrorOrBindIssue)
+  }
+
+  /** composite case: D4C instance on autobind decorated method */
+  const d4c = new D4C();
+  const result = await d4c.apply(testController.testAutoBind, { args: ["world"] });
+  t.is(result, "Hello, world!!")
+
+  /** composite case: D4C instance on autobind non-decorated method */
+  t.is(await d4c.apply(testController.autobindMethodNoQueue, { args: ["world"] }), "Hello, world!!")
+
   /** Two class should not affect each other  */
   @injectQ
   class TestController2 {
@@ -175,7 +197,7 @@ test("Decorator usage", async (t) => {
   await Promise.all([TestController.timeout(0.5, test), TestController2.timeout(0.1, test)]);
   t.is(test.str, '0.10.5')
 
-  /** test missingClassDecoratorError */
+  /** test missingThisDueNoClassDecoratorErrorOrBindIssue */
   let error;
   try {
     class TestController3 {
@@ -188,7 +210,7 @@ test("Decorator usage", async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, errMsg.missingClassDecoratorError);
+  t.is(error.message, errMsg.missingThisDueNoClassDecoratorErrorOrBindIssue);
 
   /** test invalid decorator */
   error = null
