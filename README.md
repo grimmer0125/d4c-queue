@@ -266,7 +266,7 @@ The below shows how to make `hello query` become `synchronized`. Keep in mind th
 
 ```typescript
 import { Query } from '@nestjs/graphql';
-import { synchronized } from 'd4c-queue';
+import { injectQ, synchronized } from 'd4c-queue';
 
 function delay() {
   return new Promise<string>(function (resolve, reject) {
