@@ -212,7 +212,7 @@ class ServiceAdapter {
 
 #### Another case: use D4C instance to guarantee the execution order
 
-The code snippet is from [embedded-pydicom-react-viewer](https://github.com/grimmer0125/embedded-pydicom-react-viewer/blob/master/src/pyodideHelper.ts). Some function only can be executed after init function is finished.
+The code snippet is from [embedded-pydicom-react-viewer](https://github.com/grimmer0125/embedded-pydicom-react-viewer). Some function only can be executed after init function is finished.
 
 ```typescript
 const d4c = new D4C();
