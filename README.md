@@ -16,6 +16,7 @@ Pass a `async` function, a promise-returning function or a normal non-async func
 6. Support Browser and Node.js.
 7. Support TypeScript and JavaScript. Written in TypeScript and its `.d.ts` typing is out of box.
 8. Support `async function`, a `promise-returning` function, and a `normal non-async` function.
+9. Well tested.
 
 ## Installation
 
