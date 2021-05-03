@@ -178,7 +178,7 @@ test("Decorator usage", async (t) => {
   t.is(result, "Hello, world!!")
 
   /** composite case: D4C instance on autobind non-decorated method */
-  t.is(await d4c.apply(testController.autobindMethodNoQueue, { args: ["world"] }), "Hello, world!!")
+  t.is(await d4c.apply(testController.autobindMethodNoQueue), "Hello, undefined!!")
 
   /** Two class should not affect each other  */
   @injectQ
@@ -231,7 +231,7 @@ test("Decorator usage", async (t) => {
   /** test if option inheritPreErr works on decorator */
   (async () => {
     try {
-      await testController.instanceTimeoutError(1, new Error('some_error'))
+      await testController.instanceTimeoutError(1, 'some_error')
     } catch (err) {
       // console.log(" err by purpose")
     }

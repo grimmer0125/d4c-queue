@@ -90,21 +90,17 @@ export function synchronized(
       descriptor: PropertyDescriptor
     ) {
 
-      const prototype = target?.prototype ?? target;
       const originalMethod = descriptor.value;
       const newFunc = _q(
         null,
         originalMethod,
         targetOrOption,
-        prototype
       );
       descriptor.value = newFunc;
     };
   } else {
     /** no parentheses case */
     const type = typeof targetOrOption;
-
-    const prototype = targetOrOption?.prototype ?? targetOrOption
 
     /** 
      * static method decorator case: target type is constructor function. use target.prototype
@@ -118,7 +114,6 @@ export function synchronized(
         null,
         originalMethod,
         {},
-        prototype
       );
       descriptor.value = newFunc
     } else {
@@ -134,8 +129,7 @@ function _q<T extends IAnyFn>(
     tag?: QueueTag;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
-  },
-  target?: any
+  }
 ): (
     ...args: Parameters<typeof func>
   ) => Promise<Unwrap<typeof func>> {
