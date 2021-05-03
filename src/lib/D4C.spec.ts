@@ -27,7 +27,7 @@ const timeout = (seconds: number, target: { str: string }) => {
     setTimeout(() => {
       target.str += seconds;
       resolve('');
-    }, seconds * 10)
+    }, seconds * 100)
   );
 };
 
@@ -35,7 +35,7 @@ const timeoutError = (seconds: number, result) => {
   return new Promise((_, reject) =>
     setTimeout(() => {
       reject(result);
-    }, seconds * 10)
+    }, seconds * 100)
   );
 };
 
