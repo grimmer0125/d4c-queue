@@ -210,6 +210,23 @@ class ServiceAdapter {
 }
 ```
 
+#### Another case: use D4C instance to guarantee the execution order
+
+The code snippet is from [embedded-pydicom-react-viewer](https://github.com/grimmer0125/embedded-pydicom-react-viewer/blob/master/src/pyodideHelper.ts). Some function only can be executed after init function is finished.
+
+```typescript
+const d4c = new D4C();
+export const initPyodide = d4c.wrap(async () => {
+  /** init Pyodide*/
+});
+
+/** without d4c-queue, it will throw exception while being called
+ * before 'initPyodide' is finished */
+export const parseByPython = d4c.wrap(async (buffer: ArrayBuffer) => {
+  /** execute python code in browser */
+});
+```
+
 ### Concurrency
 
 Concurrency may make race condition. And we usually use a synchronization mechanism (e.g. mutex) to solve it. A task queue can achieve this.
