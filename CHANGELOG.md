@@ -2,13 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [1.3.5](https://github.com/grimmer0125/d4c-queue/compare/v1.3.4...v1.3.5) (2021-05-03)
+### [1.3.6](https://github.com/grimmer0125/d4c-queue/compare/v1.3.4...v1.3.6) (2021-05-03)
 
-Improve tests
+Improve tests to 100% coverage
 
 ### [1.3.4](https://github.com/grimmer0125/d4c-queue/compare/v1.3.4...v1.3.0) (2021-05-02)
 
-Improve documentation and tests
+Improve documentation and tests, and fix a bug about empty arguments in d4c.apply
 
 ### [1.3.0](https://github.com/grimmer0125/d4c-queue/compare/v1.2.6...v1.3.0) (2021-05-02)
 
