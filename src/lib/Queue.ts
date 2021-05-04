@@ -31,6 +31,9 @@ export class Queue<T> {
       if (node.next) {
         this.head = node.next;
         this.head.prev = null;
+      } else {
+        this.head = null;
+        this.tail = null;
       }
       return node.data;
     }

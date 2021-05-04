@@ -8,6 +8,9 @@ test("Test FIFO queue", (t) => {
   t.is(queue.shift(), 1);
   t.is(queue.shift(), 2);
   t.is(queue.shift(), undefined);
+  t.is(queue.length, 0)
+  queue.push(3);
+  t.is(queue.shift(), 3);
 
   const strQueue = new Queue<string>();
   strQueue.push("1");
