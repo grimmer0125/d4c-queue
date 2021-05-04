@@ -439,6 +439,10 @@ becomes
 d4c.apply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' });
 ```
 
+## Changelog
+
+Check [here](https://github.com/grimmer0125/d4c-queue/blob/master/CHANGELOG.md)
+
 ## Appendix
 
 ### babel.config.json
