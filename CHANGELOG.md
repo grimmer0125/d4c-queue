@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 Those versions which only include documentation change might not be included here.
 
-### [1.3.12](https://github.com/grimmer0125/d4c-queue/compare/v1.3.11...v1.3.12 (2021-05-04)
+### [1.3.12](https://github.com/grimmer0125/d4c-queue/compare/v1.3.11...v1.3.12) (2021-05-04)
 
 Add changelog link in README
 
