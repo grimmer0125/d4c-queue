@@ -24,7 +24,7 @@ Improve documentation and tests, and fix a bug about empty arguments in d4c.appl
 
 Improve queue system & API breaking change & back to es6 for main build
 
-Improve the queue system, no more global usage and static queues
+Improve the queue system, no more global usage and its queues
 
 Each instance/class is isolated with the others. API is breaking change.
 
