@@ -1,4 +1,4 @@
-import Denque from 'denque';
+import { Queue } from "./Queue"
 import 'reflect-metadata';
 
 type Task = {
@@ -8,7 +8,7 @@ type Task = {
 };
 
 type TaskQueue = {
-  queue: Denque<Task>;
+  queue: Queue<Task>;
   isRunning: boolean;
 };
 
@@ -58,11 +58,11 @@ export function synchronized(
 ): void | MethodDecoratorParameter {
 
   /**
-   * problem is target in instance method & option both are object 
+   * problem is target in instance method & option both are object
    * so the below check is complicated
    */
 
-  /** if class has a static member call inheritPreErr, even no using parentheses, 
+  /** if class has a static member call inheritPreErr, even no using parentheses,
    * targetOrOption will have targetOrOption property but its type is function */
   function checkIfOptionObject(obj: any): boolean {
     if (obj === undefined || obj === null) {
@@ -70,7 +70,7 @@ export function synchronized(
     }
 
     /**
-     * hasOwnProperty should be false since it is a literal object 
+     * hasOwnProperty should be false since it is a literal object
      */
     //eslint-disable-next-line
     if (typeof obj === "object" && !obj.hasOwnProperty("constructor") && (Object.keys(obj).length === 0 ||
@@ -102,9 +102,9 @@ export function synchronized(
     /** no parentheses case */
     const type = typeof targetOrOption;
 
-    /** 
+    /**
      * static method decorator case: target type is constructor function. use target.prototype
-     * method decorator case: target is a prototype object, not literally object. use target       
+     * method decorator case: target is a prototype object, not literally object. use target
      */
     if ((type === "function" || targetOrOption.hasOwnProperty("constructor")) && // eslint-disable-line
       typeof propertyKey === "string" &&
@@ -166,7 +166,7 @@ function _q<T extends IAnyFn>(
     taskQueue = currTaskQueues.get(tag);
     if (!taskQueue) {
       taskQueue = {
-        queue: new Denque<Task>(),
+        queue: new Queue<Task>(),
         isRunning: false,
       };
       currTaskQueues.set(tag, taskQueue);

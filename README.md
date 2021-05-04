@@ -9,7 +9,7 @@ Pass a [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference
 1. Two usages
    1. D4C instance
    2. Class and method decorator (also for static methods) on your classes
-2. Use third party library [Denque](https://www.npmjs.com/package/denque) to implement a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
+2. This library implements a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr`. Set it as `true` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`, if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
 4. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the first task in the queue in the next tick of the event loop. This is useful if you pass a non-async function as the first task but do not want it to block the current event loop.
 5. Able to pass arguments and get return value for each task function.

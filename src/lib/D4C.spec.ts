@@ -23,10 +23,10 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
 };
 
 const timeout = (seconds: number, target: { str: string }) => {
-  return new Promise((resolve, _) =>
+  return new Promise<void>((resolve, _) =>
     setTimeout(() => {
       target.str += seconds;
-      resolve('');
+      resolve();
     }, seconds * 100)
   );
 };
@@ -44,9 +44,9 @@ const immediateFun = (seconds: number, target: { str: string }) => {
 };
 
 const immediateFunPromise = (seconds: number, target: { str: string }) => {
-  return Promise.resolve((target.str += seconds));
+  target.str += seconds;
+  return Promise.resolve();
 };
-
 
 test("Instance usage: pass a class arrow function property", async (t) => {
 
@@ -307,7 +307,7 @@ test('Instance usage: apply a funcAsync', async (t) => {
 test('Instance usage: test if queue really work, execute one by one', async (t) => {
   let test = { str: '' };
   await Promise.all([timeout(2, test), immediateFun(1, test), timeout(0.5, test), immediateFunPromise(0.2, test), timeout(0.05, test)]);
-  t.is(test.str, '10.20.050.52') // 1, 0.2, 0.05, 0.5, 2 
+  t.is(test.str, '10.20.050.52') // 1, 0.2, 0.05, 0.5, 2
 
   test = { str: '' };
   const d4c = new D4C();
