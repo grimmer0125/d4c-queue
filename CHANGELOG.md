@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.11](https://github.com/grimmer0125/d4c-queue/compare/v1.3.10...v1.3.101 (2021-05-04)
+
+Fix internal queue bug
+
 ### [1.3.10](https://github.com/grimmer0125/d4c-queue/compare/v1.3.6...v1.3.10) (2021-05-04)
 
 Implement a FIFO queue instead of using third party library, denque
