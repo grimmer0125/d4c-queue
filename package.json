@@ -8,6 +8,8 @@
   "repository": "https://github.com/grimmer0125/d4c-queue",
   "license": "MIT",
   "keywords": [
+    "task",
+    "task-runner",
     "task queue",
     "task-queue",
     "queue",
