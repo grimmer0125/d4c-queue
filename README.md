@@ -473,4 +473,4 @@ module.exports = {
 4. in your project, `yarn link d4c-queue`. Do above ES6/CommonJS import to start to use.
 5. in your project, `yarn unlink d4c-queue` to uninstall.
 
-The development environment of this library is Node.js v15.14.0 & Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules. [typescript-starter](https://github.com/bitjson/typescript-starter) is used to generate two builds, `main` and `module` via its setting. Some example code is in [tests](https://github.com/grimmer0125/d4c-queue/blob/master/src/lib/D4C.spec.ts)
+The development environment of this library is Node.js v15.14.0 & Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules. [typescript-starter](https://github.com/bitjson/typescript-starter) is used to generate two builds, `main` and `module` via its setting. Some example code is in [tests](https://github.com/grimmer0125/d4c-queue/blob/master/src/lib/D4C.spec.ts).
