@@ -34,11 +34,46 @@ Improve documentation and tests, and fix a bug about empty arguments in d4c.appl
 
 #### ⚠ BREAKING CHANGES
 
-Improve queue system & API breaking change & back to es6 for main build
+- Improve queue system. Each instance/class is isolated with the others.
+- API breaking change. No more global usage. no more  ~~dApply, dWrap~~, and add needed `@injectQ`. 
+- back to es6 for main build.
 
-Improve the queue system, no more global usage and its queues
+original:
+```ts
+import { D4C, dApply, dWrap, synchronized } from 'd4c-queue';
 
-Each instance/class is isolated with the others. API is breaking change.
+/** global usage*/
+const asyncFunResult = await dWrap(asyncFun, { tag: 'queue1' })(
+ 'asyncFun_arg1',
+ 'asyncFun_arg2'
+);
+
+/** instance usage */ 
+const d4c = new D4C(); 
+d4c.apply(async)
+
+/** decorator usage */
+class ServiceAdapter {
+  @synchronized
+  async connect() {}
+}  
+```
+becomes
+
+```ts
+import { D4C, injectQ, synchronized } from 'd4c-queue';
+
+/** instance usage */
+d4c.apply(syncFun, { args: ['syncFun_arg1'] });
+
+
+/** decorator usage */
+@injectQ
+class ServiceAdapter {
+  @synchronized
+  async connect() {}
+}
+```
 
 ### [1.2.6](https://github.com/grimmer0125/d4c-queue/compare/v1.2.3...v1.2.6) (2021-05-01)
 
