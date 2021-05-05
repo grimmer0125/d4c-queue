@@ -1,2 +1,2 @@
 
-export { D4C, injectQ, synchronized } from './lib/D4C';
+export { D4C, synchronized } from './lib/D4C';

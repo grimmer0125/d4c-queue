@@ -1,7 +1,7 @@
 import autobind from 'autobind-decorator'
 import test from 'ava';
 
-import { D4C, errMsg, injectQ, synchronized } from './D4C';
+import { D4C, errMsg, synchronized } from './D4C';
 
 const fixture = ['hello'];
 const fixture2 = 'world';
@@ -50,7 +50,6 @@ const immediateFunPromise = (seconds: number, target: { str: string }) => {
 
 test("Instance usage: pass a class arrow function property", async (t) => {
 
-  @injectQ
   class TestController {
     greeting: string;
     constructor(message: string) {
@@ -78,7 +77,6 @@ test("Instance usage: pass a class arrow function property", async (t) => {
 });
 
 test("Decorator usage", async (t) => {
-  @injectQ
   class TestController {
     greeting: string;
     constructor(message: string) {
@@ -169,7 +167,7 @@ test("Decorator usage", async (t) => {
     const newFunc = d4c.wrap(testController.greet);
     const resp = await newFunc("")
   } catch (err) {
-    t.is(err.message, errMsg.missingThisDueNoClassDecoratorErrorOrBindIssue)
+    t.is(err.message, errMsg.missingThisDueBindIssue)
   }
 
   /** composite case: D4C instance on autobind decorated method */
@@ -181,7 +179,6 @@ test("Decorator usage", async (t) => {
   t.is(await d4c.apply(testController.autobindMethodNoQueue), "Hello, undefined!!")
 
   /** Two class should not affect each other  */
-  @injectQ
   class TestController2 {
     greeting: string;
     constructor(message: string) {
@@ -197,25 +194,9 @@ test("Decorator usage", async (t) => {
   await Promise.all([TestController.timeout(0.5, test), TestController2.timeout(0.1, test)]);
   t.is(test.str, '0.10.5')
 
-  /** test missingThisDueNoClassDecoratorErrorOrBindIssue */
-  let error;
-  try {
-    class TestController3 {
-      @synchronized
-      static async greet(text: string) {
-        return text;
-      }
-    }
-    (await TestController3.greet(fixture2), 'world');
-  } catch (err) {
-    error = err;
-  }
-  t.is(error.message, errMsg.missingThisDueNoClassDecoratorErrorOrBindIssue);
-
   /** test invalid decorator */
-  error = null
+  let error = null
   try {
-    @injectQ
     class TestController4 {
       @synchronized(({ x: 3 } as any))
       static async greet(text: string) {

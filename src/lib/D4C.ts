@@ -28,7 +28,7 @@ type MethodDecoratorParameter = (target: any, propertyKey: string, descriptor: P
 export const errMsg = {
   instanceWrongTag: 'instanceWrongTag can not be null',
   invalidDecoratorOption: "not valid option when using decorators",
-  missingThisDueNoClassDecoratorErrorOrBindIssue: "missingThisDueNoClassDecoratorErrorOrBindIssue",
+  missingThisDueBindIssue: "missingThisDueBindIssue",
 };
 
 const queueSymbol = Symbol("d4cQueues");
@@ -57,6 +57,26 @@ export function synchronized(
   descriptor?: PropertyDescriptor
 ): void | MethodDecoratorParameter {
 
+  function injectQueue(constructorOrPrototype) {
+
+    if (constructorOrPrototype.prototype) {
+      // constructor, means static method
+      if (!constructorOrPrototype[queueSymbol]) {
+        constructorOrPrototype[queueSymbol] = new Map<string | symbol, TaskQueue>();
+      }
+    } else {
+      // prototype, means instance method
+      if (constructorOrPrototype[queueSymbol] !== null) {
+        constructorOrPrototype[queueSymbol] = null;
+      }
+    }
+
+
+    //   target[queueSymbol] = new Map<string | symbol, TaskQueue>();
+    //   target.prototype[queueSymbol] = null;
+    //   return target;
+  }
+
   /**
    * problem is target in instance method & option both are object
    * so the below check is complicated
@@ -77,7 +97,7 @@ export function synchronized(
       typeof obj.inheritPreErr === "boolean" ||
       typeof obj.noBlockCurr === "boolean" ||
       typeof obj.tag === "string" || typeof obj.tag === "symbol")) {
-      return true
+      return true;
     }
     return false;
   }
@@ -89,6 +109,9 @@ export function synchronized(
       propertyKey: string,
       descriptor: PropertyDescriptor
     ) {
+
+      injectQueue(target);
+      // const prototype = target?.prototype ?? target;
 
       const originalMethod = descriptor.value;
       const newFunc = _q(
@@ -109,13 +132,16 @@ export function synchronized(
     if ((type === "function" || targetOrOption.hasOwnProperty("constructor")) && // eslint-disable-line
       typeof propertyKey === "string" &&
       typeof descriptor === "object" && typeof descriptor.value === "function") {
+
+      injectQueue(targetOrOption);
+
       const originalMethod = descriptor.value;
       const newFunc = _q(
         null,
         originalMethod,
         {},
       );
-      descriptor.value = newFunc
+      descriptor.value = newFunc;
     } else {
       throw new Error(errMsg.invalidDecoratorOption);
     }
@@ -151,7 +177,7 @@ function _q<T extends IAnyFn>(
 
       currTaskQueues = this[queueSymbol];
     } else {
-      throw new Error(errMsg.missingThisDueNoClassDecoratorErrorOrBindIssue);
+      throw new Error(errMsg.missingThisDueBindIssue);
     }
 
     /** Detect tag */
@@ -234,11 +260,6 @@ function _q<T extends IAnyFn>(
     ) => Promise<Unwrap<typeof func>>;
 }
 
-export function injectQ(target: any) {
-  target[queueSymbol] = new Map<string | symbol, TaskQueue>();
-  target.prototype[queueSymbol] = null;
-  return target;
-}
 export class D4C {
   queues: TaskQueuesType;
 

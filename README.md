@@ -30,13 +30,13 @@ Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package
 **ES6 import**
 
 ```typescript
-import { D4C, injectQ, synchronized } from 'd4c-queue';
+import { D4C, synchronized } from 'd4c-queue';
 ```
 
 **CommonJS**
 
 ```typescript
-const { D4C, injectQ, synchronized } = require('d4c-queue');
+const { D4C, synchronized } = require('d4c-queue');
 ```
 
 It is possible to use the `module` build with CommonJS require syntax in TypeScript or other build tools.
@@ -129,7 +129,6 @@ d4c.apply(syncFun, { args: ['syncFun_arg1'] });
 ### Class and method decorators usage
 
 ```typescript
-@injectQ
 class ServiceAdapter {
   @synchronized
   async connect() {}
@@ -180,7 +179,6 @@ send_message(msg: string) {
 `Connecting` status is more ambiguous then `Disconnected` status. Now you can use a task queue to solve them. E.g.,
 
 ```typescript
-@injectQ
 class ServiceAdapter {
   async send_message(msg: string) {
     if (this.connectingStatus === 'Connected') {
@@ -286,7 +284,7 @@ The below shows how to make `hello query` become `synchronized`. Keep in mind th
 
 ```typescript
 import { Query } from '@nestjs/graphql';
-import { injectQ, synchronized } from 'd4c-queue';
+import { synchronized } from 'd4c-queue';
 
 function delay() {
   return new Promise<string>(function (resolve, reject) {
@@ -296,7 +294,6 @@ function delay() {
   });
 }
 
-@injectQ
 export class TestsResolver {
   @Query((returns) => String)
   /** without @synchronized, two resolver may print 1/2 1/2 2/2 2/2
@@ -352,17 +349,6 @@ current_function();
 The parameters in the below signatures are optional. `inheritPreErr` and `noBlockCurr` are false by default. `tag` can overwrite the default tag and **specify different queue** for this method or function.
 
 ### Decorators:
-
-- @injectQ
-
-It is used to inject two D4C queue system in your class.
-
-Example:
-
-```typescript
-@injectQ
-class TestController {}
-```
 
 - @synchronized
 
