@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/d4c-queue.svg)](https://www.npmjs.com/package/d4c-queue) ![example workflow](https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/grimmer0125/d4c-queue/badge.svg)](https://coveralls.io/github/grimmer0125/d4c-queue)
 
-Pass a [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)/[promise-returning](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)/`non-async` function into task queues, with their arguments. Do them sequentially, and get their values by `await`. It also supports [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) (`@synchronized`) on your instance or static methods.
+Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)/[promise-returning](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)/`sync` function to a queue-ready async function, which is enqueued while being called. Task queues execute original functions sequentially. It also supports `@synchronized` [decorator](https://www.typescriptlang.org/docs/handbook/decorators.html) on instance or static methods. Passing arguments and using `await` to get return values are supported.
 
 ## Features
 

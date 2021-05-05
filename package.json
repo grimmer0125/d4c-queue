@@ -1,7 +1,7 @@
 {
   "name": "d4c-queue",
-  "version": "1.4.4",
-  "description": "A task queue enenques async/promise-returning/non-async functions with arguments and does them sequentially. Get return value by await. Support decorator, TypeScript, JavaScript, browser & Node.js.",
+  "version": "1.4.5",
+  "description": "Wrap async/promise-returning/sync functions to queue-ready async functions, which are enqueued while being called. Task queues execute original functions sequentially. Plus @synchronized decorator.",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
