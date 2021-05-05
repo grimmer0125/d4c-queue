@@ -57,13 +57,13 @@ Modify your tsconfig.json to include the following settings
 
 #### JavaScript users
 
-You can use Babel to support decorators, install `@babel/plugin-proposal-decorators`. In appendix, there are my testing `babel.config.json` and I use `babel-node index.js` to test
+You can use Babel to support decorators, install `@babel/plugin-proposal-decorators`.
 
 For the users using **Create React App** JavaScript version, you can either use `eject` or [CRACO](https://github.com/gsoft-inc/craco) to customize your babel setting. Using create React App TypeScript Version just needs to modify `tsconfig.json.`
 
-See [babel.config.json](#babelconfigjson) in [Appendix](#Appendix)
+See [babel.config.json](#babelconfigjson) in [Appendix](#Appendix).
 
-To use **CRACO**, see [CRACO Setting](#craco-setting) in [Appendix](#Appendix)
+See [CRACO Setting](#craco-setting) in [Appendix](#Appendix).
 
 ## Usage example
 
@@ -421,6 +421,8 @@ d4c.apply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' });
 Check [here](https://github.com/grimmer0125/d4c-queue/blob/master/CHANGELOG.md)
 
 ## Appendix
+
+I use `babel-node index.js` with the following setting to test.
 
 ### babel.config.json
 
