@@ -63,7 +63,7 @@ Refactor API and instance method renaming
 
 Change static method to public function:
 
-```
+```ts
 D4C.apply -> dApply
 D4C.wrap -> dWrap
 D4C.synchronized -> synchronized
@@ -72,7 +72,7 @@ D4C.register -> defaultTag
 
 Change instance method naming:
 
-```
+```ts
 iapply -> apply
 iwrap -> wrap
 ```
@@ -99,5 +99,20 @@ First release to https://www.npmjs.com/package/d4c-queue/v/1.0.0
 Features
 
 - global usage
+```ts
+D4C.wrap(asyncFun, { tag: "queue1" })("asyncFun_arg1", "asyncFun_arg2");
+```
 - instance usage
+```ts
+const d4c = new D4C();
+d4c.iwrap(asyncFun, { tag: "queue1" })("asyncFun_arg1", "asyncFun_arg2");
+```
 - decorator usage.
+```ts
+@D4C.register(Symbol("jojo"))
+class ServiceAdapter {
+  @D4C.synchronized
+  client_send_message() {
+  }
+}
+```
