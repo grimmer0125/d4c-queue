@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. See [standa
 
 Those versions which only include documentation change might not be included here.
 
+### [1.4.2](https://github.com/grimmer0125/d4c-queue/compare/v1.4.1...v1.4.2) (2021-05-06)
+
+Remove reflect-metadata
+
 ### [1.4.1](https://github.com/grimmer0125/d4c-queue/compare/v1.4.0...v1.4.1) (2021-05-05)
 
 Fix security vulnerabilities
