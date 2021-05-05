@@ -43,11 +43,7 @@ It is possible to use the `module` build with CommonJS require syntax in TypeScr
 
 ### Extra optional steps if you want to use decorators from this library
 
-Keep in mind that `decorators` and `Metadata` are JavaScript proposals and may vary in the future.
-
-#### Install reflect-metadata
-
-[reflect-metadata](https://www.npmjs.com/package/reflect-metadata) is used to ensure the consistent implementation behavior of `Metadata`. https://github.com/microsoft/tsyringe mentions the the list of `polyfill for the Reflect API`, besides reflect-metadata. After `yarn add reflect-metadata`/`npm install reflect-metadata`, put `import 'reflect-metadata'` only once in your code.
+Keep in mind that `decorators` are JavaScript proposals and may vary in the future.
 
 #### TypeScript users
 
@@ -55,24 +51,19 @@ Modify your tsconfig.json to include the following settings
 
 ```json
 {
-  "experimentalDecorators": true,
-  "emitDecoratorMetadata": true
+  "experimentalDecorators": true
 }
 ```
 
 #### JavaScript users
 
-You can use Babel to support decorators, install `@babel/plugin-proposal-decorators`, `babel-plugin-transform-typescript-metadata`. And if want to apply this library on arrow function property, `"@babel/plugin-proposal-class-properties"` is needed, too. The below is my testing `babel.config.json` and I use `babel-node index.js` to test
+You can use Babel to support decorators, install `@babel/plugin-proposal-decorators`. In appendix, there are my testing `babel.config.json` and I use `babel-node index.js` to test
 
 For the users using **Create React App** JavaScript version, you can either use `eject` or [CRACO](https://github.com/gsoft-inc/craco) to customize your babel setting. Using create React App TypeScript Version just needs to modify `tsconfig.json.`
 
 See [babel.config.json](#babelconfigjson) in [Appendix](#Appendix)
 
 To use **CRACO**, see [CRACO Setting](#craco-setting) in [Appendix](#Appendix)
-
-#### Testing notes
-
-While testing this `d4c-queue` library, `babel-plugin-transform-typescript-metadata`, `emitDecoratorMetadata` are not needed. Also, explicitly `import 'reflect-metadata'` is needed when developing this library but using this library seems not (just need installation). The reason might be that `D4C` already import it once and reflect-metadata is a singleton. Anyway, please setup them in case some issues happen.
 
 ## Usage example
 
@@ -442,14 +433,7 @@ Check [here](https://github.com/grimmer0125/d4c-queue/blob/master/CHANGELOG.md)
       {
         "legacy": true
       }
-    ],
-    [
-      "@babel/plugin-proposal-class-properties",
-      {
-        "loose": true
-      }
-    ],
-    ["babel-plugin-transform-typescript-metadata"]
+    ]
   ]
 }
 ```
@@ -460,7 +444,7 @@ Follow its site, [CRACO](https://github.com/gsoft-inc/craco).
 
 1. `yarn add @craco/craco`
 2. Replace `react-scripts` with `craco` in `package.json`
-3. `yarn add @babel/preset-env @babel/plugin-proposal-decorators @babel/plugin-proposal-class-properties babel-plugin-transform-typescript-metadata -D`
+3. `yarn add @babel/preset-env @babel/plugin-proposal-decorators`
 4. Touch `craco.config.js` and modify its content as the following
 5. Then just `yarn start`.
 
@@ -470,11 +454,7 @@ Follow its site, [CRACO](https://github.com/gsoft-inc/craco).
 module.exports = {
   babel: {
     presets: [['@babel/preset-env']],
-    plugins: [
-      ['@babel/plugin-proposal-decorators', { legacy: true }],
-      ['@babel/plugin-proposal-class-properties', { loose: true }],
-      ['babel-plugin-transform-typescript-metadata'],
-    ],
+    plugins: [['@babel/plugin-proposal-decorators', { legacy: true }]],
     loaderOptions: {},
     loaderOptions: (babelLoaderOptions, { env, paths }) => {
       return babelLoaderOptions;

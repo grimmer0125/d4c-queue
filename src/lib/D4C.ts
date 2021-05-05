@@ -1,5 +1,4 @@
 import { Queue } from "./Queue"
-import 'reflect-metadata';
 
 type Task = {
   unlock: (value?: unknown) => void;
