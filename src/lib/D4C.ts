@@ -70,21 +70,17 @@ export function synchronized(
         constructorOrPrototype[queueSymbol] = null;
       }
     }
-
-
-    //   target[queueSymbol] = new Map<string | symbol, TaskQueue>();
-    //   target.prototype[queueSymbol] = null;
-    //   return target;
   }
 
   /**
-   * problem is target in instance method & option both are object
+   * since target in instance method & option both are object
    * so the below check is complicated
    */
 
   /** if class has a static member call inheritPreErr, even no using parentheses,
    * targetOrOption will have targetOrOption property but its type is function */
   function checkIfOptionObject(obj: any): boolean {
+    /** still count valid argument, e.g. @synchronized(null) */
     if (obj === undefined || obj === null) {
       return true;
     }
@@ -111,7 +107,6 @@ export function synchronized(
     ) {
 
       injectQueue(target);
-      // const prototype = target?.prototype ?? target;
 
       const originalMethod = descriptor.value;
       const newFunc = _q(

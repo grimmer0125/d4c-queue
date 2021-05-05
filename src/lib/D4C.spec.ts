@@ -81,10 +81,17 @@ test("Decorator usage", async (t) => {
     greeting: string;
     constructor(message: string) {
       this.greeting = message;
+      this.testManualBind = this.testManualBind.bind(this);
     }
 
     @synchronized
     greet(text: string) {
+      const str = 'Hello, ' + text + this.greeting;
+      return str;
+    }
+
+    @synchronized()
+    async testManualBind(text: string) {
       const str = 'Hello, ' + text + this.greeting;
       return str;
     }
@@ -131,6 +138,10 @@ test("Decorator usage", async (t) => {
   // /** instance method  */
   const testController = new TestController('!!');
   t.is(await testController.greet(fixture2), 'Hello, world!!');
+
+  /** test if this lib working with manual bind */
+  const testManualBind = testController.testManualBind;
+  t.is(await testManualBind(fixture2), 'Hello, world!!')
 
   /** test if this lib working with auto bind */
   const testAutoBind = testController.testAutoBind;
