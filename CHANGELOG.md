@@ -26,7 +26,7 @@ Implement a FIFO queue instead of using third party library, denque
 
 Improve tests to 100% coverage
 
-### [1.3.4](https://github.com/grimmer0125/d4c-queue/compare/v1.3.4...v1.3.0) (2021-05-02)
+### [1.3.4](https://github.com/grimmer0125/d4c-queue/compare/v1.3.0...v1.3.4) (2021-05-02)
 
 Improve documentation and tests, and fix a bug about empty arguments in d4c.apply
 
