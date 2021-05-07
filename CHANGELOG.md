@@ -6,7 +6,15 @@ Those versions which only include documentation change might not be included her
 
 ### [1.5.0](https://github.com/grimmer0125/d4c-queue/compare/v1.4.5...v1.5.0) (2021-05-07)
 
-Add concurrency mode support for D4C instance usage.
+⭐ New API ⭐
+
+Add concurrency mode support for D4C instance usage. Previous it only supports synchronization mode (concurrency = 1).
+
+```ts
+const d4c = new D4C(100);
+d4c.setQueue({ concurrency: 10 }); // change default concurrency from 1 to 10
+d4c.setQueue({ concurrency: 10, tag: 'queue2' }); // concurrency for queue2
+```
 
 ### [1.4.2](https://github.com/grimmer0125/d4c-queue/compare/v1.4.1...v1.4.2) (2021-05-06)
 
