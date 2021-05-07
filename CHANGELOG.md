@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. See [standa
 
 Those versions which only include documentation change might not be included here.
 
+### [1.5.0](https://github.com/grimmer0125/d4c-queue/compare/v1.4.5...v1.5.0) (2021-05-07)
+
+Add concurrency mode support for D4C instance usage.
+
 ### [1.4.2](https://github.com/grimmer0125/d4c-queue/compare/v1.4.1...v1.4.2) (2021-05-06)
 
 Remove reflect-metadata

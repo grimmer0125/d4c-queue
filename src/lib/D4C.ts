@@ -8,7 +8,10 @@ type Task = {
 
 type TaskQueue = {
   queue: Queue<Task>;
+  //** isRunning will be removed since runningTask can cover its effect */
   isRunning: boolean;
+  concurrency: number;
+  runningTask: number;
 };
 
 type Unwrap<T> = T extends Promise<infer U>
@@ -25,15 +28,20 @@ type IAnyFn = (...args: any[]) => Promise<any> | any;
 type MethodDecoratorParameter = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
 
 export const errMsg = {
-  instanceWrongTag: 'instanceWrongTag can not be null',
+  instanceInvalidTag: 'instanceInvalidTag: it should be string/symbol/undefined',
   invalidDecoratorOption: "not valid option when using decorators",
   missingThisDueBindIssue: "missingThisDueBindIssue",
+  invalidSetQueueConcurrency: "invalidSetQueueConcurrency",
+  invalidSetQueueTag: "invalidSetQueueTag",
+  invalidClassParameter: "invalidClassParameter",
 };
 
 const queueSymbol = Symbol("d4cQueues");
 const classDecoratorKey = Symbol('D4C');
 
-class PreviousError extends Error {
+const DEFAULT_CONCURRENCY = 1;
+
+export class PreviousError extends Error {
   constructor(message) {
     super(message);
     this.name = 'PreviousError';
@@ -88,10 +96,10 @@ export function synchronized(
      * hasOwnProperty should be false since it is a literal object
      */
     //eslint-disable-next-line
-    if (typeof obj === "object" && !obj.hasOwnProperty("constructor") && (Object.keys(obj).length === 0 ||
-      typeof obj.inheritPreErr === "boolean" ||
-      typeof obj.noBlockCurr === "boolean" ||
-      typeof obj.tag === "string" || typeof obj.tag === "symbol")) {
+    if (typeof obj === "object" && !obj.hasOwnProperty("constructor") && (
+      (typeof obj.inheritPreErr === "boolean" || obj.inheritPreErr === undefined) &&
+      (typeof obj.noBlockCurr === "boolean" || obj.noBlockCurr === undefined) &&
+      typeof obj.tag === "string" || typeof obj.tag === "symbol" || obj.tag === undefined)) {
       return true;
     }
     return false;
@@ -143,7 +151,7 @@ export function synchronized(
 }
 
 function _q<T extends IAnyFn>(
-  queues: TaskQueuesType,
+  d4c: D4C,
   func: T,
   option?: {
     tag?: QueueTag;
@@ -159,9 +167,9 @@ function _q<T extends IAnyFn>(
     /** Assign queues */
     let taskQueue: TaskQueue;
     let currTaskQueues: TaskQueuesType;
-    if (queues) {
+    if (d4c) {
       /** D4C instance case */
-      currTaskQueues = queues;
+      currTaskQueues = d4c.queues;
     } else if (this && (this[queueSymbol] || this[queueSymbol] === null)) {
 
       /** Decorator case, using injected queues in user defined objects*/
@@ -176,7 +184,7 @@ function _q<T extends IAnyFn>(
 
     /** Detect tag */
     let tag: QueueTag;
-    if (option?.tag) {
+    if (option?.tag !== undefined) {
       tag = option.tag;
     } else {
       tag = classDecoratorKey;
@@ -188,6 +196,8 @@ function _q<T extends IAnyFn>(
       taskQueue = {
         queue: new Queue<Task>(),
         isRunning: false,
+        runningTask: 0,
+        concurrency: d4c?.defaultConcurrency ?? DEFAULT_CONCURRENCY
       };
       currTaskQueues.set(tag, taskQueue);
     }
@@ -196,7 +206,7 @@ function _q<T extends IAnyFn>(
     let result;
     let err: Error;
     let task: Task;
-    if (taskQueue.isRunning) {
+    if (taskQueue.runningTask === taskQueue.concurrency) {
       const promise = new Promise(function (resolve) {
         task = {
           unlock: resolve,
@@ -206,11 +216,12 @@ function _q<T extends IAnyFn>(
       });
       taskQueue.queue.push(task);
       await promise;
+      taskQueue.runningTask += 1;
+    } else if (option?.noBlockCurr) {
+      taskQueue.runningTask += 1;
+      await Promise.resolve();
     } else {
-      taskQueue.isRunning = true;
-      if (option?.noBlockCurr) {
-        await Promise.resolve();
-      }
+      taskQueue.runningTask += 1;
     }
 
     /** Run the task */
@@ -231,6 +242,7 @@ function _q<T extends IAnyFn>(
         err = error;
       }
     }
+    taskQueue.runningTask -= 1;
 
     /** After the task is executed, check the following tasks */
     if (taskQueue.queue.length > 0) {
@@ -240,8 +252,6 @@ function _q<T extends IAnyFn>(
         nextTask.preError = err;
       }
       nextTask.unlock();
-    } else {
-      taskQueue.isRunning = false;
     }
 
     if (err) {
@@ -256,9 +266,51 @@ function _q<T extends IAnyFn>(
 
 export class D4C {
   queues: TaskQueuesType;
+  defaultConcurrency = DEFAULT_CONCURRENCY;
 
-  constructor() {
+  constructor(defaultConcurrency?: number) {
+    if (typeof defaultConcurrency == "number" && defaultConcurrency > 0) {
+      this.defaultConcurrency = defaultConcurrency;
+    } else if (defaultConcurrency !== undefined) {
+      throw new Error(errMsg.invalidClassParameter)
+    }
     this.queues = new Map<string | symbol, TaskQueue>();
+  }
+
+  setQueue(option: {
+    tag?: string | symbol;
+    concurrency: number,
+  }) {
+    const { tag, concurrency } = option;
+    if (typeof concurrency !== "number" || concurrency < 1) {
+      throw new Error(errMsg.invalidSetQueueConcurrency)
+    }
+    if (tag !== undefined && typeof tag !== "symbol" && typeof tag !== "string") {
+      throw new Error(errMsg.invalidSetQueueTag);
+    }
+
+    // TODO: refactor this, _q has similar code */
+    let usedTag: string | symbol;
+    if (tag !== undefined) {
+      usedTag = tag;
+    } else {
+      usedTag = classDecoratorKey;
+      this.defaultConcurrency = concurrency;
+    }
+
+    let taskQueue = this.queues.get(usedTag);
+    if (!taskQueue) {
+      taskQueue = {
+        queue: new Queue<Task>(),
+        isRunning: false,
+        runningTask: 0,
+        concurrency: concurrency
+      };
+    } else {
+      taskQueue.concurrency = concurrency;
+    }
+
+    this.queues.set(usedTag, taskQueue);
   }
 
   apply<T extends IAnyFn>(
@@ -284,9 +336,10 @@ export class D4C {
   ): (
       ...args: Parameters<typeof func>
     ) => Promise<Unwrap<typeof func>> {
-    if (option && (option.tag === null)) {
-      throw new Error(errMsg.instanceWrongTag);
+    if (!option || (option.tag === undefined || typeof option.tag === "string"
+      || typeof option.tag === "symbol")) {
+      return _q(this, func, option);
     }
-    return _q(this.queues, func, option);
+    throw new Error(errMsg.instanceInvalidTag);
   }
 }

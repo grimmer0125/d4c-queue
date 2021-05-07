@@ -2,21 +2,22 @@
 
 [![npm version](https://img.shields.io/npm/v/d4c-queue.svg)](https://www.npmjs.com/package/d4c-queue) ![example workflow](https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/grimmer0125/d4c-queue/badge.svg)](https://coveralls.io/github/grimmer0125/d4c-queue)
 
-Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)/[promise-returning](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)/`sync` function to a queue-ready async function, which is enqueued while being called. Task queues execute original functions sequentially. It also supports `@synchronized` [decorator](https://www.typescriptlang.org/docs/handbook/decorators.html) on instance or static methods. Passing arguments and using `await` to get return values are supported.
+Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)/[promise-returning](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)/`sync` function as a queue-ready async function, which is enqueued while being called. This is convenient to reuse it. Task queues execute original functions sequentially by default (synchronization mode, concurrency = 1) and allow changing concurrency limit to have concurrent tasks executed. It also supports `@synchronized` [decorator](https://www.typescriptlang.org/docs/handbook/decorators.html) on instance or static methods. Passing arguments and using `await` to get return values are also supported.
 
 ## Features
 
 1. Two usages
-   1. D4C instance
-   2. Method decorator (also for static methods) on your classes
-2. This library implements a FIFO queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
-3. Optional parameter, `inheritPreErr`. Set it as `true` to inherit previous error and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`, if it gets previous error. If omit this parameter or set it as false, the following will continue whatever previous tasks happen errors.
-4. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the first task in the queue in the next tick of the event loop. This is useful if you pass a non-async function as the first task but do not want it to block the current event loop.
-5. Able to pass arguments and get return value for each task function.
-6. Support Browser and Node.js.
-7. Support TypeScript and JavaScript. Written in TypeScript and its `.d.ts` typing is out of box.
-8. Support `async function`, a `promise-returning` function, and a `non-async` function.
-9. Well tested.
+   1. D4C instance: synchronization mode & concurrency mode.
+   2. Instance and static method decorator on classes: synchronization mode.
+2. This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
+3. Optional parameter, `inheritPreErr`. If current task is waiting for previous tasks, set it as `true` to inherit the error of the previous task and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`. If you omit this parameter or set it as false, the task will continue whether previous tasks happen error or not.
+4. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the next tick of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
+5. Support Browser and Node.js.
+6. Fully Written in TypeScript and its `.d.ts` typing is out of box. JavaScript is supported, too.
+7. Wrap a function to a new queue-ready async function. It is convenient to re-use this function. Also, it is able to pass arguments and get return value for each task function.
+8. Support `async function`, a `promise-returning` function, and a `sync` function.
+9. sub-queue system (via tags).
+10. Well tested.
 
 ## Installation
 
@@ -104,7 +105,7 @@ const asyncFunResult = await d4c.wrap(asyncFun)(
 );
 /**
  * in place 2, another event in event loop. Either async or
- * non-async function is ok. E.g., pass a non-async function,
+ * sync function is ok. E.g., pass a sync function,
  * it will wait for asyncFun's finishing, then use await to get
  * the new wrapped async function's result.
  */
@@ -115,6 +116,30 @@ Alternatively, you can use below
 
 ```typescript
 d4c.apply(syncFun, { args: ['syncFun_arg1'] });
+```
+
+#### Concurrency mode
+
+Is it useful for rate-limiting tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.
+
+Default concurrency is `1` in this library.
+
+Usage:
+
+```ts
+/** default concurrency limit applied on default queues and new queues*/
+const d4c = new D4C(100);
+```
+
+or
+
+```ts
+const d4c = new D4C();
+/** change default concurrency limit */
+d4c.setQueue({ concurrency: 10 });
+
+/** change concurrency limit for queue2 */
+d4c.setQueue({ concurrency: 10, tag: 'queue2' });
 ```
 
 ### Decorators usage
@@ -149,7 +174,7 @@ client_send_message_wait_connect(msg: string) {
 }
 ```
 
-## Motivation and more detailed user scenario
+## Motivation and more detailed user scenario about Synchronization mode
 
 ### Causality
 
@@ -300,10 +325,6 @@ export class TestsResolver {
 }
 ```
 
-#### Need multiple concurrency tasks?
-
-This library does not implement the mechanism about multiple tasks executed concurrently, if you want to have fine control on limited concurrency tasks, you can consider [p-queue](https://www.npmjs.com/package/p-queue).
-
 ### Convenience
 
 To use async functions, sometime we just `await async_fun1()` to wait for its finishing then start to call `async_func2`. But if we also do not want to use `await` to block current event loop? The workaround way is to make another wrapper function manually to detach, like below
@@ -367,9 +388,20 @@ See [decorators-usage](#decorators-usage)
 
 Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional.
 
+- constructor
+
+```ts
+constructor(public defaultConcurrency = 1)  {
+}
+```
+
+usage:
+
 ```typescript
 const d4c = new D4C();
-/** then d4.wrap or d4.apply*/
+
+/** set defaultConcurrency as 500 */
+const d4c = new D4C(500);
 ```
 
 - wrap
@@ -387,7 +419,7 @@ public wrap<T extends IAnyFn>(
 
 If original func is a async function, `wrap` will return `a async function` whose parameters and returned value's type (a.k.a. `Promise`) and value are same as original func.
 
-If original func is a non-async function, `wrap` will return `a async function` whose parameters are the same as the original function, and returned value's promise generic type is the same as original func. Which means it becomes a awaitable async function, besides queueing.
+If original func is a sync function, `wrap` will return `a async function` whose parameters are the same as the original function, and returned value's promise generic type is the same as original func. Which means it becomes a awaitable async function, besides queueing.
 
 - apply
 

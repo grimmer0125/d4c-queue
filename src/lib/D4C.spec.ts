@@ -48,6 +48,75 @@ const immediateFunPromise = (seconds: number, target: { str: string }) => {
   return Promise.resolve();
 };
 
+test('Instance usage: test concurrency', async (t) => {
+  /** default queue: concurrency 100 test */
+  let test = { str: '' };
+  let d4c = new D4C(100)
+  let fn1 = d4c.wrap(timeout);
+  let fn2 = d4c.wrap(immediateFun);
+  let fn3 = d4c.wrap(immediateFunPromise);
+  await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
+  t.is(test.str, '10.20.050.52')
+
+  /** default queue: use setQueue to change default concurrency 100 */
+  test = { str: '' };
+  d4c = new D4C();
+  d4c.setQueue({ concurrency: 100 })
+  fn1 = d4c.wrap(timeout);
+  fn2 = d4c.wrap(immediateFun);
+  fn3 = d4c.wrap(immediateFunPromise);
+  await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
+  t.is(test.str, '10.20.050.52')
+
+  /** new tag will use new default concurrency 100 */
+  test = { str: '' };
+  fn1 = d4c.wrap(timeout, { tag: "1" });
+  fn2 = d4c.wrap(immediateFun, { tag: "1" });
+  fn3 = d4c.wrap(immediateFunPromise, { tag: "1" });
+  await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
+  t.is(test.str, '10.20.050.52')
+
+  /** new tag with setQueue to set concurrency 1 */
+  test = { str: '' };
+  d4c.setQueue({ concurrency: 1, tag: "2" })
+  fn1 = d4c.wrap(timeout, { tag: "2" });
+  fn2 = d4c.wrap(immediateFun, { tag: "2" });
+  fn3 = d4c.wrap(immediateFunPromise, { tag: "2" });
+  await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
+  t.is(test.str, '210.50.20.05');
+
+  /** default queue : use setQueue to set it back to 1 */
+  test = { str: '' };
+  d4c.setQueue({ concurrency: 1 })
+  await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
+  t.is(test.str, '210.50.20.05');
+
+  let error = null
+  try {
+    d4c.setQueue({ concurrency: -100 })
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, errMsg.invalidSetQueueConcurrency);
+
+  error = null
+  try {
+    d4c.setQueue({ tag: true, concurrency: 100 } as any)
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, errMsg.invalidSetQueueTag);
+
+  error = null
+  try {
+    d4c = new D4C("11" as any);
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, errMsg.invalidClassParameter);
+});
+
+
 test("Instance usage: pass a class arrow function property", async (t) => {
 
   class TestController {
@@ -113,6 +182,11 @@ test("Decorator usage", async (t) => {
       await timeout(seconds, obj)
     }
 
+    @synchronized({ tag: "2" })
+    static async timeoutAnotherQueue(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+
     @synchronized({ inheritPreErr: true })
     async instanceTimeout(seconds: number, obj: { str: string }) {
       await timeout(seconds, obj)
@@ -154,6 +228,11 @@ test("Decorator usage", async (t) => {
   let test = { str: '' }
   await Promise.all([TestController.timeout(0.5, test), TestController.timeout(0.1, test)]);
   t.is(test.str, '0.50.1')
+
+  /** Test if these are really use different queues */
+  test = { str: '' }
+  await Promise.all([TestController.timeout(0.5, test), TestController.timeoutAnotherQueue(0.1, test)]);
+  t.is(test.str, '0.10.5')
 
   //** Static and Instance method should have different queues */
   test = { str: '' }
@@ -209,7 +288,7 @@ test("Decorator usage", async (t) => {
   let error = null
   try {
     class TestController4 {
-      @synchronized(({ x: 3 } as any))
+      @synchronized(({ tag: true } as any))
       static async greet(text: string) {
         return text;
       }
@@ -258,7 +337,7 @@ test('Instance usage: funcAsync, a invalid null tag case', async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, errMsg.instanceWrongTag);
+  t.is(error.message, errMsg.instanceInvalidTag);
 });
 
 test('Instance usage: async function', async (t) => {
