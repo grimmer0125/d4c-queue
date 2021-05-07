@@ -1,7 +1,7 @@
 {
   "name": "d4c-queue",
-  "version": "1.5.0",
-  "description": "Wrap a async/promise-returning/sync functions as a queue-ready async function, enqueued while being called. It's convenient to reuse it. Task queues execute original functions sequentially (synchronization mode) by default and support concurrency mode, @synchronized decorator, Node.js & Browser.",
+  "version": "1.5.1",
+  "description": "A task queue execute tasks sequentially or concurrently. Wrap a async/promise-returning/sync functions as a queue-ready async function for convenient reuse. Support @synchronized decorator, Node.js, Browser, JavaScript and TypeScript.",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
@@ -39,7 +39,10 @@
     "throttle",
     "throat",
     "concurrency",
-    "fifo"
+    "concurrent",
+    "fifo",
+    "worker",
+    "asynchronous"
   ],
   "scripts": {
     "build": "run-p build:*",
