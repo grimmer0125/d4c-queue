@@ -72,10 +72,14 @@ Keep in mind that a function will not be enqueued into a task queue even it beco
 
 ### Designed queue system
 
-Each queue is isolated with the others. The default queue in instance method queues is something like `@synchronized(self)` in other language.
+Each queue is isolated with the others.
+
+- Two instance of your decorated class will have two individual queue system.
+  - The default queue in instance method queues is something like `@synchronized(self)` in other languages.
+- Each D4C instance will have its own queue system.
 
 ```
-D4C queues (decorator) injected into your class:
+D4C queues (decorator) injected into your class (per instance):
   - instance method queues:
       - default queue
       - tag1 queue
