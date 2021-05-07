@@ -6,7 +6,7 @@ Those versions which only include documentation change might not be included her
 
 ### [1.5.0](https://github.com/grimmer0125/d4c-queue/compare/v1.4.5...v1.5.0) (2021-05-07)
 
-⭐ New API ⭐
+⭐ New API ⭐ and minor bug fixes
 
 Add concurrency mode support for D4C instance usage. Previous it only supports synchronization mode (concurrency = 1).
 
