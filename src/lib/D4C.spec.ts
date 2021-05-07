@@ -51,7 +51,7 @@ const immediateFunPromise = (seconds: number, target: { str: string }) => {
 test('Instance usage: test concurrency', async (t) => {
   /** default queue: concurrency 100 test */
   let test = { str: '' };
-  let d4c = new D4C(100)
+  let d4c = new D4C({ concurrency: 100 })
   let fn1 = d4c.wrap(timeout);
   let fn2 = d4c.wrap(immediateFun);
   let fn3 = d4c.wrap(immediateFunPromise);
@@ -109,7 +109,7 @@ test('Instance usage: test concurrency', async (t) => {
 
   error = null
   try {
-    d4c = new D4C("11" as any);
+    d4c = new D4C({ concurrency: "11" } as any);
   } catch (err) {
     error = err;
   }

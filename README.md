@@ -127,8 +127,9 @@ Default concurrency is `1` in this library.
 Usage:
 
 ```ts
-/** default concurrency limit applied on default queues and new queues*/
-const d4c = new D4C(100);
+/** default concurrency limit applied on default queues
+ * and new tag queues*/
+const d4c = new D4C({ concurrency: 100 });
 ```
 
 or
@@ -402,7 +403,7 @@ usage:
 const d4c = new D4C();
 
 /** set defaultConcurrency as 500 */
-const d4c = new D4C(500);
+const d4c = new D4C({ concurrency: 500 });
 ```
 
 - wrap

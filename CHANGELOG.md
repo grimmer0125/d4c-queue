@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file. See [standa
 
 Those versions which only include documentation change might not be included here.
 
+### [1.5.4](https://github.com/grimmer0125/d4c-queue/compare/v1.4.5...v1.5.4) (2021-05-07)
+
+#### ⚠ BREAKING CHANGES
+
+```ts
+const d4c = new D4C(100);
+```
+
+To
+
+```ts
+const d4c = new D4C({ concurrency: 100 });
+```
+
 ### [1.5.0](https://github.com/grimmer0125/d4c-queue/compare/v1.4.5...v1.5.0) (2021-05-07)
 
 ⭐ New API ⭐ and minor bug fixes

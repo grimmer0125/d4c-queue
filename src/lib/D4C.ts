@@ -268,12 +268,16 @@ export class D4C {
   queues: TaskQueuesType;
   defaultConcurrency = DEFAULT_CONCURRENCY;
 
-  constructor(defaultConcurrency?: number) {
-    if (typeof defaultConcurrency == "number" && defaultConcurrency > 0) {
-      this.defaultConcurrency = defaultConcurrency;
-    } else if (defaultConcurrency !== undefined) {
-      throw new Error(errMsg.invalidClassParameter)
+  constructor(option?: { concurrency?: number }) {
+    if (option) {
+      const { concurrency } = option;
+      if (typeof concurrency == "number" && concurrency > 0) {
+        this.defaultConcurrency = concurrency;
+      } else if (concurrency !== undefined) {
+        throw new Error(errMsg.invalidClassParameter)
+      }
     }
+
     this.queues = new Map<string | symbol, TaskQueue>();
   }
 
