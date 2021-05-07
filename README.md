@@ -179,6 +179,23 @@ client_send_message_wait_connect(msg: string) {
 }
 ```
 
+Using D4C instance on `arrow function property` works well.
+
+```ts
+class TestController {
+  // alternative way
+  // @autobind
+  // bindMethodByArrowPropertyOrAutobind(){
+  // }
+
+  bindMethodByArrowPropertyOrAutobind = async () => {
+    /** access some property in this. accessible after wrapping*/
+  };
+}
+const d4c = new D4C();
+const res = await d4c.apply(testController.bindMethodByArrowPropertyOrAutobind);
+```
+
 ## Motivation and more detailed user scenario about Synchronization mode
 
 ### Causality
