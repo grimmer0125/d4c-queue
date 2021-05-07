@@ -267,6 +267,8 @@ testRaceCondition();
 
 `func2` will be executed when `fun1` is not finished.
 
+#### Real world cases
+
 In backend, the practical example is to compare `Async/await` in [Express](https://expressjs.com/) framework and [Apollo](https://www.apollographql.com/docs/apollo-server/)/[NestJS](https://nestjs.com/) frameworks. [NestJS' GraphQL part](https://docs.nestjs.com/graphql/quick-start) is using Apollo and they have a different implementation than ExpressJS. [NestJS' Restful part](https://docs.nestjs.com/controllers) is the same as ExpressJS.
 
 No race condition on two API call in `Express`, any API will be executed one by one. After async handler callback function is finished, another starts to be executed.
