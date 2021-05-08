@@ -25,7 +25,7 @@ type Unwrap<T> = T extends Promise<infer U>
 type QueueTag = string | symbol;
 type TaskQueuesType = Map<string | symbol, TaskQueue>;
 type IAnyFn = (...args: any[]) => Promise<any> | any;
-type MethodDecoratorParameter = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
+type MethodDecoratorType = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
 
 export const errMsg = {
   instanceInvalidTag: 'instanceInvalidTag: it should be string/symbol/undefined',
@@ -37,7 +37,7 @@ export const errMsg = {
 };
 
 const queueSymbol = Symbol("d4cQueues");
-const classDecoratorKey = Symbol('D4C');
+const defaultTag = Symbol('D4C');
 
 const DEFAULT_CONCURRENCY = 1;
 
@@ -57,12 +57,12 @@ export function synchronized(
     tag?: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
-  }): MethodDecoratorParameter;
+  }): MethodDecoratorType;
 export function synchronized(
   targetOrOption?: any,
   propertyKey?: string,
   descriptor?: PropertyDescriptor
-): void | MethodDecoratorParameter {
+): void | MethodDecoratorType {
 
   function injectQueue(constructorOrPrototype) {
 
@@ -187,7 +187,7 @@ function _q<T extends IAnyFn>(
     if (option?.tag !== undefined) {
       tag = option.tag;
     } else {
-      tag = classDecoratorKey;
+      tag = defaultTag;
     }
 
     /** Get sub-queue */
@@ -298,7 +298,7 @@ export class D4C {
     if (tag !== undefined) {
       usedTag = tag;
     } else {
-      usedTag = classDecoratorKey;
+      usedTag = defaultTag;
       this.defaultConcurrency = concurrency;
     }
 
