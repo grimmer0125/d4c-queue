@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. See [standa
 
 Those versions which only include documentation change might not be included here.
 
+### [1.5.9](https://github.com/grimmer0125/d4c-queue/compare/v1.5.4...v1.5.9) (2021-05-07)
+
+Add TypeDoc site and refactor code and improve some test. 
+
 ### [1.5.4](https://github.com/grimmer0125/d4c-queue/compare/v1.5.0...v1.5.4) (2021-05-07)
 
 #### ⚠ BREAKING CHANGES
