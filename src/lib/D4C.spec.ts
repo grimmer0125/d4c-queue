@@ -404,19 +404,23 @@ test('Instance usage: test if queue really work, execute one by one', async (t) 
   t.is(test.str, '10.220.50.05')
 });
 
-test('Instance usage: option noBlockCurr enable, with non-async function', async (t) => {
+test('Instance usage: option noBlockCurr enable, with two non-async function ', async (t) => {
   const d4c = new D4C();
   let testStr = '';
   testStr += '1';
-  const newFunc = d4c.wrap((input: string[], input2: string) => {
+  const newFunc = d4c.wrap(() => {
     testStr += 'inFuncSyn';
   }, { tag: queueTag, noBlockCurr: true });
   testStr += '2';
-  const job = newFunc(fixture, fixture2);
+  const job = newFunc();
   testStr += '3';
-  await job;
+
+  const newFunc2 = d4c.wrap(() => {
+    testStr += 'inFuncSyn2';
+  }, { tag: queueTag });
+  await Promise.all([job, newFunc2()]);
   testStr += '4';
-  t.is(testStr, '123inFuncSyn4');
+  t.is(testStr, '123inFuncSyninFuncSyn24');
 });
 
 
