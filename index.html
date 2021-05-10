@@ -1,0 +1,574 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>d4c-queue</title>
+	<meta name="description" content="Documentation for d4c-queue">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">d4c-queue</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1>d4c-queue</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#d4c-queue" id="d4c-queue" style="color: inherit; text-decoration: none;">
+					<h1>D4C Queue</h1>
+				</a>
+				<p><a href="https://www.npmjs.com/package/d4c-queue"><img src="https://img.shields.io/npm/v/d4c-queue.svg" alt="npm version"></a> <img src="https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg" alt="example workflow"> <a href="https://coveralls.io/github/grimmer0125/d4c-queue"><img src="https://coveralls.io/repos/github/grimmer0125/d4c-queue/badge.svg" alt="Coverage Status"></a></p>
+				<p>Wrap an <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function">async</a>/<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises">promise-returning</a>/<code>sync</code> function as a queue-ready async function, which is enqueued while being called. This is convenient to reuse it. Task queues execute original functions sequentially by default (synchronization mode, concurrency = 1) and allow changing concurrency limit to have concurrent tasks executed. It also supports <code>@synchronized</code> <a href="https://www.typescriptlang.org/docs/handbook/decorators.html">decorator</a> on instance or static methods. Passing arguments and using <code>await</code> to get return values are also supported.</p>
+				<a href="#features" id="features" style="color: inherit; text-decoration: none;">
+					<h2>Features</h2>
+				</a>
+				<ol>
+					<li>Two usages<ol>
+							<li>D4C instance: synchronization mode &amp; concurrency mode.</li>
+							<li>Instance and static method decorator on classes: synchronization mode.</li>
+						</ol>
+					</li>
+					<li>This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.</li>
+					<li>Optional parameter, <code>inheritPreErr</code>. If current task is waiting for previous tasks, set it as <code>true</code> to inherit the error of the previous task and the task will not be executed and throw a custom error <code>new PreviousError(task.preError.message ?? task.preError)</code>. If this parameter is omitted or set as <code>false</code>, the task will continue whether previous tasks happen errors or not.</li>
+					<li>Optional parameter, <code>noBlockCurr</code>. Set it as <code>true</code> to forcibly execute the current task in the next tick of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.</li>
+					<li>Support Browser and Node.js.</li>
+					<li>Fully Written in TypeScript and its <code>.d.ts</code> typing is out of box. JavaScript is supported, too.</li>
+					<li>Wrap a function to a new queue-ready async function. It is convenient to re-use this function. Also, it is able to pass arguments and get return value for each task function.</li>
+					<li>Support <code>async function</code>, a <code>promise-returning</code> function, and a <code>sync</code> function.</li>
+					<li>Sub queues system (via tags).</li>
+					<li>Well tested.</li>
+				</ol>
+				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+					<h2>Installation</h2>
+				</a>
+				<p>This package includes two builds.</p>
+				<ul>
+					<li>ES6 build (ES2015) with CommonJS module for <code>main</code> build in package.json.</li>
+					<li>ES6 build (ES2015) with ES6 module for <code>module</code> build. Some tools will follow the <code>module</code> field in <code>package.json</code>, like Rollup, Webpack, or Parcel. It is good to let build tools can tree-shake your module build to import only the code they need.</li>
+				</ul>
+				<p>Either <code>npm install d4c-queue</code> or <code>yarn add d4c-queue</code>. Then import this package.</p>
+				<p><strong>ES6 import</strong></p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { D4C, synchronized } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;d4c-queue&#x27;</span>;
+</code></pre>
+				<p><strong>CommonJS</strong></p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> { D4C, synchronized } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;d4c-queue&#x27;</span>);
+</code></pre>
+				<p>It is possible to use the <code>module</code> build with CommonJS require syntax in TypeScript or other build tools.</p>
+				<a href="#extra-optional-steps-if-you-want-to-use-decorators-from-this-library" id="extra-optional-steps-if-you-want-to-use-decorators-from-this-library" style="color: inherit; text-decoration: none;">
+					<h3>Extra optional steps if you want to use decorators from this library</h3>
+				</a>
+				<p>Keep in mind that <code>decorators</code> are JavaScript proposals and may vary in the future.</p>
+				<a href="#typescript-users" id="typescript-users" style="color: inherit; text-decoration: none;">
+					<h4>TypeScript users</h4>
+				</a>
+				<p>Modify your tsconfig.json to include the following settings</p>
+				<pre><code class="language-json">{
+  <span class="hljs-attr">&quot;experimentalDecorators&quot;</span>: <span class="hljs-literal">true</span>
+}
+</code></pre>
+				<a href="#javascript-users" id="javascript-users" style="color: inherit; text-decoration: none;">
+					<h4>JavaScript users</h4>
+				</a>
+				<p>You can use Babel to support decorators, install <code>@babel/plugin-proposal-decorators</code>.</p>
+				<p>For the users using <strong>Create React App</strong> JavaScript version, you can either use <code>eject</code> or <a href="https://github.com/gsoft-inc/craco">CRACO</a> to customize your babel setting. Using create React App TypeScript Version just needs to modify <code>tsconfig.json.</code></p>
+				<p>See <a href="#babelconfigjson">babel.config.json</a> in <a href="#Appendix">Appendix</a>.</p>
+				<p>See <a href="#craco-setting">CRACO Setting</a> in <a href="#Appendix">Appendix</a>.</p>
+				<a href="#usage-example" id="usage-example" style="color: inherit; text-decoration: none;">
+					<h2>Usage example</h2>
+				</a>
+				<p>Keep in mind that a function will not be enqueued into a task queue even it becomes a new function after wrapping. A task will be enqueued only when it is executed.</p>
+				<a href="#designed-queue-system" id="designed-queue-system" style="color: inherit; text-decoration: none;">
+					<h3>Designed queue system</h3>
+				</a>
+				<p>Each queue is isolated with the others.</p>
+				<ul>
+					<li>Two instance of your decorated class will have two individual queue system.<ul>
+							<li>The default queue in instance method queues is something like <code>@synchronized(self)</code> in other languages.</li>
+						</ul>
+					</li>
+					<li>Each D4C instance will have its own queue system.</li>
+				</ul>
+				<pre><code>D4C queues (decorator) injected <span class="hljs-keyword">into</span> your <span class="hljs-keyword">class</span> (per instance):
+  - instance <span class="hljs-function"><span class="hljs-keyword">method</span> <span class="hljs-title">queues</span>:</span>
+      - <span class="hljs-keyword">default</span> queue
+      - tag1 queue
+      - tag2 queue
+  - <span class="hljs-keyword">static</span> <span class="hljs-function"><span class="hljs-keyword">method</span> <span class="hljs-title">queues</span>
+      - <span class="hljs-title">default</span> <span class="hljs-title">queue</span>
+      - <span class="hljs-title">tag1</span> <span class="hljs-title">queue</span>
+      - <span class="hljs-title">tag2</span> <span class="hljs-title">queue</span>
+<span class="hljs-title">D4C</span> <span class="hljs-title">instance</span> <span class="hljs-title">queues</span> <span class="hljs-params">(per D4C object)</span>:</span>
+  - <span class="hljs-keyword">default</span> queue
+  - tag1 queue
+  - tag2 queue
+</code></pre>
+				<a href="#d4c-instance-usage" id="d4c-instance-usage" style="color: inherit; text-decoration: none;">
+					<h3>D4C instance usage</h3>
+				</a>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
+
+<span class="hljs-comment">/**
+ * in place 1
+ * you can choose to await the result or not.
+ */</span>
+<span class="hljs-keyword">const</span> asyncFunResult = <span class="hljs-keyword">await</span> d4c.wrap(asyncFun)(
+  <span class="hljs-string">&#x27;asyncFun_arg1&#x27;</span>,
+  <span class="hljs-string">&#x27;asyncFun_arg2&#x27;</span>
+);
+<span class="hljs-comment">/**
+ * in place 2, another event in event loop. Either async or
+ * sync function is ok. E.g., pass a sync function,
+ * it will wait for asyncFun&#x27;s finishing, then use await to get
+ * the new wrapped async function&#x27;s result.
+ */</span>
+<span class="hljs-keyword">const</span> syncFunFunResult = <span class="hljs-keyword">await</span> d4c.wrap(syncFun)(<span class="hljs-string">&#x27;syncFun_arg1&#x27;</span>);
+</code></pre>
+				<p>Alternatively, you can use below</p>
+				<pre><code class="language-typescript">d4c.apply(syncFun, { <span class="hljs-attr">args</span>: [<span class="hljs-string">&#x27;syncFun_arg1&#x27;</span>] });
+</code></pre>
+				<a href="#concurrency-mode" id="concurrency-mode" style="color: inherit; text-decoration: none;">
+					<h4>Concurrency mode</h4>
+				</a>
+				<p>Is it useful for rate-limiting tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.</p>
+				<p>Default concurrency is <code>1</code> in this library.</p>
+				<p>Usage:</p>
+				<pre><code class="language-ts"><span class="hljs-comment">/** default concurrency limit applied on default queues
+ * and new tag queues*/</span>
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C({ <span class="hljs-attr">concurrency</span>: <span class="hljs-number">100</span> });
+</code></pre>
+				<p>or</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
+<span class="hljs-comment">/** change default concurrency limit */</span>
+d4c.setQueue({ <span class="hljs-attr">concurrency</span>: <span class="hljs-number">10</span> });
+
+<span class="hljs-comment">/** change concurrency limit for queue2 */</span>
+d4c.setQueue({ <span class="hljs-attr">concurrency</span>: <span class="hljs-number">10</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;queue2&#x27;</span> });
+</code></pre>
+				<a href="#decorators-usage" id="decorators-usage" style="color: inherit; text-decoration: none;">
+					<h3>Decorators usage</h3>
+				</a>
+				<pre><code class="language-typescript"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ServiceAdapter</span> </span>{
+  <span class="hljs-meta">@synchronized</span>
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">connect</span>(<span class="hljs-params"></span>)</span> {}
+
+  <span class="hljs-meta">@synchronized</span>
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">client_send_message_wait_connect</span>(<span class="hljs-params">msg: <span class="hljs-built_in">string</span></span>)</span> {
+    <span class="hljs-comment">// ...</span>
+  }
+
+  <span class="hljs-comment">//** parameters are optional */</span>
+  <span class="hljs-meta">@synchronized</span>({ <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;world&#x27;</span>, <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">noBlockCurr</span>: <span class="hljs-literal">true</span> })
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">staticMethod</span>(<span class="hljs-params">text: <span class="hljs-built_in">string</span></span>)</span> {
+    <span class="hljs-keyword">return</span> text;
+  }
+}
+</code></pre>
+				<a href="#arrow-function" id="arrow-function" style="color: inherit; text-decoration: none;">
+					<h4>Arrow function</h4>
+				</a>
+				<p>Using decorators on <code>arrow function property</code> does not work since some limitation. If you need the effect of arrow function, you can bind by yourself (e.g. <code>this.handleChange = this.handleChange.bind(this);</code>) or consider <a href="https://www.npmjs.com/package/autobind-decorator">autobind-decorator</a></p>
+				<pre><code class="language-typescript"><span class="hljs-meta">@autobind</span>
+<span class="hljs-meta">@synchronized</span> <span class="hljs-comment">// should be the second line</span>
+<span class="hljs-function"><span class="hljs-title">client_send_message_wait_connect</span>(<span class="hljs-params">msg: <span class="hljs-built_in">string</span></span>)</span> {
+  <span class="hljs-comment">// ...</span>
+}
+</code></pre>
+				<p>Using D4C instance on <code>arrow function property</code> works well.</p>
+				<pre><code class="language-ts"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestController</span> </span>{
+  <span class="hljs-comment">// alternative way</span>
+  <span class="hljs-comment">// @autobind</span>
+  <span class="hljs-comment">// bindMethodByArrowPropertyOrAutobind(){</span>
+  <span class="hljs-comment">// }</span>
+
+  bindMethodByArrowPropertyOrAutobind = <span class="hljs-keyword">async</span> () =&gt; {
+    <span class="hljs-comment">/** access some property in this. accessible after wrapping*/</span>
+  };
+}
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
+<span class="hljs-keyword">const</span> res = <span class="hljs-keyword">await</span> d4c.apply(testController.bindMethodByArrowPropertyOrAutobind);
+</code></pre>
+				<a href="#motivation-and-more-detailed-user-scenario-about-synchronization-mode" id="motivation-and-more-detailed-user-scenario-about-synchronization-mode" style="color: inherit; text-decoration: none;">
+					<h2>Motivation and more detailed user scenario about Synchronization mode</h2>
+				</a>
+				<a href="#causality" id="causality" style="color: inherit; text-decoration: none;">
+					<h3>Causality</h3>
+				</a>
+				<p>Sometimes a task function is better to be executed after the previous task function is finished. For example, assume you are writing a adapter to use a network client library to connect to a service, either in a React frontend or a Node.js backend program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so <code>connect</code> is called first, later <code>send_message</code> is executed in another event. In the adapter code, usually a flag can be used and do something like</p>
+				<pre><code class="language-typescript"><span class="hljs-function"><span class="hljs-title">send_message</span>(<span class="hljs-params">msg: <span class="hljs-built_in">string</span></span>)</span> {
+  <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.connectingStatus === <span class="hljs-string">&#x27;Connected&#x27;</span>) {
+    <span class="hljs-comment">// send message</span>
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.connectingStatus === <span class="hljs-string">&#x27;Connecting&#x27;</span>) {
+    <span class="hljs-comment">// Um...how to wait for connecting successfully?</span>
+  } <span class="hljs-keyword">else</span> (<span class="hljs-built_in">this</span>.connectingStatus === <span class="hljs-string">&#x27;Disconnected&#x27;</span>) {
+    <span class="hljs-comment">// try to re-connect</span>
+  }
+}
+</code></pre>
+				<p><code>Connecting</code> status is more ambiguous then <code>Disconnected</code> status. Now you can use a task queue to solve them. E.g.,</p>
+				<pre><code class="language-typescript"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ServiceAdapter</span> </span>{
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">send_message</span>(<span class="hljs-params">msg: <span class="hljs-built_in">string</span></span>)</span> {
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.connectingStatus === <span class="hljs-string">&#x27;Connected&#x27;</span>) {
+      <span class="hljs-comment">/** send message */</span>
+      <span class="hljs-keyword">await</span> client_send_message_without_wait_connect(msg);
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.connectingStatus === <span class="hljs-string">&#x27;Connecting&#x27;</span>) {
+      <span class="hljs-comment">/** send message */</span>
+      <span class="hljs-keyword">await</span> client_send_message_wait_connect(msg);
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-comment">//..</span>
+    }
+  }
+
+  <span class="hljs-meta">@synchronized</span>
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">connect</span>(<span class="hljs-params"></span>)</span> {
+    <span class="hljs-comment">// ...</span>
+  }
+
+  <span class="hljs-meta">@synchronized</span>
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">client_send_message_wait_connect</span>(<span class="hljs-params">msg: <span class="hljs-built_in">string</span></span>)</span> {
+    <span class="hljs-comment">// ...</span>
+  }
+
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">client_send_message_without_wait_connect</span>(<span class="hljs-params">msg: <span class="hljs-built_in">string</span></span>)</span> {
+    <span class="hljs-comment">// ...</span>
+  }
+}
+</code></pre>
+				<a href="#another-case-use-d4c-instance-to-guarantee-the-execution-order" id="another-case-use-d4c-instance-to-guarantee-the-execution-order" style="color: inherit; text-decoration: none;">
+					<h4>Another case: use D4C instance to guarantee the execution order</h4>
+				</a>
+				<p>The code snippet is from <a href="https://github.com/grimmer0125/embedded-pydicom-react-viewer">embedded-pydicom-react-viewer</a>. Some function only can be executed after init function is finished.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> initPyodide = d4c.wrap(<span class="hljs-keyword">async</span> () =&gt; {
+  <span class="hljs-comment">/** init Pyodide*/</span>
+});
+
+<span class="hljs-comment">/** without d4c-queue, it will throw exception while being called
+ * before &#x27;initPyodide&#x27; is finished */</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> parseByPython = d4c.wrap(<span class="hljs-keyword">async</span> (buffer: <span class="hljs-built_in">ArrayBuffer</span>) =&gt; {
+  <span class="hljs-comment">/** execute python code in browser */</span>
+});
+</code></pre>
+				<a href="#concurrency" id="concurrency" style="color: inherit; text-decoration: none;">
+					<h3>Concurrency</h3>
+				</a>
+				<p>Concurrency may make race condition. And we usually use a synchronization mechanism (e.g. mutex) to solve it. A task queue can achieve this.</p>
+				<p>It is similar to causality. Sometimes two function which access same data within and will result race condition if they are executed concurrently. Although JavaScript is single thread (except Node.js Worker threads, Web Workers and JS runtime), the intrinsic property of event loop may result in some unexpected race condition, e.g.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> func1 = <span class="hljs-keyword">async</span> () =&gt; {
+  <span class="hljs-comment">// console.log(&quot;func1 start, event1 in event loop&quot;)</span>
+  <span class="hljs-keyword">await</span> func3();
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;func1 end, should not be same event1&#x27;</span>);
+};
+
+<span class="hljs-keyword">const</span> func2 = <span class="hljs-keyword">async</span> () =&gt; {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;func2&#x27;</span>);
+};
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">testRaceCondition</span>(<span class="hljs-params"></span>) </span>{
+  func1(); <span class="hljs-comment">// if add await will result in no race condition</span>
+  func2();
+}
+testRaceCondition();
+</code></pre>
+				<p><code>func2</code> will be executed when <code>fun1</code> is not finished.</p>
+				<a href="#real-world-cases" id="real-world-cases" style="color: inherit; text-decoration: none;">
+					<h4>Real world cases</h4>
+				</a>
+				<p>In backend, the practical example is to compare <code>Async/await</code> in <a href="https://expressjs.com/">Express</a> framework and <a href="https://www.apollographql.com/docs/apollo-server/">Apollo</a>/<a href="https://nestjs.com/">NestJS</a> frameworks. <a href="https://docs.nestjs.com/graphql/quick-start">NestJS&#39; GraphQL part</a> is using Apollo and they have a different implementation than ExpressJS. <a href="https://docs.nestjs.com/controllers">NestJS&#39; Restful part</a> is the same as ExpressJS.</p>
+				<p>No race condition on two API call in <code>Express</code>, any API will be executed one by one. After async handler callback function is finished, another starts to be executed.</p>
+				<pre><code class="language-typescript"><span class="hljs-comment">/** Express case */</span>
+app.post(<span class="hljs-string">&#x27;/testing&#x27;</span>, <span class="hljs-keyword">async</span> (req, res) =&gt; {
+  <span class="hljs-comment">// Do something here</span>
+});
+</code></pre>
+				<p>However, race condition may happen on two API call in <code>Apollo</code>/<code>NestJS</code>.</p>
+				<pre><code class="language-typescript"><span class="hljs-comment">/** Apollo server case */</span>
+<span class="hljs-keyword">const</span> resolvers = {
+  <span class="hljs-attr">Mutation</span>: {
+    <span class="hljs-attr">orderBook</span>: <span class="hljs-keyword">async</span> (_, { email, book }, { dataSources }) =&gt; {},
+  },
+  <span class="hljs-attr">Query</span>: {
+    <span class="hljs-attr">books</span>: <span class="hljs-keyword">async</span> () =&gt; books,
+  },
+};
+</code></pre>
+				<p>Two Apollo GraphQL queries/mutations may be executed concurrently, not like Express. This has advantage and disadvantage. If you need to worry about the possible race condition, you can consider this <code>d4c-queue</code> library, or <code>Database transaction</code> or <a href="https://www.npmjs.com/package/async-mutex">async-mutex</a>. You do not need to apply <code>d4c-queue</code> library on top API endpoint always, just apply on the place you worry about.</p>
+				<a href="#nestjs-graphql-synchronized-resolver-example-with-this-d4c-queue" id="nestjs-graphql-synchronized-resolver-example-with-this-d4c-queue" style="color: inherit; text-decoration: none;">
+					<h4>NestJS GraphQL synchronized resolver example with this d4c-queue</h4>
+				</a>
+				<p>The below shows how to make <code>hello query</code> become <code>synchronized</code>. Keep in mind that <code>@synchronized</code> should be below <code>@Query</code>.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { Query } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@nestjs/graphql&#x27;</span>;
+<span class="hljs-keyword">import</span> { synchronized } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;d4c-queue&#x27;</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">delay</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">string</span>&gt;(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">resolve, reject</span>) </span>{
+    <span class="hljs-built_in">setTimeout</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+      resolve(<span class="hljs-string">&#x27;world&#x27;</span>);
+    }, <span class="hljs-number">10</span> * <span class="hljs-number">1000</span>);
+  });
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestsResolver</span> </span>{
+  <span class="hljs-meta">@Query</span>(<span class="hljs-function">(<span class="hljs-params">returns</span>) =&gt;</span> <span class="hljs-built_in">String</span>)
+  <span class="hljs-comment">/** without <span class="hljs-doctag">@synchronized</span>, two resolver may print 1/2 1/2 2/2 2/2
+   *  with <span class="hljs-doctag">@synchronized</span>, it prints: 1/2 2/2 2/2 2/2
+   */</span>
+  <span class="hljs-meta">@synchronized</span>
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">hello</span>(<span class="hljs-params"></span>)</span> {
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;hello graphql resolver part: 1/2&#x27;</span>);
+    <span class="hljs-keyword">const</span> resp = <span class="hljs-keyword">await</span> delay();
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;hello graphql resolver part: 2/2&#x27;</span>);
+    <span class="hljs-keyword">return</span> resp;
+  }
+}
+</code></pre>
+				<a href="#convenience" id="convenience" style="color: inherit; text-decoration: none;">
+					<h3>Convenience</h3>
+				</a>
+				<p>To use async functions, sometime we just <code>await async_fun1()</code> to wait for its finishing then start to call <code>async_func2</code>. But if we also do not want to use <code>await</code> to block current event loop? The workaround way is to make another wrapper function manually to detach, like below</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">wrap_function</span>(<span class="hljs-params"></span>)</span>{
+  <span class="hljs-keyword">await</span> async_fun1()
+  <span class="hljs-keyword">await</span> async_func2()
+}
+
+<span class="hljs-function"><span class="hljs-title">current_function</span>(<span class="hljs-params"></span>)</span>
+{
+  <span class="hljs-comment">// just call</span>
+  wrap_function()
+
+  <span class="hljs-comment">// continue current following code</span>
+  <span class="hljs-comment">// ..</span>
+}
+</code></pre>
+				<p>Use this library can easily achieve, becomes</p>
+				<pre><code class="language-typescript">current_function();
+{
+  <span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
+  d4c.apply(async_fun1);
+  d4c.apply(async_fun1);
+}
+</code></pre>
+				<a href="#api" id="api" style="color: inherit; text-decoration: none;">
+					<h2>API</h2>
+				</a>
+				<p>The parameters in the below signatures are optional. <code>inheritPreErr</code> and <code>noBlockCurr</code> are false by default. <code>tag</code> can overwrite the default tag and <strong>specify different queue</strong> for this method or function.</p>
+				<a href="#decorators" id="decorators" style="color: inherit; text-decoration: none;">
+					<h3>Decorators:</h3>
+				</a>
+				<ul>
+					<li>@synchronized</li>
+				</ul>
+				<pre><code class="language-typescript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">synchronized</span>(<span class="hljs-params">option?: {
+  inheritPreErr?: <span class="hljs-built_in">boolean</span>;
+  noBlockCurr?: <span class="hljs-built_in">boolean</span>;
+  tag?: <span class="hljs-built_in">string</span> | symbol;
+}</span>)</span>;
+</code></pre>
+				<p>Example:</p>
+				<pre><code class="language-typescript"><span class="hljs-meta">@synchronized</span>
+<span class="hljs-meta">@synchronized</span>()
+<span class="hljs-meta">@synchronized</span>({ <span class="hljs-attr">tag</span>: <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span> })
+<span class="hljs-meta">@synchronized</span>({ <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">noBlockCurr</span>: <span class="hljs-literal">true</span> })
+</code></pre>
+				<p>See <a href="#decorators-usage">decorators-usage</a></p>
+				<a href="#d4c-instance-usage-1" id="d4c-instance-usage-1" style="color: inherit; text-decoration: none;">
+					<h3>D4C instance usage</h3>
+				</a>
+				<p>Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional.</p>
+				<ul>
+					<li>constructor</li>
+				</ul>
+				<pre><code class="language-ts"><span class="hljs-title">constructor</span>(<span class="hljs-params">defaultConcurrency?: <span class="hljs-built_in">number</span></span>)
+</code></pre>
+				<p>usage:</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
+
+<span class="hljs-comment">/** set defaultConcurrency as 500 */</span>
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C({ <span class="hljs-attr">concurrency</span>: <span class="hljs-number">500</span> });
+</code></pre>
+				<ul>
+					<li>wrap</li>
+				</ul>
+				<pre><code class="language-typescript"><span class="hljs-keyword">public</span> wrap&lt;T <span class="hljs-keyword">extends</span> IAnyFn&gt;(
+  func: T,
+  option?: {
+    tag?: <span class="hljs-built_in">string</span> | symbol;
+    inheritPreErr?: <span class="hljs-built_in">boolean</span>;
+    noBlockCurr?: <span class="hljs-built_in">boolean</span>;
+  }
+)
+</code></pre>
+				<p>If original func is a async function, <code>wrap</code> will return <code>a async function</code> whose parameters and returned value&#39;s type (a.k.a. <code>Promise</code>) and value are same as original func.</p>
+				<p>If original func is a sync function, <code>wrap</code> will return <code>a async function</code> whose parameters are the same as the original function, and returned value&#39;s promise generic type is the same as original func. Which means it becomes a awaitable async function, besides queueing.</p>
+				<ul>
+					<li>apply</li>
+				</ul>
+				<pre><code class="language-typescript"><span class="hljs-keyword">public</span> apply&lt;T <span class="hljs-keyword">extends</span> IAnyFn&gt;(
+  func: T,
+  option?: {
+    tag?: <span class="hljs-built_in">string</span> | symbol;
+    inheritPreErr?: <span class="hljs-built_in">boolean</span>;
+    noBlockCurr?: <span class="hljs-built_in">boolean</span>;
+    args?: Parameters&lt;<span class="hljs-keyword">typeof</span> func&gt;;
+  }
+)
+</code></pre>
+				<p>Almost the same as <code>wrap</code> but just directly executing the original function call, e.g.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> newFunc = d4c.wrap(asyncFun, { <span class="hljs-attr">tag</span>: <span class="hljs-string">&quot;queue1&quot;</span> })
+newFunc(<span class="hljs-string">&quot;asyncFun_arg1&quot;</span>, <span class="hljs-string">&quot;asyncFun_arg2&quot;</span>);)
+</code></pre>
+				<p>becomes</p>
+				<pre><code class="language-typescript">d4c.apply(asyncFun, { <span class="hljs-attr">args</span>: [<span class="hljs-string">&#x27;asyncFun_arg1&#x27;</span>], <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;queue1&#x27;</span> });
+</code></pre>
+				<a href="#changelog" id="changelog" style="color: inherit; text-decoration: none;">
+					<h2>Changelog</h2>
+				</a>
+				<p>Check <a href="https://github.com/grimmer0125/d4c-queue/blob/master/CHANGELOG.md">here</a></p>
+				<a href="#appendix" id="appendix" style="color: inherit; text-decoration: none;">
+					<h2>Appendix</h2>
+				</a>
+				<p>I use <code>babel-node index.js</code> with the following setting to test.</p>
+				<a href="#babelconfigjson" id="babelconfigjson" style="color: inherit; text-decoration: none;">
+					<h3>babel.config.json</h3>
+				</a>
+				<pre><code class="language-json">{
+  <span class="hljs-attr">&quot;presets&quot;</span>: [<span class="hljs-string">&quot;@babel/preset-env&quot;</span>],
+  <span class="hljs-attr">&quot;plugins&quot;</span>: [
+    [
+      <span class="hljs-string">&quot;@babel/plugin-proposal-decorators&quot;</span>,
+      {
+        <span class="hljs-attr">&quot;legacy&quot;</span>: <span class="hljs-literal">true</span>
+      }
+    ]
+  ]
+}
+</code></pre>
+				<a href="#craco-setting" id="craco-setting" style="color: inherit; text-decoration: none;">
+					<h3>CRACO setting</h3>
+				</a>
+				<p>Follow its site, <a href="https://github.com/gsoft-inc/craco">CRACO</a>.</p>
+				<ol>
+					<li><code>yarn add @craco/craco</code></li>
+					<li>Replace <code>react-scripts</code> with <code>craco</code> in <code>package.json</code></li>
+					<li><code>yarn add @babel/preset-env @babel/plugin-proposal-decorators</code></li>
+					<li>Touch <code>craco.config.js</code> and modify its content as the following</li>
+					<li>Then just <code>yarn start</code>.</li>
+				</ol>
+				<p><code>craco.config.js</code> (roughly same as <code>babel.config.json</code>):</p>
+				<pre><code class="language-javascript"><span class="hljs-built_in">module</span>.exports = {
+  <span class="hljs-attr">babel</span>: {
+    <span class="hljs-attr">presets</span>: [[<span class="hljs-string">&#x27;@babel/preset-env&#x27;</span>]],
+    <span class="hljs-attr">plugins</span>: [[<span class="hljs-string">&#x27;@babel/plugin-proposal-decorators&#x27;</span>, { <span class="hljs-attr">legacy</span>: <span class="hljs-literal">true</span> }]],
+    <span class="hljs-attr">loaderOptions</span>: {},
+    <span class="hljs-attr">loaderOptions</span>: <span class="hljs-function">(<span class="hljs-params">babelLoaderOptions, { env, paths }</span>) =&gt;</span> {
+      <span class="hljs-keyword">return</span> babelLoaderOptions;
+    },
+  },
+};
+</code></pre>
+				<a href="#use-latest-github-code-of-this-library" id="use-latest-github-code-of-this-library" style="color: inherit; text-decoration: none;">
+					<h3>Use latest GitHub code of this library</h3>
+				</a>
+				<ol>
+					<li>git clone this repo</li>
+					<li>in cloned project folder, <code>yarn link</code></li>
+					<li><code>yarn test</code> or <code>yarn build</code></li>
+					<li>in your project, <code>yarn link d4c-queue</code>. Do above ES6/CommonJS import to start to use.</li>
+					<li>in your project, <code>yarn unlink d4c-queue</code> to uninstall.</li>
+				</ol>
+				<p>The development environment of this library is Node.js v15.14.0 &amp; Visual Studio Code. TypeScript 4.2.3 is also used and will be automatically installed in node_modules. <a href="https://github.com/bitjson/typescript-starter">typescript-starter</a> is used to generate two builds, <code>main</code> and <code>module</code> via its setting. Some example code is in <a href="https://github.com/grimmer0125/d4c-queue/blob/master/src/lib/D4C.spec.ts">tests</a>.</p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_index_.html">&quot;index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_lib_d4c_.html">&quot;lib/<wbr>D4C&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_lib_queue_.html">&quot;lib/<wbr>Queue&quot;</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
