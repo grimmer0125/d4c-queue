@@ -6,6 +6,7 @@
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
   "repository": "https://github.com/grimmer0125/d4c-queue",
+  "homepage": "https://grimmer0125.github.io/d4c-queue",
   "license": "MIT",
   "keywords": [
     "task queue",
@@ -22,6 +23,7 @@
     "javascript",
     "node",
     "browser",
+
     "rate-limit",
     "apollo",
     "nestjs",
@@ -70,7 +72,7 @@
     "cov:send": "run-s cov:lcov && codecov",
     "cov:check": "nyc report && nyc check-coverage --lines 100 --functions 100 --branches 100",
     "doc": "run-s doc:html && open-cli build/docs/index.html",
-    "doc:html": "typedoc src/ --exclude **/*.spec.ts --target ES6 --mode file --out build/docs",
+    "doc:html": "typedoc src/ --exclude **/*.spec.ts --target ES6  --exclude src/lib/Queue.ts --excludeNotExported --out build/docs",
     "doc:json": "typedoc src/ --exclude **/*.spec.ts --target ES6 --mode file --json build/docs/typedoc.json",
     "doc:publish": "gh-pages -m \"[ci skip] Updates\" -d build/docs",
     "version": "standard-version",

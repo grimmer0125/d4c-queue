@@ -1,7 +1,7 @@
 import autobind from 'autobind-decorator'
 import test from 'ava';
 
-import { D4C, errMsg, synchronized } from './D4C';
+import { D4C, ErrMsg, synchronized } from './D4C';
 
 const fixture = ['hello'];
 const fixture2 = 'world';
@@ -97,7 +97,7 @@ test('Instance usage: test concurrency', async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, errMsg.invalidSetQueueConcurrency);
+  t.is(error.message, ErrMsg.InvalidSetQueueConcurrency);
 
   error = null
   try {
@@ -105,7 +105,7 @@ test('Instance usage: test concurrency', async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, errMsg.invalidSetQueueTag);
+  t.is(error.message, ErrMsg.InvalidSetQueueTag);
 
   error = null
   try {
@@ -113,7 +113,7 @@ test('Instance usage: test concurrency', async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, errMsg.invalidClassParameter);
+  t.is(error.message, ErrMsg.InvalidClassParameter);
 });
 
 
@@ -257,7 +257,7 @@ test("Decorator usage", async (t) => {
     const newFunc = d4c.wrap(testController.greet);
     const resp = await newFunc("")
   } catch (err) {
-    t.is(err.message, errMsg.missingThisDueBindIssue)
+    t.is(err.message, ErrMsg.MissingThisDueBindIssue)
   }
 
   /** composite case: D4C instance on autobind decorated method */
@@ -297,7 +297,7 @@ test("Decorator usage", async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, errMsg.invalidDecoratorOption);
+  t.is(error.message, ErrMsg.InvalidDecoratorOption);
 
   /** test if option inheritPreErr works on decorator */
   (async () => {
@@ -337,7 +337,7 @@ test('Instance usage: funcAsync, a invalid null tag case', async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, errMsg.instanceInvalidTag);
+  t.is(error.message, ErrMsg.InstanceInvalidTag);
 });
 
 test('Instance usage: async function', async (t) => {

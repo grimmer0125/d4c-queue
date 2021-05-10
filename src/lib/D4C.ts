@@ -14,7 +14,7 @@ type TaskQueue = {
   runningTask: number;
 };
 
-type Unwrap<T> = T extends Promise<infer U>
+type UnwrapPromise<T> = T extends Promise<infer U>
   ? U
   : T extends (...args: any) => Promise<infer U>
   ? U
@@ -27,13 +27,13 @@ type TaskQueuesType = Map<string | symbol, TaskQueue>;
 type IAnyFn = (...args: any[]) => Promise<any> | any;
 type MethodDecoratorType = (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
 
-export const errMsg = {
-  instanceInvalidTag: 'instanceInvalidTag: it should be string/symbol/undefined',
-  invalidDecoratorOption: "not valid option when using decorators",
-  missingThisDueBindIssue: "missingThisDueBindIssue",
-  invalidSetQueueConcurrency: "invalidSetQueueConcurrency",
-  invalidSetQueueTag: "invalidSetQueueTag",
-  invalidClassParameter: "invalidClassParameter",
+export enum ErrMsg {
+  InstanceInvalidTag = 'instanceInvalidTag: it should be string/symbol/undefined',
+  InvalidDecoratorOption = "not valid option when using decorators",
+  InvalidSetQueueConcurrency = "invalidSetQueueConcurrency",
+  InvalidSetQueueTag = "invalidSetQueueTag",
+  InvalidClassParameter = "invalidClassParameter",
+  MissingThisDueBindIssue = "missingThisDueBindIssue",
 };
 
 const queueSymbol = Symbol("d4cQueues");
@@ -41,13 +41,22 @@ const defaultTag = Symbol('D4C');
 
 const DEFAULT_CONCURRENCY = 1;
 
-export class PreviousError extends Error {
+export class PreviousTaskError extends Error {
   constructor(message) {
     super(message);
     this.name = 'PreviousError';
   }
 }
 
+/** Usage example:
+ * ```typescript
+ * @synchronize
+ * async connect() {}
+ * // or
+ * @synchronized({ tag: 'world', inheritPreErr: true, noBlockCurr: true })
+ * static async staticMethod(text: string) {}
+ * ```
+ * */
 export function synchronized(
   target: any,
   propertyKey: string,
@@ -145,13 +154,13 @@ export function synchronized(
       );
       descriptor.value = newFunc;
     } else {
-      throw new Error(errMsg.invalidDecoratorOption);
+      throw new Error(ErrMsg.InvalidDecoratorOption);
     }
   }
 }
 
 function _q<T extends IAnyFn>(
-  d4c: D4C,
+  d4c: { queues: TaskQueuesType, defaultConcurrency: number },
   func: T,
   option?: {
     tag?: QueueTag;
@@ -160,7 +169,7 @@ function _q<T extends IAnyFn>(
   }
 ): (
     ...args: Parameters<typeof func>
-  ) => Promise<Unwrap<typeof func>> {
+  ) => Promise<UnwrapPromise<typeof func>> {
 
   return async function (...args: any[]): Promise<any> {
 
@@ -179,7 +188,7 @@ function _q<T extends IAnyFn>(
 
       currTaskQueues = this[queueSymbol];
     } else {
-      throw new Error(errMsg.missingThisDueBindIssue);
+      throw new Error(ErrMsg.MissingThisDueBindIssue);
     }
 
     /** Detect tag */
@@ -226,7 +235,7 @@ function _q<T extends IAnyFn>(
 
     /** Run the task */
     if (task?.preError) {
-      err = new PreviousError(task.preError.message ?? task.preError);
+      err = new PreviousTaskError(task.preError.message ?? task.preError);
     } else {
       try {
         /** this will be constructor function for static method case */
@@ -261,20 +270,22 @@ function _q<T extends IAnyFn>(
     return result;
   } as (
       ...args: Parameters<typeof func>
-    ) => Promise<Unwrap<typeof func>>;
+    ) => Promise<UnwrapPromise<typeof func>>;
 }
 
 export class D4C {
-  queues: TaskQueuesType;
-  defaultConcurrency = DEFAULT_CONCURRENCY;
+  private queues: TaskQueuesType;
 
+  private defaultConcurrency = DEFAULT_CONCURRENCY;
+
+  /** default concurrency is 1 */
   constructor(option?: { concurrency?: number }) {
     if (option) {
       const { concurrency } = option;
       if (typeof concurrency == "number" && concurrency > 0) {
         this.defaultConcurrency = concurrency;
       } else if (concurrency !== undefined) {
-        throw new Error(errMsg.invalidClassParameter)
+        throw new Error(ErrMsg.InvalidClassParameter)
       }
     }
 
@@ -287,10 +298,10 @@ export class D4C {
   }) {
     const { tag, concurrency } = option;
     if (typeof concurrency !== "number" || concurrency < 1) {
-      throw new Error(errMsg.invalidSetQueueConcurrency)
+      throw new Error(ErrMsg.InvalidSetQueueConcurrency)
     }
     if (tag !== undefined && typeof tag !== "symbol" && typeof tag !== "string") {
-      throw new Error(errMsg.invalidSetQueueTag);
+      throw new Error(ErrMsg.InvalidSetQueueTag);
     }
 
     // TODO: refactor this, _q has similar code */
@@ -317,6 +328,7 @@ export class D4C {
     this.queues.set(usedTag, taskQueue);
   }
 
+  /** It wraps original function for queue ready and executes it*/
   apply<T extends IAnyFn>(
     func: T,
     option?: {
@@ -325,11 +337,12 @@ export class D4C {
       noBlockCurr?: boolean;
       args?: Parameters<typeof func>;
     }
-  ): Promise<Unwrap<typeof func>> {
+  ): Promise<UnwrapPromise<typeof func>> {
     const resp = this.wrap(func, option).apply(null, option?.args);
     return resp;
   }
 
+  /** It wraps original function for queue ready */
   wrap<T extends IAnyFn>(
     func: T,
     option?: {
@@ -339,11 +352,11 @@ export class D4C {
     }
   ): (
       ...args: Parameters<typeof func>
-    ) => Promise<Unwrap<typeof func>> {
+    ) => Promise<UnwrapPromise<typeof func>> {
     if (!option || (option.tag === undefined || typeof option.tag === "string"
       || typeof option.tag === "symbol")) {
-      return _q(this, func, option);
+      return _q({ queues: this.queues, defaultConcurrency: this.defaultConcurrency }, func, option);
     }
-    throw new Error(errMsg.instanceInvalidTag);
+    throw new Error(ErrMsg.InstanceInvalidTag);
   }
 }
