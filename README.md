@@ -384,6 +384,8 @@ current_function();
 
 The parameters in the below signatures are optional. `inheritPreErr` and `noBlockCurr` are false by default. `tag` can overwrite the default tag and **specify different queue** for this method or function.
 
+You can check the generated [TypeDoc site](https://grimmer.io/d4c-queue/modules/_lib_d4c_.html).
+
 ### Decorators:
 
 - @synchronized
