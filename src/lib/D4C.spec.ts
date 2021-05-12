@@ -58,6 +58,15 @@ test('Instance usage: test concurrency', async (t) => {
   await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
   t.is(test.str, '10.20.050.52')
 
+  /** tag queue: concurrency 100 test */
+  test = { str: '' };
+  d4c = new D4C({ concurrency: 100, tag: "2" })
+  fn1 = d4c.wrap(timeout);
+  fn2 = d4c.wrap(immediateFun);
+  fn3 = d4c.wrap(immediateFunPromise);
+  await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
+  t.is(test.str, '10.20.050.52')
+
   /** default queue: use setQueue to change default concurrency 100 */
   test = { str: '' };
   d4c = new D4C();
@@ -97,7 +106,7 @@ test('Instance usage: test concurrency', async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, ErrMsg.InvalidSetQueueConcurrency);
+  t.is(error.message, ErrMsg.InvalidQueueConcurrency);
 
   error = null
   try {
@@ -105,7 +114,7 @@ test('Instance usage: test concurrency', async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, ErrMsg.InvalidSetQueueTag);
+  t.is(error.message, ErrMsg.InvalidQueueTag);
 
   error = null
   try {
@@ -113,7 +122,7 @@ test('Instance usage: test concurrency', async (t) => {
   } catch (err) {
     error = err;
   }
-  t.is(error.message, ErrMsg.InvalidClassParameter);
+  t.is(error.message, ErrMsg.InvalidQueueConcurrency);
 });
 
 

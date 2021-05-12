@@ -30,8 +30,8 @@ type MethodDecoratorType = (target: any, propertyKey: string, descriptor: Proper
 export enum ErrMsg {
   InstanceInvalidTag = 'instanceInvalidTag: it should be string/symbol/undefined',
   InvalidDecoratorOption = "not valid option when using decorators",
-  InvalidSetQueueConcurrency = "invalidSetQueueConcurrency",
-  InvalidSetQueueTag = "invalidSetQueueTag",
+  InvalidQueueConcurrency = "invalidQueueConcurrency",
+  InvalidQueueTag = "invalidQueueTag",
   InvalidClassParameter = "invalidClassParameter",
   MissingThisDueBindIssue = "missingThisDueBindIssue",
 };
@@ -84,6 +84,8 @@ export function synchronized(
       // prototype, means instance method
       if (constructorOrPrototype[queueSymbol] !== null) {
         constructorOrPrototype[queueSymbol] = null;
+      } else {
+        console.log("instance case: constructorOrPrototype[queueSymbol] not null")
       }
     }
   }
@@ -279,29 +281,36 @@ export class D4C {
   private defaultConcurrency = DEFAULT_CONCURRENCY;
 
   /** default concurrency is 1 */
-  constructor(option?: { concurrency?: number }) {
-    if (option) {
-      const { concurrency } = option;
-      if (typeof concurrency == "number" && concurrency > 0) {
-        this.defaultConcurrency = concurrency;
-      } else if (concurrency !== undefined) {
-        throw new Error(ErrMsg.InvalidClassParameter)
-      }
-    }
+  constructor(option?: { tag?: string | symbol, concurrency?: number }) {
 
     this.queues = new Map<string | symbol, TaskQueue>();
+
+    if (option?.concurrency) {
+      this._setQueue(option);
+    }
   }
 
   setQueue(option: {
     tag?: string | symbol;
     concurrency: number,
   }) {
+    this._setQueue(option);
+  }
+
+  _setQueue(option?: {
+    tag?: string | symbol;
+    concurrency?: number,
+  }) {
+    if (option?.concurrency === undefined || typeof (option?.concurrency) !== "number") {
+      throw new Error(ErrMsg.InvalidQueueConcurrency)
+    }
+
     const { tag, concurrency } = option;
-    if (typeof concurrency !== "number" || concurrency < 1) {
-      throw new Error(ErrMsg.InvalidSetQueueConcurrency)
+    if (concurrency < 1) {
+      throw new Error(ErrMsg.InvalidQueueConcurrency)
     }
     if (tag !== undefined && typeof tag !== "symbol" && typeof tag !== "string") {
-      throw new Error(ErrMsg.InvalidSetQueueTag);
+      throw new Error(ErrMsg.InvalidQueueTag);
     }
 
     // TODO: refactor this, _q has similar code */
