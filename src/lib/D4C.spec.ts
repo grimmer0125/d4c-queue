@@ -49,9 +49,12 @@ const immediateFunPromise = (seconds: number, target: { str: string }) => {
 };
 
 test('Instance usage: test concurrency', async (t) => {
+
+
+
   /** default queue: concurrency 100 test */
   let test = { str: '' };
-  let d4c = new D4C({ concurrency: 100 })
+  let d4c = new D4C({ limit: 100 })
   let fn1 = d4c.wrap(timeout);
   let fn2 = d4c.wrap(immediateFun);
   let fn3 = d4c.wrap(immediateFunPromise);
@@ -60,17 +63,17 @@ test('Instance usage: test concurrency', async (t) => {
 
   /** tag queue: concurrency 100 test */
   test = { str: '' };
-  d4c = new D4C({ concurrency: 100, tag: "2" })
-  fn1 = d4c.wrap(timeout);
-  fn2 = d4c.wrap(immediateFun);
-  fn3 = d4c.wrap(immediateFunPromise);
+  d4c = new D4C({ limit: 100, tag: "2" })
+  fn1 = d4c.wrap(timeout, { tag: "2" });
+  fn2 = d4c.wrap(immediateFun, { tag: "2" });
+  fn3 = d4c.wrap(immediateFunPromise, { tag: "2" });
   await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
   t.is(test.str, '10.20.050.52')
 
   /** default queue: use setQueue to change default concurrency 100 */
   test = { str: '' };
   d4c = new D4C();
-  d4c.setQueue({ concurrency: 100 })
+  d4c.setQueue({ limit: 100 })
   fn1 = d4c.wrap(timeout);
   fn2 = d4c.wrap(immediateFun);
   fn3 = d4c.wrap(immediateFunPromise);
@@ -87,7 +90,7 @@ test('Instance usage: test concurrency', async (t) => {
 
   /** new tag with setQueue to set concurrency 1 */
   test = { str: '' };
-  d4c.setQueue({ concurrency: 1, tag: "2" })
+  d4c.setQueue({ limit: 1, tag: "2" })
   fn1 = d4c.wrap(timeout, { tag: "2" });
   fn2 = d4c.wrap(immediateFun, { tag: "2" });
   fn3 = d4c.wrap(immediateFunPromise, { tag: "2" });
@@ -96,13 +99,13 @@ test('Instance usage: test concurrency', async (t) => {
 
   /** default queue : use setQueue to set it back to 1 */
   test = { str: '' };
-  d4c.setQueue({ concurrency: 1 })
+  d4c.setQueue({ limit: 1 })
   await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
   t.is(test.str, '210.50.20.05');
 
   let error = null
   try {
-    d4c.setQueue({ concurrency: -100 })
+    d4c.setQueue({ limit: -100 })
   } catch (err) {
     error = err;
   }
@@ -110,7 +113,7 @@ test('Instance usage: test concurrency', async (t) => {
 
   error = null
   try {
-    d4c.setQueue({ tag: true, concurrency: 100 } as any)
+    d4c.setQueue({ tag: true, limit: 100 } as any)
   } catch (err) {
     error = err;
   }
@@ -118,7 +121,25 @@ test('Instance usage: test concurrency', async (t) => {
 
   error = null
   try {
-    d4c = new D4C({ concurrency: "11" } as any);
+    d4c.setQueue({ tag: true } as any)
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, ErrMsg.InvalidQueueConcurrency);
+
+  error = null
+  try {
+    d4c.setQueue({ tag: true, limit: "100" } as any)
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, ErrMsg.InvalidQueueConcurrency);
+
+
+
+  error = null
+  try {
+    d4c = new D4C({ limit: "11" } as any);
   } catch (err) {
     error = err;
   }

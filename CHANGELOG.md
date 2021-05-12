@@ -6,7 +6,17 @@ Those versions which only include documentation change might not be included her
 
 ### [1.5.10](https://github.com/grimmer0125/d4c-queue/compare/v1.5.9...v1.5.10) (2021-05-07)
 
-- Allow D4C constructor can setup tag queue concurrency.
+#### ⚠ BREAKING CHANGES
+
+```ts
+/** orig */
+d4c.setQueue({ concurrency: 10 });
+
+/** new, rename parameter */
+d4c.setQueue({ limit: 10 });
+```
+
+- Allow D4C constructor can setup tag queue concurrency limit. `const d4c = new D4C({ limit: 100, tag: '2' });`
 - Improve README.
 
 ### [1.5.9](https://github.com/grimmer0125/d4c-queue/compare/v1.5.4...v1.5.9) (2021-05-07)

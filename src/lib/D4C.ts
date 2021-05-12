@@ -84,8 +84,6 @@ export function synchronized(
       // prototype, means instance method
       if (constructorOrPrototype[queueSymbol] !== null) {
         constructorOrPrototype[queueSymbol] = null;
-      } else {
-        console.log("instance case: constructorOrPrototype[queueSymbol] not null")
       }
     }
   }
@@ -280,33 +278,38 @@ export class D4C {
 
   private defaultConcurrency = DEFAULT_CONCURRENCY;
 
-  /** default concurrency is 1 */
-  constructor(option?: { tag?: string | symbol, concurrency?: number }) {
-
+  /** Default concurrency is 1. Omitting tag means it is for default queue.
+   * If you specify concurrency limit for some tag queue,
+   * this instance will not use that tag queue by default. */
+  constructor(concurrency?: { tag?: string | symbol, limit?: number }) {
     this.queues = new Map<string | symbol, TaskQueue>();
-
-    if (option?.concurrency) {
-      this._setQueue(option);
+    if (concurrency?.limit) {
+      this._setQueue(concurrency);
     }
   }
 
-  setQueue(option: {
+  /** Omitting tag means it is for default queue. */
+  /**
+   *
+   * @param concurrency tag is optional for specific queue. omitting is for default queue
+   */
+  setQueue(concurrency: {
     tag?: string | symbol;
-    concurrency: number,
+    limit: number,
   }) {
-    this._setQueue(option);
+    this._setQueue(concurrency);
   }
 
-  _setQueue(option?: {
+  _setQueue(concurrency?: {
     tag?: string | symbol;
-    concurrency?: number,
+    limit?: number,
   }) {
-    if (option?.concurrency === undefined || typeof (option?.concurrency) !== "number") {
+    if (concurrency?.limit === undefined || typeof (concurrency?.limit) !== "number") {
       throw new Error(ErrMsg.InvalidQueueConcurrency)
     }
 
-    const { tag, concurrency } = option;
-    if (concurrency < 1) {
+    const { tag, limit } = concurrency;
+    if (limit < 1) {
       throw new Error(ErrMsg.InvalidQueueConcurrency)
     }
     if (tag !== undefined && typeof tag !== "symbol" && typeof tag !== "string") {
@@ -319,7 +322,7 @@ export class D4C {
       usedTag = tag;
     } else {
       usedTag = defaultTag;
-      this.defaultConcurrency = concurrency;
+      this.defaultConcurrency = limit;
     }
 
     let taskQueue = this.queues.get(usedTag);
@@ -328,10 +331,10 @@ export class D4C {
         queue: new Queue<Task>(),
         isRunning: false,
         runningTask: 0,
-        concurrency: concurrency
+        concurrency: limit
       };
     } else {
-      taskQueue.concurrency = concurrency;
+      taskQueue.concurrency = limit;
     }
 
     this.queues.set(usedTag, taskQueue);

@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/d4c-queue.svg)](https://www.npmjs.com/package/d4c-queue) ![example workflow](https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/grimmer0125/d4c-queue/badge.svg)](https://coveralls.io/github/grimmer0125/d4c-queue)
 
-Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)/[promise-returning](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)/`sync` function as a queue-ready async function, which is enqueued while being called. This is convenient to reuse it. Task queues execute original functions sequentially by default (synchronization mode, `concurrency = 1`) and allow changing concurrency limit to have concurrent tasks executed. It also supports `@synchronized` [decorator](https://www.typescriptlang.org/docs/handbook/decorators.html) on instance or static methods. Passing arguments and using `await` to get return values are also supported.
+Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)/[promise-returning](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)/`sync` function as a queue-ready async function, which is enqueued while being called. This is convenient to reuse it. Task queues execute original functions sequentially by default (synchronization mode, `concurrency limit = 1`) and allow changing concurrency limit to have concurrent tasks executed. It also supports `@synchronized` [decorator](https://www.typescriptlang.org/docs/handbook/decorators.html) on instance or static methods. Passing arguments and using `await` to get return values are also supported.
 
 ## Features
 
@@ -126,17 +126,17 @@ d4c.apply(syncFun, { args: ['syncFun_arg1'] });
 
 Is it useful for rate-limiting tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.
 
-Default concurrency is `1` in this library.
+Default concurrency limit is `1` in this library.
 
 Usage:
 
 ```ts
 /** default concurrency limit applied on default queues
  * and new tag queues*/
-const d4c = new D4C({ concurrency: 100 });
+const d4c = new D4C({ limit: 100 });
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C({ concurrency: 100, tag: '2' });
+const d4c = new D4C({ limit: 100, tag: '2' });
 ```
 
 or
@@ -144,10 +144,10 @@ or
 ```ts
 const d4c = new D4C();
 /** change default concurrency limit */
-d4c.setQueue({ concurrency: 10 });
+d4c.setQueue({ limit: 10 });
 
 /** change concurrency limit for queue2 */
-d4c.setQueue({ concurrency: 10, tag: 'queue2' });
+d4c.setQueue({ limit: 10, tag: 'queue2' });
 ```
 
 ### Decorators usage
@@ -420,7 +420,7 @@ Make a instance first, there is a default tag so that setting a unique tag for a
 - constructor
 
 ```ts
-constructor(option?: { tag?: string | symbol, concurrency?: number })
+constructor(concurrency?: { tag?: string | symbol, limit?: number }) {
 ```
 
 usage:
@@ -430,10 +430,18 @@ const d4c = new D4C();
 
 /** default concurrency limit 500 applied on default queues
  * and new tag queues*/
-const d4c = new D4C({ concurrency: 500 });
+const d4c = new D4C({ limit: 500 });
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C({ concurrency: 100, tag: '2' });
+const d4c = new D4C({ limit: 100, tag: '2' });
+```
+
+- setQueue
+
+```ts
+d4c.setQueue({ limit: 10 });
+
+d4c.setQueue({ limit: 10, tag: 'queue2' });
 ```
 
 - wrap
