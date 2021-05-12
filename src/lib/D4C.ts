@@ -304,7 +304,7 @@ export class D4C {
     tag?: string | symbol;
     limit?: number,
   }) {
-    if (concurrency?.limit === undefined || typeof (concurrency?.limit) !== "number") {
+    if (concurrency?.limit === undefined || typeof (concurrency.limit) !== "number") {
       throw new Error(ErrMsg.InvalidQueueConcurrency)
     }
 

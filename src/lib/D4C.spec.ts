@@ -105,6 +105,15 @@ test('Instance usage: test concurrency', async (t) => {
 
   let error = null
   try {
+    d4c.setQueue(undefined as any)
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, ErrMsg.InvalidQueueConcurrency);
+
+
+  error = null
+  try {
     d4c.setQueue({ limit: -100 })
   } catch (err) {
     error = err;
