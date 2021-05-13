@@ -49,6 +49,61 @@ export class PreviousTaskError extends Error {
   }
 }
 
+export function concurrency(queuesParam: [{ tag?: string | symbol, limit: number, isStatic?: false }]): ClassDecorator {
+  if (!Array.isArray(queuesParam)) {
+    throw new Error(ErrMsg.InvalidClassDecoratorParameter);
+  }
+
+  return (target) => {
+
+    queuesParam.forEach((queueParam) => {
+      if (!queuesParam) {
+        return;
+      }
+      const { tag, limit, isStatic } = queueParam;
+      if (!checkTag(tag) || typeof limit !== "number" || (isStatic !== undefined && typeof isStatic !== "boolean")) {
+        throw new Error(ErrMsg.InvalidClassDecoratorParameter);
+      }
+
+      const usedTag = tag ?? defaultTag;
+
+      if (isStatic) {
+        // check if some static method is using @synchronized
+        const queues: TaskQueuesType = target[queueSymbol]
+        if (queues) {
+          let taskQueue = queues.get(usedTag);
+          if (!taskQueue) {
+            taskQueue = {
+              queue: new Queue<Task>(),
+              isRunning: false,
+              runningTask: 0,
+              /**  Decorator usage */
+              concurrency: limit
+            };
+            queues.set(usedTag, taskQueue);
+          } else {
+            // duplicate tag
+            throw new Error(ErrMsg.InvalidClassDecoratorParameter);
+          }
+        }
+      } else {
+        // check if some instance method is using @synchronized
+        if (target.prototype[queueSymbol] !== null) {
+          if (!target.prototype[concurrentSymbol]) {
+            target.prototype[concurrentSymbol] = {};
+          }
+          if (target.prototype[queueSymbol][usedTag]) {
+            // duplicate tag
+            throw new Error(ErrMsg.InvalidClassDecoratorParameter);
+          }
+          target.prototype[queueSymbol][usedTag] = limit;
+        }
+      }
+    })
+    // Reflect.defineMetadata(classDecoratorKey, defaultTag, target.prototype);
+  };
+}
+
 function checkTag(tag) {
   if (tag === undefined || typeof tag === "string"
     || typeof tag === "symbol") {
@@ -186,6 +241,16 @@ function _q<T extends IAnyFn>(
 
   return async function (...args: any[]): Promise<any> {
 
+    /** Detect tag */
+    let tag: QueueTag;
+    if (option?.tag !== undefined) {
+      tag = option.tag;
+    } else {
+      tag = defaultTag;
+    }
+
+    let decoratorConcurrencyLimit: number;
+
     /** Assign queues */
     let taskQueue: TaskQueue;
     let currTaskQueues: TaskQueuesType;
@@ -194,22 +259,16 @@ function _q<T extends IAnyFn>(
       currTaskQueues = d4c.queues;
     } else if (this && (this[queueSymbol] || this[queueSymbol] === null)) {
 
-      /** Decorator case, using injected queues in user defined objects*/
       if (this[queueSymbol] === null) {
+        /** Decorator instance method first time case, using injected queues in user defined objects*/
         this[queueSymbol] = new Map<string | symbol, TaskQueue>();
       }
 
       currTaskQueues = this[queueSymbol];
+      decoratorConcurrencyLimit = this[queueSymbol][tag];
+      console.log("decoratorConcurrencyLimit:", decoratorConcurrencyLimit)
     } else {
       throw new Error(ErrMsg.MissingThisDueBindIssue);
-    }
-
-    /** Detect tag */
-    let tag: QueueTag;
-    if (option?.tag !== undefined) {
-      tag = option.tag;
-    } else {
-      tag = defaultTag;
     }
 
     /** Get sub-queue */
@@ -219,7 +278,8 @@ function _q<T extends IAnyFn>(
         queue: new Queue<Task>(),
         isRunning: false,
         runningTask: 0,
-        concurrency: d4c?.defaultConcurrency ?? DEFAULT_CONCURRENCY
+        /** D4C instance usage ?? (Decorator usage - specified limit ?? decorator - nonspecified case) */
+        concurrency: d4c?.defaultConcurrency ?? (decoratorConcurrencyLimit ?? DEFAULT_CONCURRENCY)
       };
       currTaskQueues.set(tag, taskQueue);
     }
@@ -339,6 +399,7 @@ export class D4C {
       this.defaultConcurrency = limit;
     }
 
+    // TODO: refactor, other places have similar code
     let taskQueue = this.queues.get(usedTag);
     if (!taskQueue) {
       taskQueue = {
