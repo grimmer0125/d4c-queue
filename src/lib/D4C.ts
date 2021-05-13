@@ -48,7 +48,8 @@ export class PreviousTaskError extends Error {
   }
 }
 
-/** Usage example:
+/**
+ * Usage example:
  * ```typescript
  * @synchronize
  * async connect() {}
@@ -288,10 +289,9 @@ export class D4C {
     }
   }
 
-  /** Omitting tag means it is for default queue. */
   /**
-   *
    * @param concurrency tag is optional for specific queue. omitting is for default queue
+   * @param concurrency.limit it should be >= 1
    */
   setQueue(concurrency: {
     tag?: string | symbol;
@@ -300,7 +300,7 @@ export class D4C {
     this._setQueue(concurrency);
   }
 
-  _setQueue(concurrency?: {
+  private _setQueue(concurrency?: {
     tag?: string | symbol;
     limit?: number,
   }) {
