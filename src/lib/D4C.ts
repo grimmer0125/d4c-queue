@@ -228,7 +228,7 @@ export function synchronized(
 }
 
 function _q<T extends IAnyFn>(
-  d4c: { queues: TaskQueuesType, defaultConcurrency: number },
+  d4cObj: { queues: TaskQueuesType, defaultConcurrency: number },
   func: T,
   option?: {
     tag?: QueueTag;
@@ -254,9 +254,9 @@ function _q<T extends IAnyFn>(
     /** Assign queues */
     let taskQueue: TaskQueue;
     let currTaskQueues: TaskQueuesType;
-    if (d4c) {
+    if (d4cObj) {
       /** D4C instance case */
-      currTaskQueues = d4c.queues;
+      currTaskQueues = d4cObj.queues;
     } else if (this && (this[queueSymbol] || this[queueSymbol] === null)) {
 
       if (this[queueSymbol] === null) {
@@ -279,7 +279,7 @@ function _q<T extends IAnyFn>(
         isRunning: false,
         runningTask: 0,
         /** D4C instance usage ?? (Decorator usage - specified limit ?? decorator - nonspecified case) */
-        concurrency: d4c?.defaultConcurrency ?? (decoratorConcurrencyLimit ?? DEFAULT_CONCURRENCY)
+        concurrency: d4cObj?.defaultConcurrency ?? (decoratorConcurrencyLimit ?? DEFAULT_CONCURRENCY)
       };
       currTaskQueues.set(tag, taskQueue);
     }
@@ -351,27 +351,28 @@ export class D4C {
 
   private defaultConcurrency = DEFAULT_CONCURRENCY;
 
+  // TODO: change to array of concurrency?
   /**
    * Default concurrency is 1. Omitting tag means it is for default queue.
    * If you specify concurrency limit for some tag queue,
    * this instance will not use that tag queue by default.
    */
-  constructor(concurrency?: { tag?: string | symbol, limit?: number }) {
+  constructor(option?: { concurrency: { tag?: string | symbol, limit?: number } }) {
     this.queues = new Map<string | symbol, TaskQueue>();
-    if (concurrency?.limit) {
-      this._setQueue(concurrency);
+    if (option?.concurrency?.limit > 0) {
+      this._setQueue(option.concurrency);
     }
   }
 
   /**
-   * @param concurrency tag is optional for specific queue. omitting is for default queue
+   * @param option tag is optional for specific queue. omitting is for default queue
    * @param concurrency.limit is limit of concurrency and should be >= 1
    */
-  setQueue(concurrency: {
+  setConcurrency(option: {
     tag?: string | symbol;
     limit: number,
   }) {
-    this._setQueue(concurrency);
+    this._setQueue(option);
   }
 
   private _setQueue(concurrency?: {
