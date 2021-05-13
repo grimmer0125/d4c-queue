@@ -32,11 +32,12 @@ export enum ErrMsg {
   InvalidDecoratorOption = "not valid option when using decorators",
   InvalidQueueConcurrency = "invalidQueueConcurrency",
   InvalidQueueTag = "invalidQueueTag",
-  InvalidClassParameter = "invalidClassParameter",
+  InvalidClassDecoratorParameter = "invalidClassDecoratorParameter",
   MissingThisDueBindIssue = "missingThisDueBindIssue",
 };
 
 const queueSymbol = Symbol("d4cQueues");
+const concurrentSymbol = Symbol("concurrent");
 const defaultTag = Symbol('D4C');
 
 const DEFAULT_CONCURRENCY = 1;
@@ -45,6 +46,30 @@ export class PreviousTaskError extends Error {
   constructor(message) {
     super(message);
     this.name = 'PreviousError';
+  }
+}
+
+function checkTag(tag) {
+  if (tag === undefined || typeof tag === "string"
+    || typeof tag === "symbol") {
+    return true;
+  }
+
+  return false;
+}
+
+function injectQueue(constructorOrPrototype) {
+
+  if (constructorOrPrototype.prototype) {
+    // constructor, means static method
+    if (!constructorOrPrototype[queueSymbol]) {
+      constructorOrPrototype[queueSymbol] = new Map<string | symbol, TaskQueue>();
+    }
+  } else {
+    // prototype, means instance method
+    if (constructorOrPrototype[queueSymbol] !== null) {
+      constructorOrPrototype[queueSymbol] = null;
+    }
   }
 }
 
@@ -74,20 +99,7 @@ export function synchronized(
   descriptor?: PropertyDescriptor
 ): void | MethodDecoratorType {
 
-  function injectQueue(constructorOrPrototype) {
 
-    if (constructorOrPrototype.prototype) {
-      // constructor, means static method
-      if (!constructorOrPrototype[queueSymbol]) {
-        constructorOrPrototype[queueSymbol] = new Map<string | symbol, TaskQueue>();
-      }
-    } else {
-      // prototype, means instance method
-      if (constructorOrPrototype[queueSymbol] !== null) {
-        constructorOrPrototype[queueSymbol] = null;
-      }
-    }
-  }
 
   /**
    * since target in instance method & option both are object
@@ -109,7 +121,7 @@ export function synchronized(
     if (typeof obj === "object" && !obj.hasOwnProperty("constructor") && (
       (typeof obj.inheritPreErr === "boolean" || obj.inheritPreErr === undefined) &&
       (typeof obj.noBlockCurr === "boolean" || obj.noBlockCurr === undefined) &&
-      typeof obj.tag === "string" || typeof obj.tag === "symbol" || obj.tag === undefined)) {
+      checkTag(obj.tag))) {
       return true;
     }
     return false;
@@ -279,9 +291,11 @@ export class D4C {
 
   private defaultConcurrency = DEFAULT_CONCURRENCY;
 
-  /** Default concurrency is 1. Omitting tag means it is for default queue.
+  /**
+   * Default concurrency is 1. Omitting tag means it is for default queue.
    * If you specify concurrency limit for some tag queue,
-   * this instance will not use that tag queue by default. */
+   * this instance will not use that tag queue by default.
+   */
   constructor(concurrency?: { tag?: string | symbol, limit?: number }) {
     this.queues = new Map<string | symbol, TaskQueue>();
     if (concurrency?.limit) {
@@ -291,7 +305,7 @@ export class D4C {
 
   /**
    * @param concurrency tag is optional for specific queue. omitting is for default queue
-   * @param concurrency.limit it should be >= 1
+   * @param concurrency.limit is limit of concurrency and should be >= 1
    */
   setQueue(concurrency: {
     tag?: string | symbol;
@@ -312,7 +326,7 @@ export class D4C {
     if (limit < 1) {
       throw new Error(ErrMsg.InvalidQueueConcurrency)
     }
-    if (tag !== undefined && typeof tag !== "symbol" && typeof tag !== "string") {
+    if (!checkTag(tag)) {
       throw new Error(ErrMsg.InvalidQueueTag);
     }
 
@@ -365,8 +379,7 @@ export class D4C {
   ): (
       ...args: Parameters<typeof func>
     ) => Promise<UnwrapPromise<typeof func>> {
-    if (!option || (option.tag === undefined || typeof option.tag === "string"
-      || typeof option.tag === "symbol")) {
+    if (!option || checkTag(option.tag)) {
       return _q({ queues: this.queues, defaultConcurrency: this.defaultConcurrency }, func, option);
     }
     throw new Error(ErrMsg.InstanceInvalidTag);
