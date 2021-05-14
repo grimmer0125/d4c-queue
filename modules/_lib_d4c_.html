@@ -84,6 +84,8 @@
 						<section class="tsd-index-section ">
 							<h3>Functions</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_lib_d4c_.html#qconcurrency" class="tsd-kind-icon">QConcurrency</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_lib_d4c_.html#concurrent" class="tsd-kind-icon">concurrent</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_lib_d4c_.html#synchronized" class="tsd-kind-icon">synchronized</a></li>
 							</ul>
 						</section>
@@ -92,6 +94,104 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="qconcurrency" class="tsd-anchor"></a>
+					<h3>QConcurrency</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">QConcurrency<span class="tsd-signature-symbol">(</span>queuesParam<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>isStatic<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>limit<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>tag<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ClassDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/grimmer0125/c4q/blob/4ec1b47/src/lib/D4C.ts#L69">src/lib/D4C.ts:69</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Class decorator to setup concurrency for queues</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>queuesParam: <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>isStatic<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>limit<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span>tag<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>a array of each queue parameter</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">ClassDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="concurrent" class="tsd-anchor"></a>
+					<h3>concurrent</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">concurrent<span class="tsd-signature-symbol">(</span>target<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, propertyKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, descriptor<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDescriptor</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">concurrent<span class="tsd-signature-symbol">(</span>option<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">{ </span>inheritPreErr<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>noBlockCurr<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>tag<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">MethodDecoratorType</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/grimmer0125/c4q/blob/4ec1b47/src/lib/D4C.ts#L198">src/lib/D4C.ts:198</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Static and instance method decorator. Default concurrency = Infinity.
+									usage example:</p>
+									<pre><code class="language-typescript"><span class="hljs-meta">@concurrent</span>
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">fetchData</span>(<span class="hljs-params"></span>)</span> {}
+<span class="hljs-comment">// or</span>
+<span class="hljs-meta">@concurrent</span>({ <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;world&#x27;</span>, <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">noBlockCurr</span>: <span class="hljs-literal">true</span> })
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">fetchData</span>(<span class="hljs-params">url: <span class="hljs-built_in">string</span></span>)</span> {}
+</code></pre>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>target: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>propertyKey: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>descriptor: <span class="tsd-signature-type">PropertyDescriptor</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/grimmer0125/c4q/blob/4ec1b47/src/lib/D4C.ts#L202">src/lib/D4C.ts:202</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> option: <span class="tsd-signature-symbol">{ </span>inheritPreErr<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>noBlockCurr<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span>tag<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol"> }</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> inherit<wbr>Pre<wbr>Err<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> no<wbr>Block<wbr>Curr<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5><span class="tsd-flag ts-flagOptional">Optional</span> tag<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span></h5>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">MethodDecoratorType</span></h4>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
 					<a name="synchronized" class="tsd-anchor"></a>
 					<h3>synchronized</h3>
@@ -103,12 +203,13 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/grimmer0125/c4q/blob/f30b73c/src/lib/D4C.ts#L60">src/lib/D4C.ts:60</a></li>
+									<li>Defined in <a href="https://github.com/grimmer0125/c4q/blob/4ec1b47/src/lib/D4C.ts#L227">src/lib/D4C.ts:227</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Usage example:</p>
+									<p>Static and instance method decorator. Default concurrency = 1 for lock.
+									usage example:</p>
 									<pre><code class="language-typescript"><span class="hljs-meta">@synchronize</span>
 <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">connect</span>(<span class="hljs-params"></span>)</span> {}
 <span class="hljs-comment">// or</span>
@@ -134,7 +235,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/grimmer0125/c4q/blob/f30b73c/src/lib/D4C.ts#L64">src/lib/D4C.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/grimmer0125/c4q/blob/4ec1b47/src/lib/D4C.ts#L231">src/lib/D4C.ts:231</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -184,6 +285,12 @@
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-module">
 						<a href="../classes/_lib_d4c_.previoustaskerror.html" class="tsd-kind-icon">Previous<wbr>Task<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_lib_d4c_.html#qconcurrency" class="tsd-kind-icon">QConcurrency</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_lib_d4c_.html#concurrent" class="tsd-kind-icon">concurrent</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="_lib_d4c_.html#synchronized" class="tsd-kind-icon">synchronized</a>

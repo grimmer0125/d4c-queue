@@ -65,15 +65,15 @@
 				<a href="#d4c-queue" id="d4c-queue" style="color: inherit; text-decoration: none;">
 					<h1>D4C Queue</h1>
 				</a>
-				<p><a href="https://www.npmjs.com/package/d4c-queue"><img src="https://img.shields.io/npm/v/d4c-queue.svg" alt="npm version"></a> <img src="https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg" alt="example workflow"> <a href="https://coveralls.io/github/grimmer0125/d4c-queue"><img src="https://coveralls.io/repos/github/grimmer0125/d4c-queue/badge.svg" alt="Coverage Status"></a></p>
-				<p>Wrap an <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function">async</a>/<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises">promise-returning</a>/<code>sync</code> function as a queue-ready async function, which is enqueued while being called. This is convenient to reuse it. Task queues execute original functions sequentially by default (synchronization mode, <code>concurrency limit = 1</code>) and allow changing concurrency limit to have concurrent tasks executed. It also supports <code>@synchronized</code> <a href="https://www.typescriptlang.org/docs/handbook/decorators.html">decorator</a> on instance or static methods. Passing arguments and using <code>await</code> to get return values are also supported.</p>
+				<p><a href="https://www.npmjs.com/package/d4c-queue"><img src="https://img.shields.io/npm/v/d4c-queue.svg" alt="npm version"></a> <img src="https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg" alt="example workflow"> <a href="https://coveralls.io/github/grimmer0125/d4c-queue?branch=master"><img src="https://coveralls.io/repos/github/grimmer0125/d4c-queue/badge.svg?branch=master" alt="Coverage Status"></a></p>
+				<p>Wrap an <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function">async</a>/<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises">promise-returning</a>/<code>sync</code> function as a queue-ready async function, which is enqueued while being called. This is convenient to reuse it. Task queues execute original functions sequentially by default (synchronization mode, <code>concurrency limit = 1</code>) and allow changing concurrency limit to have concurrent tasks executed. It also supports <code>@synchronized</code>/<code>@concurrent</code> <a href="https://www.typescriptlang.org/docs/handbook/decorators.html">decorator</a> on instance or static methods. Passing arguments and using <code>await</code> to get return values are also supported.</p>
 				<a href="#features" id="features" style="color: inherit; text-decoration: none;">
 					<h2>Features</h2>
 				</a>
 				<ol>
 					<li>Two usages<ol>
 							<li>D4C instance: synchronization mode &amp; concurrency mode.</li>
-							<li>Instance and static method decorator on classes: synchronization mode.</li>
+							<li>Class, instance, and static method decorators on classes: synchronization mode &amp; concurrency mode.</li>
 						</ol>
 					</li>
 					<li>This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.</li>
@@ -96,10 +96,10 @@
 				</ul>
 				<p>Either <code>npm install d4c-queue</code> or <code>yarn add d4c-queue</code>. Then import this package.</p>
 				<p><strong>ES6 import</strong></p>
-				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { D4C, synchronized } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;d4c-queue&#x27;</span>;
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { D4C, synchronized, QConcurrency, concurrent } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;d4c-queue&#x27;</span>;
 </code></pre>
 				<p><strong>CommonJS</strong></p>
-				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> { D4C, synchronized } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;d4c-queue&#x27;</span>);
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> { D4C, synchronized, QConcurrency, concurrent } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;d4c-queue&#x27;</span>);
 </code></pre>
 				<p>It is possible to use the <code>module</code> build with CommonJS require syntax in TypeScript or other build tools.</p>
 				<a href="#extra-optional-steps-if-you-want-to-use-decorators-from-this-library" id="extra-optional-steps-if-you-want-to-use-decorators-from-this-library" style="color: inherit; text-decoration: none;">
@@ -153,6 +153,9 @@
 				<a href="#d4c-instance-usage" id="d4c-instance-usage" style="color: inherit; text-decoration: none;">
 					<h3>D4C instance usage</h3>
 				</a>
+				<a href="#synchronization-mode" id="synchronization-mode" style="color: inherit; text-decoration: none;">
+					<h4>Synchronization mode</h4>
+				</a>
 				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
 
 <span class="hljs-comment">/**
@@ -178,25 +181,27 @@
 					<h4>Concurrency mode</h4>
 				</a>
 				<p>Is it useful for rate-limiting tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.</p>
-				<p>Default concurrency limit is <code>1</code> in this library.</p>
+				<p>Default concurrency limit of D4C instance is <code>1</code> in this library.</p>
 				<p>Usage:</p>
-				<pre><code class="language-ts"><span class="hljs-comment">/** default concurrency limit applied on default queues
- * and new tag queues*/</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C({ <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span> });
+				<pre><code class="language-ts"><span class="hljs-comment">/** change concurrency limit applied on default queues */</span>
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span> }]);
 
 <span class="hljs-comment">/** setup concurrency for specific queue: &quot;2&quot; */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C({ <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> });
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> }]);
 </code></pre>
-				<p>or</p>
+				<p>You can adjust concurrency via <code>setConcurrency</code>.</p>
 				<pre><code class="language-ts"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
-<span class="hljs-comment">/** change default concurrency limit */</span>
-d4c.setQueue({ <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span> });
+<span class="hljs-comment">/** change concurrency limit on default queue*/</span>
+d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span> }]);
 
 <span class="hljs-comment">/** change concurrency limit for queue2 */</span>
-d4c.setQueue({ <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;queue2&#x27;</span> });
+d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;queue2&#x27;</span> }]);
 </code></pre>
 				<a href="#decorators-usage" id="decorators-usage" style="color: inherit; text-decoration: none;">
 					<h3>Decorators usage</h3>
+				</a>
+				<a href="#synchronization-mode-1" id="synchronization-mode-1" style="color: inherit; text-decoration: none;">
+					<h4>Synchronization mode</h4>
 				</a>
 				<pre><code class="language-typescript"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ServiceAdapter</span> </span>{
   <span class="hljs-meta">@synchronized</span>
@@ -212,6 +217,29 @@ d4c.setQueue({ <span class="hljs-attr">limit</span>: <span class="hljs-number">1
   <span class="hljs-keyword">static</span> <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">staticMethod</span>(<span class="hljs-params">text: <span class="hljs-built_in">string</span></span>)</span> {
     <span class="hljs-keyword">return</span> text;
   }
+}
+</code></pre>
+				<a href="#concurrency-mode-1" id="concurrency-mode-1" style="color: inherit; text-decoration: none;">
+					<h4>Concurrency mode</h4>
+				</a>
+				<p><code>isStatic</code> is to specify this queue setting is for static method and default is false. omitting tag refers default queue.</p>
+				<pre><code class="language-ts"><span class="hljs-comment">/** if omitting <span class="hljs-doctag">@QConcurrency</span>, <span class="hljs-doctag">@concurrent </span>will use its
+ * default concurrency Infinity*/</span>
+<span class="hljs-meta">@QConcurrency</span>([
+  { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">isStatic</span>: <span class="hljs-literal">true</span> },
+  { <span class="hljs-attr">limit</span>: <span class="hljs-number">50</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> },
+])
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestController</span> </span>{
+  <span class="hljs-meta">@concurrent</span>
+  <span class="hljs-keyword">static</span> <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">fetchData</span>(<span class="hljs-params">url: <span class="hljs-built_in">string</span></span>)</span> {}
+
+  <span class="hljs-meta">@concurrent</span>({ <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> })
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">fetchData2</span>(<span class="hljs-params">url: <span class="hljs-built_in">string</span></span>)</span> {}
+
+  <span class="hljs-comment">/** You can still use <span class="hljs-doctag">@synchronized</span>, as long as
+   * they are different queues*/</span>
+  <span class="hljs-meta">@synchronized</span>({<span class="hljs-attr">tag</span>:<span class="hljs-string">&#x27;3&#x27;</span>)
+  <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">connect</span>(<span class="hljs-params"></span>)</span> {}
 }
 </code></pre>
 				<a href="#arrow-function" id="arrow-function" style="color: inherit; text-decoration: none;">
@@ -407,46 +435,78 @@ app.post(<span class="hljs-string">&#x27;/testing&#x27;</span>, <span class="hlj
 					<h3>Decorators:</h3>
 				</a>
 				<ul>
-					<li>@synchronized</li>
+					<li>@QConcurrency</li>
+				</ul>
+				<p>setup a array of queue settings</p>
+				<pre><code class="language-ts"><span class="hljs-comment">// use with @concurrent</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">QConcurrency</span>(<span class="hljs-params">
+  queuesParam: <span class="hljs-built_in">Array</span>&lt;{
+    limit: <span class="hljs-built_in">number</span>;
+    tag?: <span class="hljs-built_in">string</span> | symbol;
+    isStatic?: <span class="hljs-built_in">boolean</span>;
+  }&gt;
+</span>) </span>{}
+
+<span class="hljs-comment">// example:</span>
+<span class="hljs-meta">@QConcurrency</span>([
+  { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">isStatic</span>: <span class="hljs-literal">true</span> },
+  { <span class="hljs-attr">limit</span>: <span class="hljs-number">50</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> },
+])
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestController</span> </span>{}
+</code></pre>
+				<ul>
+					<li>@synchronized &amp; @concurrent</li>
 				</ul>
 				<pre><code class="language-typescript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">synchronized</span>(<span class="hljs-params">option?: {
   inheritPreErr?: <span class="hljs-built_in">boolean</span>;
   noBlockCurr?: <span class="hljs-built_in">boolean</span>;
   tag?: <span class="hljs-built_in">string</span> | symbol;
-}</span>)</span>;
+}</span>) </span>{}
+
+<span class="hljs-comment">/** default concurrency limit is Infinity, // use with <span class="hljs-doctag">@QConcurrency </span>*/</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">concurrent</span>(<span class="hljs-params">option?: {
+  tag?: <span class="hljs-built_in">string</span> | symbol;
+  inheritPreErr?: <span class="hljs-built_in">boolean</span>;
+  noBlockCurr?: <span class="hljs-built_in">boolean</span>;
+}</span>) </span>{}
 </code></pre>
 				<p>Example:</p>
 				<pre><code class="language-typescript"><span class="hljs-meta">@synchronized</span>
 <span class="hljs-meta">@synchronized</span>()
 <span class="hljs-meta">@synchronized</span>({ <span class="hljs-attr">tag</span>: <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span> })
 <span class="hljs-meta">@synchronized</span>({ <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">noBlockCurr</span>: <span class="hljs-literal">true</span> })
+
+<span class="hljs-meta">@concurrent</span>
+<span class="hljs-meta">@concurrent</span>()
+<span class="hljs-meta">@concurrent</span>({ <span class="hljs-attr">tag</span>: <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span> })
+<span class="hljs-meta">@concurrent</span>({ <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">noBlockCurr</span>: <span class="hljs-literal">true</span> })
 </code></pre>
 				<p>See <a href="#decorators-usage">decorators-usage</a></p>
 				<a href="#d4c-instance-usage-1" id="d4c-instance-usage-1" style="color: inherit; text-decoration: none;">
 					<h3>D4C instance usage</h3>
 				</a>
-				<p>Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional.</p>
+				<p>Make a instance first, there is a default tag so using <code>tag</code> parameter to specify some queue is optional.</p>
 				<ul>
 					<li>constructor</li>
 				</ul>
-				<pre><code class="language-ts"><span class="hljs-function"><span class="hljs-title">constructor</span>(<span class="hljs-params">concurrency?: { tag?: <span class="hljs-built_in">string</span> | symbol, limit?: <span class="hljs-built_in">number</span> }</span>)</span> {
+				<pre><code class="language-ts"><span class="hljs-function"><span class="hljs-title">constructor</span>(<span class="hljs-params">queuesParam?: <span class="hljs-built_in">Array</span>&lt;{ tag?: <span class="hljs-built_in">string</span> | symbol, limit?: <span class="hljs-built_in">number</span> }&gt;</span>)</span> {
 </code></pre>
 				<p>usage:</p>
-				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
+				<pre><code class="language-typescript"><span class="hljs-comment">/** default concurrency is 1*/</span>
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
 
-<span class="hljs-comment">/** default concurrency limit 500 applied on default queues
- * and new tag queues*/</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C({ <span class="hljs-attr">limit</span>: <span class="hljs-number">500</span> });
+<span class="hljs-comment">/** concurrency limit 500 applied on default queues */</span>
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">500</span> }]);
 
 <span class="hljs-comment">/** setup concurrency for specific queue: &quot;2&quot; */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C({ <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> });
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> }]);
 </code></pre>
 				<ul>
-					<li>setQueue</li>
+					<li>setConcurrency</li>
 				</ul>
-				<pre><code class="language-ts">d4c.setQueue({ <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span> });
+				<pre><code class="language-ts">d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span> }]);
 
-d4c.setQueue({ <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;queue2&#x27;</span> });
+d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;queue2&#x27;</span> }]);
 </code></pre>
 				<ul>
 					<li>wrap</li>
