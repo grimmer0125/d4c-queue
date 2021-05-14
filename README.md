@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/d4c-queue.svg)](https://www.npmjs.com/package/d4c-queue) ![example workflow](https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/grimmer0125/d4c-queue/badge.svg?branch=master)](https://coveralls.io/github/grimmer0125/d4c-queue?branch=master)
 
-Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)/[promise-returning](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)/`sync` function as a queue-ready async function, which is enqueued while being called. This is convenient to reuse it. Task queues execute original functions sequentially by default (synchronization mode, `concurrency limit = 1`) and allow changing concurrency limit to have concurrent tasks executed. It also supports `@synchronized` [decorator](https://www.typescriptlang.org/docs/handbook/decorators.html) on instance or static methods. Passing arguments and using `await` to get return values are also supported.
+Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)/[promise-returning](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)/`sync` function as a queue-ready async function, which is enqueued while being called. This is convenient to reuse it. Task queues execute original functions sequentially by default (synchronization mode, `concurrency limit = 1`) and allow changing concurrency limit to have concurrent tasks executed. It also supports `@synchronized`/`@concurrent` [decorator](https://www.typescriptlang.org/docs/handbook/decorators.html) on instance or static methods. Passing arguments and using `await` to get return values are also supported.
 
 ## Features
 
@@ -128,9 +128,9 @@ d4c.apply(syncFun, { args: ['syncFun_arg1'] });
 
 Is it useful for rate-limiting tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.
 
-**Default concurrency limit of D4C instance** is `1` in this library.
+Default concurrency limit of D4C instance is `1` in this library.
 
-**Usage**:
+Usage:
 
 ```ts
 /** change concurrency limit applied on default queues */
