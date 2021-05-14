@@ -33,11 +33,15 @@ export enum ErrMsg {
   InvalidQueueConcurrency = "invalidQueueConcurrency",
   InvalidQueueTag = "invalidQueueTag",
   InvalidClassDecoratorParameter = "invalidClassDecoratorParameter",
+  TwoDecoratorsIncompatible = "TwoDecoratorsInCompatible",
+  ClassAndMethodDecoratorsIncompatible = "ClassAndMethodDecoratorsIncompatible",
   MissingThisDueBindIssue = "missingThisDueBindIssue",
 };
 
-const queueSymbol = Symbol("d4cQueues");
-const concurrentSymbol = Symbol("concurrent");
+const queueSymbol = Symbol("d4cQueues"); // subQueue system
+const concurrentSymbol = Symbol("concurrent"); // record the concurrency of each instance method decorator's tag
+const isConcurrentSymbol = Symbol("isConcurrent"); // record isConcurrent of each instance method decortor's tag
+
 const defaultTag = Symbol('D4C');
 
 const DEFAULT_CONCURRENCY = 1;
@@ -49,13 +53,22 @@ export class PreviousTaskError extends Error {
   }
 }
 
-export function concurrency(queuesParam: [{ tag?: string | symbol, limit: number, isStatic?: false }]): ClassDecorator {
+function checkIfClassConcurrencyApplyOnSynchronizedMethod(target, usedTag: string | symbol) {
+  // true means isConcurrent, false means sync, undefined means no static method decorator on this tag
+  if (target[isConcurrentSymbol][usedTag] === undefined) {
+    return;
+  } else if (target[isConcurrentSymbol][usedTag] === false) {
+    throw new Error(ErrMsg.ClassAndMethodDecoratorsIncompatible)
+  }
+}
+
+export function classConcurrency(queuesParam: [{ tag?: string | symbol, limit: number, isStatic?: false }]): ClassDecorator {
   if (!Array.isArray(queuesParam)) {
     throw new Error(ErrMsg.InvalidClassDecoratorParameter);
   }
 
+  /** target is constructor */
   return (target) => {
-
     queuesParam.forEach((queueParam) => {
       if (!queuesParam) {
         return;
@@ -67,40 +80,54 @@ export function concurrency(queuesParam: [{ tag?: string | symbol, limit: number
 
       const usedTag = tag ?? defaultTag;
 
+      /** TODO: refactor below as they are use similar code */
       if (isStatic) {
-        // check if some static method is using @synchronized
-        const queues: TaskQueuesType = target[queueSymbol]
-        if (queues) {
-          let taskQueue = queues.get(usedTag);
-          if (!taskQueue) {
-            taskQueue = {
-              queue: new Queue<Task>(),
-              isRunning: false,
-              runningTask: 0,
-              /**  Decorator usage */
-              concurrency: limit
-            };
-            queues.set(usedTag, taskQueue);
-          } else {
-            // duplicate tag
-            throw new Error(ErrMsg.InvalidClassDecoratorParameter);
-          }
+        // check if at least one static method is using @synchronized/@concurrent
+        if (!target[queueSymbol]) {
+          return;
         }
+
+        checkIfClassConcurrencyApplyOnSynchronizedMethod(target, tag);
+
+        /** inject concurrency info for each tag in instance method case */
+        if (target?.[concurrentSymbol]?.[usedTag]) {
+          target[concurrentSymbol][usedTag] = limit;
+        }
+
+        // const queues: TaskQueuesType = target[queueSymbol]
+        // let taskQueue = queues.get(usedTag);
+        // if (!taskQueue) {
+        //   taskQueue = {
+        //     queue: new Queue<Task>(),
+        //     isRunning: false,
+        //     runningTask: 0,
+        //     /**  Decorator usage */
+        //     concurrency: limit
+        //   };
+        //   queues.set(usedTag, taskQueue);
+        // } else {
+        //   // duplicate tag settings in classConcurrency
+        //   throw new Error(ErrMsg.InvalidClassDecoratorParameter);
+        // }
       } else {
-        // check if some instance method is using @synchronized
+        // check if at least one instance method is using @synchronized/@concurrent
         if (target.prototype[queueSymbol] !== null) {
-          if (!target.prototype[concurrentSymbol]) {
-            target.prototype[concurrentSymbol] = {};
-          }
-          if (target.prototype[queueSymbol][usedTag]) {
-            // duplicate tag
-            throw new Error(ErrMsg.InvalidClassDecoratorParameter);
-          }
-          target.prototype[queueSymbol][usedTag] = limit;
+          return
         }
+
+        checkIfClassConcurrencyApplyOnSynchronizedMethod(target.prototype, usedTag);
+
+        /** inject concurrency info for each tag in instance method case */
+        if (target.prototype?.[concurrentSymbol]?.[usedTag]) {
+          target.prototype[concurrentSymbol][usedTag] = limit;
+        }
+
+        // if (target.prototype[concurrentSymbol][usedTag]) {
+        // duplicate tag settings in classConcurrency
+        // throw new Error(ErrMsg.InvalidClassDecoratorParameter);
+        // }
       }
     })
-    // Reflect.defineMetadata(classDecoratorKey, defaultTag, target.prototype);
   };
 }
 
@@ -113,7 +140,29 @@ function checkTag(tag) {
   return false;
 }
 
-function injectQueue(constructorOrPrototype) {
+function checkIfTwoDecoratorsHaveSameConcurrentValue(target, tag: string | symbol, isConcurrent: boolean) {
+  // init
+  if (!target[isConcurrentSymbol]) {
+    target[isConcurrentSymbol] = {};
+  }
+
+  // check if two decorators for same queue have same isConcurrency value
+  if (target[isConcurrentSymbol][tag] === undefined) {
+    target[isConcurrentSymbol][tag] = isConcurrent;
+  } else if (target[isConcurrentSymbol][tag] !== isConcurrent) {
+    throw new Error(ErrMsg.TwoDecoratorsIncompatible);
+  }
+
+  /** set default concurrency is infinity for @concurrent on instance/static methods*/
+  if (isConcurrent) {
+    if (!target[concurrentSymbol]) {
+      target[concurrentSymbol] = {};
+    }
+    target[concurrentSymbol][tag] = Infinity;
+  }
+}
+
+function injectQueue(constructorOrPrototype, tag: string | symbol, isConcurrent: boolean) {
 
   if (constructorOrPrototype.prototype) {
     // constructor, means static method
@@ -126,6 +175,47 @@ function injectQueue(constructorOrPrototype) {
       constructorOrPrototype[queueSymbol] = null;
     }
   }
+
+  checkIfTwoDecoratorsHaveSameConcurrentValue(constructorOrPrototype, tag, isConcurrent);
+}
+
+/** if class has a static member call inheritPreErr, even no using parentheses,
+ * targetOrOption will have targetOrOption property but its type is function */
+function checkIfDecoratorOptionObject(obj: any): boolean {
+  /** still count valid argument, e.g. @synchronized(null) */
+  if (obj === undefined || obj === null) {
+    return true;
+  }
+
+  /**
+   * hasOwnProperty should be false since it is a literal object
+   */
+  //eslint-disable-next-line
+  if (typeof obj === "object" && !obj.hasOwnProperty("constructor") && (
+    (typeof obj.inheritPreErr === "boolean" || obj.inheritPreErr === undefined) &&
+    (typeof obj.noBlockCurr === "boolean" || obj.noBlockCurr === undefined) &&
+    checkTag(obj.tag))) {
+    return true;
+  }
+  return false;
+}
+
+export function concurrent(
+  target: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor): void;
+export function concurrent(
+  option?: {
+    tag?: string | symbol;
+    inheritPreErr?: boolean;
+    noBlockCurr?: boolean;
+  }): MethodDecoratorType;
+export function concurrent(
+  targetOrOption?: any,
+  propertyKey?: string,
+  descriptor?: PropertyDescriptor
+): void | MethodDecoratorType {
+  return _methodDecorator(targetOrOption, propertyKey, descriptor, true);
 }
 
 /**
@@ -153,44 +243,25 @@ export function synchronized(
   propertyKey?: string,
   descriptor?: PropertyDescriptor
 ): void | MethodDecoratorType {
+  return _methodDecorator(targetOrOption, propertyKey, descriptor, false);
+}
 
+function _methodDecorator(
+  targetOrOption: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor,
+  isConcurrent: boolean
+): void | MethodDecoratorType {
 
-
-  /**
-   * since target in instance method & option both are object
-   * so the below check is complicated
-   */
-
-  /** if class has a static member call inheritPreErr, even no using parentheses,
-   * targetOrOption will have targetOrOption property but its type is function */
-  function checkIfOptionObject(obj: any): boolean {
-    /** still count valid argument, e.g. @synchronized(null) */
-    if (obj === undefined || obj === null) {
-      return true;
-    }
-
-    /**
-     * hasOwnProperty should be false since it is a literal object
-     */
-    //eslint-disable-next-line
-    if (typeof obj === "object" && !obj.hasOwnProperty("constructor") && (
-      (typeof obj.inheritPreErr === "boolean" || obj.inheritPreErr === undefined) &&
-      (typeof obj.noBlockCurr === "boolean" || obj.noBlockCurr === undefined) &&
-      checkTag(obj.tag))) {
-      return true;
-    }
-    return false;
-  }
-
-  if (checkIfOptionObject(targetOrOption)) {
-    /** parentheses case */
+  if (checkIfDecoratorOptionObject(targetOrOption)) {
+    /** parentheses case containing option (=targetOrOption) */
     return function (
       target: any,
       propertyKey: string,
       descriptor: PropertyDescriptor
     ) {
 
-      injectQueue(target);
+      injectQueue(target, targetOrOption?.tag ?? defaultTag, isConcurrent);
 
       const originalMethod = descriptor.value;
       const newFunc = _q(
@@ -212,7 +283,7 @@ export function synchronized(
       typeof propertyKey === "string" &&
       typeof descriptor === "object" && typeof descriptor.value === "function") {
 
-      injectQueue(targetOrOption);
+      injectQueue(targetOrOption, defaultTag, isConcurrent);
 
       const originalMethod = descriptor.value;
       const newFunc = _q(
@@ -265,8 +336,8 @@ function _q<T extends IAnyFn>(
       }
 
       currTaskQueues = this[queueSymbol];
-      decoratorConcurrencyLimit = this[queueSymbol][tag];
-      console.log("decoratorConcurrencyLimit:", decoratorConcurrencyLimit)
+      decoratorConcurrencyLimit = this?.[concurrentSymbol]?.[tag];
+      // console.log("decoratorConcurrencyLimit:", decoratorConcurrencyLimit)
     } else {
       throw new Error(ErrMsg.MissingThisDueBindIssue);
     }

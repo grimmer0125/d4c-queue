@@ -1,7 +1,7 @@
 import autobind from 'autobind-decorator'
 import test from 'ava';
 
-import { D4C, ErrMsg, synchronized } from './D4C';
+import { classConcurrency, D4C, ErrMsg, synchronized } from './D4C';
 
 const fixture = ['hello'];
 const fixture2 = 'world';
@@ -48,9 +48,19 @@ const immediateFunPromise = (seconds: number, target: { str: string }) => {
   return Promise.resolve();
 };
 
+// 1. 測試 class 的 concurrency, class instance method 都有設定. 使用 defaut tag
+// 1.3  測試 class 的 concurrency, class static method 都有設定. 使用 defaut tag
+// 1.2 測試都有設定但 default tag 不影響到 a. tag1 b. synchronized 的 c. static
+
+// 2. 測試 class 的 concurrency, class 有但 method 沒有. 沒有 conconcureency
+// 3. 測試 class 的              class 沒有 method 有. 預設是 Infinity ???????? yes
+
+// 7. ~~測試 class 設定 duplicate tag concurrency <- 算了~~
+// 4. 測試相容性
+// 5.              1. 同一個 tag 的 instance/static method 不相容
+// 6.              2. class 有 但 instance 是 sync 不相容
+
 test('Instance usage: test concurrency', async (t) => {
-
-
 
   /** default queue: concurrency 100 test */
   let test = { str: '' };
