@@ -77,26 +77,28 @@ test('Class usage: test concurrency', async (t) => {
       await timeout(seconds, obj)
     }
   }
-  // 1.1
+  // test: concurrency on static method, and use default tag
   let test = { str: '' }
   await Promise.all([TestController.staticTimeout(0.5, test), TestController.staticTimeout(0.1, test)]);
   t.is(test.str, '0.10.5')
 
+  // test: concurrency on static method,
   test = { str: '' }
   await Promise.all([TestController.staticTimeout2(0.5, test), TestController.staticTimeout2(0.1, test)]);
   t.is(test.str, '0.50.1')
 
-  // 1.2
+  // test: concurrency on instance method, and use default tag
   const testController = new TestController();
   test = { str: '' }
   await Promise.all([testController.instanceTimeout(0.5, test), testController.instanceTimeout(0.1, test)]);
   t.is(test.str, '0.10.5')
 
+  // test: concurrency on instance method
   test = { str: '' }
   await Promise.all([testController.instanceTimeout2(0.5, test), testController.instanceTimeout2(0.1, test)]);
   t.is(test.str, '0.50.1')
 
-  //2
+  // test: no use class decorator so @concurrent will use default @concurrency Infinity
   class TestController2 {
     @concurrent
     static async staticTimeout(seconds: number, obj: { str: string }) {
@@ -137,18 +139,19 @@ test('Class usage: test concurrency', async (t) => {
       await timeout(seconds, obj)
     }
   }
-  // 3
+
+  // Test: applying @classConcurrency but testing method not decorated will not be affected
   test = { str: '' }
   await Promise.all([TestController3.staticTimeoutNoDecorator(0.5, test), TestController3.staticTimeoutNoDecorator(0.1, test)]);
   t.is(test.str, '0.10.5')
 
-  //1.3
+  // Test: different queues are isolated with each other
   const testController3 = new TestController3();
   test = { str: '' }
-  await Promise.all([TestController.staticTimeout(0.5, test), testController.instanceTimeout(0.4, test), TestController.staticTimeout(0.3, test), testController.instanceTimeout(0.2, test)]);
+  await Promise.all([TestController.staticTimeout(0.5, test), testController.instanceTimeout(0.4, test), TestController.staticTimeout2(0.3, test), testController.instanceTimeout2(0.2, test)]);
   t.is(test.str, '0.20.30.40.5')
 
-  //4.
+  /** @classConcurrency tries to setup default queue's concurrency but is conflicted with synchronized (implicitly concurrency =1) */
   let error = null
   try {
     @classConcurrency([{ limit: 1, isStatic: true }])
@@ -167,6 +170,7 @@ test('Class usage: test concurrency', async (t) => {
   }
   t.is(error.message, ErrMsg.ClassAndMethodDecoratorsIncompatible);
 
+  /** for test coverage */
   error = null
   try {
     @classConcurrency([{ limit: 1, isStatic: true, tag: "2" }])
@@ -185,6 +189,7 @@ test('Class usage: test concurrency', async (t) => {
   }
   t.is(error, null);
 
+  /** for test coverage */
   error = null
   try {
     @classConcurrency([{ limit: 1, isStatic: true, tag: "2" }])
@@ -199,6 +204,7 @@ test('Class usage: test concurrency', async (t) => {
   }
   t.is(error, null);
 
+  /** for test coverage */
   error = null
   try {
     @classConcurrency([{ limit: 1, tag: "2" }])
@@ -213,6 +219,7 @@ test('Class usage: test concurrency', async (t) => {
   }
   t.is(error, null);
 
+  /** for test coverage */
   error = null
   try {
     @classConcurrency([{ limit: 1, tag: "2" }, { limit: 1, tag: "3", isStatic: true }])
@@ -226,7 +233,7 @@ test('Class usage: test concurrency', async (t) => {
   }
   t.is(error, null);
 
-  //5.
+  /** for the same tag queue,  @concurrent & @synchronized can not be applied both */
   error = null
   try {
     @classConcurrency([{ limit: 1, isStatic: true }])
@@ -250,6 +257,7 @@ test('Class usage: test concurrency', async (t) => {
   }
   t.is(error.message, ErrMsg.TwoDecoratorsIncompatible);
 
+  /** @classConcurrency' parameters should be an array  */
   error = null
   try {
     @classConcurrency({ limit: 1, tag: "2" } as any)
@@ -263,6 +271,7 @@ test('Class usage: test concurrency', async (t) => {
   }
   t.is(error.message, ErrMsg.InvalidClassDecoratorParameter);
 
+  /** limit should be a number */
   error = null
   try {
     @classConcurrency([null, { limit: "3" }] as any)
