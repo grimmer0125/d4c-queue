@@ -8,7 +8,7 @@ Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Referenc
 
 1. Two usages
    1. D4C instance: synchronization mode & concurrency mode.
-   2. Instance and static method decorator on classes: synchronization mode.
+   2. Class, instance, and static method decorators on classes: synchronization mode & concurrency mode.
 2. This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr`. If current task is waiting for previous tasks, set it as `true` to inherit the error of the previous task and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`. If this parameter is omitted or set as `false`, the task will continue whether previous tasks happen errors or not.
 4. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the next tick of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
@@ -31,13 +31,13 @@ Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package
 **ES6 import**
 
 ```typescript
-import { D4C, synchronized } from 'd4c-queue';
+import { D4C, synchronized, QConcurrency, concurrent } from 'd4c-queue';
 ```
 
 **CommonJS**
 
 ```typescript
-const { D4C, synchronized } = require('d4c-queue');
+const { D4C, synchronized, QConcurrency, concurrent } = require('d4c-queue');
 ```
 
 It is possible to use the `module` build with CommonJS require syntax in TypeScript or other build tools.
@@ -96,6 +96,8 @@ D4C instance queues (per D4C object):
 
 ### D4C instance usage
 
+#### Synchronization mode
+
 ```typescript
 const d4c = new D4C();
 
@@ -126,31 +128,32 @@ d4c.apply(syncFun, { args: ['syncFun_arg1'] });
 
 Is it useful for rate-limiting tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.
 
-Default concurrency limit is `1` in this library.
+**Default concurrency limit of D4C instance** is `1` in this library.
 
-Usage:
+**Usage**:
 
 ```ts
-/** default concurrency limit applied on default queues
- * and new tag queues*/
-const d4c = new D4C({ limit: 100 });
+/** change concurrency limit applied on default queues */
+const d4c = new D4C([{ limit: 100 }]);
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C({ limit: 100, tag: '2' });
+const d4c = new D4C([{ limit: 100, tag: '2' }]);
 ```
 
-or
+You can adjust concurrency via `setConcurrency`.
 
 ```ts
 const d4c = new D4C();
-/** change default concurrency limit */
-d4c.setQueue({ limit: 10 });
+/** change concurrency limit on default queue*/
+d4c.setConcurrency([{ limit: 10 }]);
 
 /** change concurrency limit for queue2 */
-d4c.setQueue({ limit: 10, tag: 'queue2' });
+d4c.setConcurrency([{ limit: 10, tag: 'queue2' }]);
 ```
 
 ### Decorators usage
+
+#### Synchronization mode
 
 ```typescript
 class ServiceAdapter {
@@ -167,6 +170,31 @@ class ServiceAdapter {
   static async staticMethod(text: string) {
     return text;
   }
+}
+```
+
+#### Concurrency mode
+
+`isStatic` is to specify this queue setting is for static method and default is false. omitting tag refers default queue.
+
+```ts
+/** if omitting @QConcurrency, @concurrent will use its
+ * default concurrency Infinity*/
+@QConcurrency([
+  { limit: 100, isStatic: true },
+  { limit: 50, tag: '2' },
+])
+class TestController {
+  @concurrent
+  static async fetchData(url: string) {}
+
+  @concurrent({ tag: '2' })
+  async fetchData2(url: string) {}
+
+  /** You can still use @synchronized, as long as
+   * they are different queues*/
+  @synchronized({tag:'3')
+  async connect() {}
 }
 ```
 
@@ -391,14 +419,43 @@ You can check the generated [TypeDoc site](https://grimmer.io/d4c-queue/modules/
 
 ### Decorators:
 
-- @synchronized
+- @QConcurrency
+
+setup a array of queue settings
+
+```ts
+// use with @concurrent
+function QConcurrency(
+  queuesParam: Array<{
+    limit: number;
+    tag?: string | symbol;
+    isStatic?: boolean;
+  }>
+) {}
+
+// example:
+@QConcurrency([
+  { limit: 100, isStatic: true },
+  { limit: 50, tag: '2' },
+])
+class TestController {}
+```
+
+- @synchronized & @concurrent
 
 ```typescript
 function synchronized(option?: {
   inheritPreErr?: boolean;
   noBlockCurr?: boolean;
   tag?: string | symbol;
-});
+}) {}
+
+/** default concurrency limit is Infinity, // use with @QConcurrency */
+function concurrent(option?: {
+  tag?: string | symbol;
+  inheritPreErr?: boolean;
+  noBlockCurr?: boolean;
+}) {}
 ```
 
 Example:
@@ -409,39 +466,44 @@ Example:
 @synchronized({ tag: "world", inheritPreErr: true })
 @synchronized({ inheritPreErr: true, noBlockCurr: true })
 
+@concurrent
+@concurrent()
+@concurrent({ tag: "world", inheritPreErr: true })
+@concurrent({ inheritPreErr: true, noBlockCurr: true })
+
 ```
 
 See [decorators-usage](#decorators-usage)
 
 ### D4C instance usage
 
-Make a instance first, there is a default tag so that setting a unique tag for a unique queue is optional.
+Make a instance first, there is a default tag so using `tag` parameter to specify some queue is optional.
 
 - constructor
 
 ```ts
-constructor(concurrency?: { tag?: string | symbol, limit?: number }) {
+constructor(queuesParam?: Array<{ tag?: string | symbol, limit?: number }>) {
 ```
 
 usage:
 
 ```typescript
+/** default concurrency is 1*/
 const d4c = new D4C();
 
-/** default concurrency limit 500 applied on default queues
- * and new tag queues*/
-const d4c = new D4C({ limit: 500 });
+/** concurrency limit 500 applied on default queues */
+const d4c = new D4C([{ limit: 500 }]);
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C({ limit: 100, tag: '2' });
+const d4c = new D4C([{ limit: 100, tag: '2' }]);
 ```
 
-- setQueue
+- setConcurrency
 
 ```ts
-d4c.setQueue({ limit: 10 });
+d4c.setConcurrency([{ limit: 10 }]);
 
-d4c.setQueue({ limit: 10, tag: 'queue2' });
+d4c.setConcurrency([{ limit: 10, tag: 'queue2' }]);
 ```
 
 - wrap

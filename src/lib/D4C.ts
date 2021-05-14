@@ -62,7 +62,11 @@ function checkIfClassConcurrencyApplyOnSynchronizedMethod(target, usedTag: strin
   }
 }
 
-export function classConcurrency(queuesParam: Array<{ tag?: string | symbol, limit: number, isStatic?: boolean }>): ClassDecorator {
+/**
+ * Class decorator to setup concurrency for queues
+ * @param queuesParam a array of each queue parameter
+ */
+export function QConcurrency(queuesParam: Array<{ limit: number, tag?: string | symbol, isStatic?: boolean }>): ClassDecorator {
   if (!Array.isArray(queuesParam)) {
     throw new Error(ErrMsg.InvalidClassDecoratorParameter);
   }
@@ -94,21 +98,6 @@ export function classConcurrency(queuesParam: Array<{ tag?: string | symbol, lim
           target[concurrentSymbol][usedTag] = limit;
         }
 
-        // const queues: TaskQueuesType = target[queueSymbol]
-        // let taskQueue = queues.get(usedTag);
-        // if (!taskQueue) {
-        //   taskQueue = {
-        //     queue: new Queue<Task>(),
-        //     isRunning: false,
-        //     runningTask: 0,
-        //     /**  Decorator usage */
-        //     concurrency: limit
-        //   };
-        //   queues.set(usedTag, taskQueue);
-        // } else {
-        //   // duplicate tag settings in classConcurrency
-        //   throw new Error(ErrMsg.InvalidClassDecoratorParameter);
-        // }
       } else {
         // check if at least one instance method is using @synchronized/@concurrent
         if (target.prototype[queueSymbol] !== null) {
@@ -121,11 +110,6 @@ export function classConcurrency(queuesParam: Array<{ tag?: string | symbol, lim
         if (target.prototype[concurrentSymbol]?.[usedTag]) {
           target.prototype[concurrentSymbol][usedTag] = limit;
         }
-
-        // if (target.prototype[concurrentSymbol][usedTag]) {
-        // duplicate tag settings in classConcurrency
-        // throw new Error(ErrMsg.InvalidClassDecoratorParameter);
-        // }
       }
     })
   };
@@ -200,6 +184,17 @@ function checkIfDecoratorOptionObject(obj: any): boolean {
   return false;
 }
 
+/**
+ * Static and instance method decorator. Default concurrency = Infinity.
+ * usage example:
+ * ```typescript
+ * @concurrent
+ * async fetchData() {}
+ * // or
+ * @concurrent({ tag: 'world', inheritPreErr: true, noBlockCurr: true })
+ * static async fetchData(url: string) {}
+ * ```
+ * */
 export function concurrent(
   target: any,
   propertyKey: string,
@@ -219,7 +214,8 @@ export function concurrent(
 }
 
 /**
- * Usage example:
+ * Static and instance method decorator. Default concurrency = 1 for lock.
+ * usage example:
  * ```typescript
  * @synchronize
  * async connect() {}
@@ -428,25 +424,33 @@ export class D4C {
    * If you specify concurrency limit for some tag queue,
    * this instance will not use that tag queue by default.
    */
-  constructor(option?: { concurrency: { tag?: string | symbol, limit?: number } }) {
+  constructor(queuesParam?: Array<{ concurrency: { tag?: string | symbol, limit?: number } }>) {
     this.queues = new Map<string | symbol, TaskQueue>();
-    if (option?.concurrency?.limit > 0) {
-      this._setQueue(option.concurrency);
+    if (Array.isArray(queuesParam)) {
+      queuesParam.forEach((option) => {
+        if (option?.concurrency?.limit > 0) {
+          this._setConcurrency(option.concurrency);
+        }
+      });
     }
   }
 
   /**
    * @param option tag is optional for specific queue. omitting is for default queue
-   * @param concurrency.limit is limit of concurrency and should be >= 1
+   * @param option.limit is limit of concurrency and should be >= 1
    */
-  setConcurrency(option: {
+  setConcurrency(queuesParam: Array<{
     tag?: string | symbol;
     limit: number,
-  }) {
-    this._setQueue(option);
+  }>) {
+    if (Array.isArray(queuesParam)) {
+      queuesParam.forEach((option) => {
+        this._setConcurrency(option);
+      });
+    }
   }
 
-  private _setQueue(concurrency?: {
+  private _setConcurrency(concurrency?: {
     tag?: string | symbol;
     limit?: number,
   }) {
@@ -468,7 +472,6 @@ export class D4C {
       usedTag = tag;
     } else {
       usedTag = defaultTag;
-      this.defaultConcurrency = limit;
     }
 
     // TODO: refactor, other places have similar code

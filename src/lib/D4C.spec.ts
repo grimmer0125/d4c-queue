@@ -1,7 +1,7 @@
 import autobind from 'autobind-decorator'
 import test from 'ava';
 
-import { classConcurrency, concurrent, D4C, ErrMsg, synchronized } from './D4C';
+import { concurrent, D4C, ErrMsg, QConcurrency, synchronized } from './D4C';
 
 const fixture = ['hello'];
 const fixture2 = 'world';
@@ -49,8 +49,8 @@ const immediateFunPromise = (seconds: number, target: { str: string }) => {
 };
 
 test('Class usage: test concurrency', async (t) => {
-  @classConcurrency([{ limit: 100, isStatic: true }, { limit: 100, isStatic: false },
-  { limit: 1, isStatic: true, tag: "2" }, { limit: 1, isStatic: false, tag: "2" }])
+  @QConcurrency([{ limit: 100, isStatic: true }, { limit: 100, isStatic: false },
+  { limit: 1, isStatic: true, tag: "2" }, { limit: 1, tag: "2" }])
   class TestController {
     @concurrent
     static async staticTimeout(seconds: number, obj: { str: string }) {
@@ -104,14 +104,13 @@ test('Class usage: test concurrency', async (t) => {
     static async staticTimeout(seconds: number, obj: { str: string }) {
       await timeout(seconds, obj)
     }
-
   }
   test = { str: '' }
   await Promise.all([TestController2.staticTimeout(0.5, test), TestController2.staticTimeout(0.1, test)]);
   t.is(test.str, '0.10.5')
 
 
-  @classConcurrency([{ limit: 1, isStatic: true }, { limit: 1, isStatic: false },
+  @QConcurrency([{ limit: 1, isStatic: true }, { limit: 1, isStatic: false },
   { limit: 1, isStatic: true, tag: "2" },
   { limit: 1, isStatic: false, tag: "2" }])
   class TestController3 {
@@ -154,7 +153,7 @@ test('Class usage: test concurrency', async (t) => {
   /** @classConcurrency tries to setup default queue's concurrency but is conflicted with synchronized (implicitly concurrency =1) */
   let error = null
   try {
-    @classConcurrency([{ limit: 1, isStatic: true }])
+    @QConcurrency([{ limit: 1, isStatic: true }])
     class TestController4 {
       static async staticTimeoutNoDecorator(seconds: number, obj: { str: string }) {
         await timeout(seconds, obj)
@@ -173,7 +172,7 @@ test('Class usage: test concurrency', async (t) => {
   /** for test coverage */
   error = null
   try {
-    @classConcurrency([{ limit: 1, isStatic: true, tag: "2" }])
+    @QConcurrency([{ limit: 1, isStatic: true, tag: "2" }])
     class TestController5 {
       static async staticTimeoutNoDecorator(seconds: number, obj: { str: string }) {
         await timeout(seconds, obj)
@@ -192,7 +191,7 @@ test('Class usage: test concurrency', async (t) => {
   /** for test coverage */
   error = null
   try {
-    @classConcurrency([{ limit: 1, isStatic: true, tag: "2" }])
+    @QConcurrency([{ limit: 1, isStatic: true, tag: "2" }])
     class TestController6 {
       @concurrent
       static async staticTimeout(seconds: number, obj: { str: string }) {
@@ -207,7 +206,7 @@ test('Class usage: test concurrency', async (t) => {
   /** for test coverage */
   error = null
   try {
-    @classConcurrency([{ limit: 1, tag: "2" }])
+    @QConcurrency([{ limit: 1, tag: "2" }])
     class TestController7 {
       @synchronized
       async staticTimeout(seconds: number, obj: { str: string }) {
@@ -222,7 +221,7 @@ test('Class usage: test concurrency', async (t) => {
   /** for test coverage */
   error = null
   try {
-    @classConcurrency([{ limit: 1, tag: "2" }, { limit: 1, tag: "3", isStatic: true }])
+    @QConcurrency([{ limit: 1, tag: "2" }, { limit: 1, tag: "3", isStatic: true }])
     class TestController8 {
       async staticTimeout(seconds: number, obj: { str: string }) {
         await timeout(seconds, obj)
@@ -236,7 +235,7 @@ test('Class usage: test concurrency', async (t) => {
   /** for the same tag queue,  @concurrent & @synchronized can not be applied both */
   error = null
   try {
-    @classConcurrency([{ limit: 1, isStatic: true }])
+    @QConcurrency([{ limit: 1, isStatic: true }])
     class TestController9 {
       static async staticTimeoutNoDecorator(seconds: number, obj: { str: string }) {
         await timeout(seconds, obj)
@@ -260,7 +259,7 @@ test('Class usage: test concurrency', async (t) => {
   /** @classConcurrency' parameters should be an array  */
   error = null
   try {
-    @classConcurrency({ limit: 1, tag: "2" } as any)
+    @QConcurrency({ limit: 1, tag: "2" } as any)
     class TestController10 {
       async staticTimeout(seconds: number, obj: { str: string }) {
         await timeout(seconds, obj)
@@ -274,7 +273,7 @@ test('Class usage: test concurrency', async (t) => {
   /** limit should be a number */
   error = null
   try {
-    @classConcurrency([null, { limit: "3" }] as any)
+    @QConcurrency([null, { limit: "3" }] as any)
     class TestController11 {
       async staticTimeout(seconds: number, obj: { str: string }) {
         await timeout(seconds, obj)
@@ -288,9 +287,14 @@ test('Class usage: test concurrency', async (t) => {
 
 test('Instance usage: test concurrency', async (t) => {
 
+  /** Fixme: dummy cases for code coverage */
+  let d4c = new D4C([null] as any)
+  d4c = new D4C([{}] as any)
+  d4c.setConcurrency(null)
+
   /** default queue: concurrency 100 test */
   let test = { str: '' };
-  let d4c = new D4C({ concurrency: { limit: 100 } })
+  d4c = new D4C([{ concurrency: { limit: 100 } }])
   let fn1 = d4c.wrap(timeout);
   let fn2 = d4c.wrap(immediateFun);
   let fn3 = d4c.wrap(immediateFunPromise);
@@ -299,58 +303,44 @@ test('Instance usage: test concurrency', async (t) => {
 
   /** tag queue: concurrency 100 test */
   test = { str: '' };
-  d4c = new D4C({ concurrency: { limit: 100, tag: "2" } })
+  d4c = new D4C([{ concurrency: { limit: 100, tag: "2" } }])
   fn1 = d4c.wrap(timeout, { tag: "2" });
   fn2 = d4c.wrap(immediateFun, { tag: "2" });
   fn3 = d4c.wrap(immediateFunPromise, { tag: "2" });
   await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
   t.is(test.str, '10.20.050.52')
 
-  /** default queue: use setQueue to change default concurrency 100 */
+  /** default queue: use setConcurrency to change concurrency on default to 100 */
   test = { str: '' };
   d4c = new D4C();
-  d4c.setConcurrency({ limit: 100 })
+  d4c.setConcurrency([{ limit: 100 }])
   fn1 = d4c.wrap(timeout);
   fn2 = d4c.wrap(immediateFun);
   fn3 = d4c.wrap(immediateFunPromise);
   await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
   t.is(test.str, '10.20.050.52')
 
-  /** new tag will use new default concurrency 100 */
+  /** new tag with setConcurrency to set concurrency 1 */
   test = { str: '' };
-  fn1 = d4c.wrap(timeout, { tag: "1" });
-  fn2 = d4c.wrap(immediateFun, { tag: "1" });
-  fn3 = d4c.wrap(immediateFunPromise, { tag: "1" });
-  await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
-  t.is(test.str, '10.20.050.52')
-
-  /** new tag with setQueue to set concurrency 1 */
-  test = { str: '' };
-  d4c.setConcurrency({ limit: 1, tag: "2" })
+  d4c.setConcurrency([{ limit: 1, tag: "2" }])
   fn1 = d4c.wrap(timeout, { tag: "2" });
   fn2 = d4c.wrap(immediateFun, { tag: "2" });
   fn3 = d4c.wrap(immediateFunPromise, { tag: "2" });
   await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
   t.is(test.str, '210.50.20.05');
 
-  /** default queue : use setQueue to set it back to 1 */
+  /** default queue: use setConcurrency to set it back to 1 */
   test = { str: '' };
-  d4c.setConcurrency({ limit: 1 })
+  d4c.setConcurrency([{ limit: 1 }])
+  fn1 = d4c.wrap(timeout);
+  fn2 = d4c.wrap(immediateFun);
+  fn3 = d4c.wrap(immediateFunPromise);
   await Promise.all([fn1(2, test), fn2(1, test), fn1(0.5, test), fn3(0.2, test), fn1(0.05, test)]);
   t.is(test.str, '210.50.20.05');
 
   let error = null
   try {
-    d4c.setConcurrency(undefined as any)
-  } catch (err) {
-    error = err;
-  }
-  t.is(error.message, ErrMsg.InvalidQueueConcurrency);
-
-
-  error = null
-  try {
-    d4c.setConcurrency({ limit: -100 })
+    d4c.setConcurrency([undefined] as any)
   } catch (err) {
     error = err;
   }
@@ -358,7 +348,15 @@ test('Instance usage: test concurrency', async (t) => {
 
   error = null
   try {
-    d4c.setConcurrency({ tag: true, limit: 100 } as any)
+    d4c.setConcurrency([{ limit: -100 }])
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, ErrMsg.InvalidQueueConcurrency);
+
+  error = null
+  try {
+    d4c.setConcurrency([{ tag: true, limit: 100 }] as any)
   } catch (err) {
     error = err;
   }
@@ -366,7 +364,7 @@ test('Instance usage: test concurrency', async (t) => {
 
   error = null
   try {
-    d4c.setConcurrency({ tag: true } as any)
+    d4c.setConcurrency([{ tag: true }] as any)
   } catch (err) {
     error = err;
   }
@@ -374,7 +372,7 @@ test('Instance usage: test concurrency', async (t) => {
 
   error = null
   try {
-    d4c.setConcurrency({ tag: true, limit: "100" } as any)
+    d4c.setConcurrency([{ tag: true, limit: "100" }] as any)
   } catch (err) {
     error = err;
   }
@@ -382,7 +380,7 @@ test('Instance usage: test concurrency', async (t) => {
 
   error = null
   try {
-    d4c = new D4C({ concurrency: { limit: "11" } } as any);
+    d4c = new D4C([{ concurrency: { limit: "11" } }] as any);
   } catch (err) {
     error = err;
   }

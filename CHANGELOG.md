@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file. See [standa
 
 Those versions which only include documentation change might not be included here.
 
+### [1.6.0](https://github.com/grimmer0125/d4c-queue/compare/v1.5.10...v1.6.0) (2021-05-07)
+
+Decorator concurrency mode is added.
+
+```ts
+@QConcurrency([
+  { limit: 100, isStatic: true },
+  { limit: 50, tag: '2' },
+])
+class TestController {
+  @concurrent
+  static async fetchData(url: string) {}
+```
+
+#### ⚠ BREAKING CHANGES
+
+```ts
+// orig: only setup one queue, omitting tag will apply default queue and new tag queue
+d4c = new D4C({ concurrency: { limit: 100 } });
+d4c.setConcurrency({ limit: 10 });
+
+// new. to setup multiple queue, omitting tag will only for deafult queue and not apply on new tag queue
+d4c = new D4C([{ concurrency: { limit: 100 } }]);
+d4c.setConcurrency([{ limit: 10 }]);
+```
+
 ### [1.5.10](https://github.com/grimmer0125/d4c-queue/compare/v1.5.9...v1.5.10) (2021-05-07)
 
 #### ⚠ BREAKING CHANGES
@@ -13,7 +39,7 @@ Those versions which only include documentation change might not be included her
 d4c.setQueue({ concurrency: 10 });
 
 /** new, rename parameter */
-d4c.setQueue({ limit: 10 });
+d4c.setConcurrency({ limit: 10 });
 ```
 
 - Allow D4C constructor can setup tag queue concurrency limit. `const d4c = new D4C({ limit: 100, tag: '2' });`
