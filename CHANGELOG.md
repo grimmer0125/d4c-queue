@@ -6,7 +6,7 @@ Those versions which only include documentation change might not be included her
 
 ### [1.6.0](https://github.com/grimmer0125/d4c-queue/compare/v1.5.10...v1.6.0) (2021-05-07)
 
-Decorator concurrency mode is added.
+⭐ Decorator concurrency mode ⭐ is added.
 
 ```ts
 @QConcurrency([
