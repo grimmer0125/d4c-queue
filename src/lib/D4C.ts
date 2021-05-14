@@ -418,7 +418,6 @@ export class D4C {
 
   private defaultConcurrency = DEFAULT_CONCURRENCY;
 
-  // TODO: change to array of concurrency?
   /**
    * Default concurrency is 1. Omitting tag means it is for default queue.
    * If you specify concurrency limit for some tag queue,
