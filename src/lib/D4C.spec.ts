@@ -1,7 +1,7 @@
 import autobind from 'autobind-decorator'
 import test from 'ava';
 
-import { classConcurrency, D4C, ErrMsg, synchronized } from './D4C';
+import { classConcurrency, concurrent, D4C, ErrMsg, synchronized } from './D4C';
 
 const fixture = ['hello'];
 const fixture2 = 'world';
@@ -48,17 +48,234 @@ const immediateFunPromise = (seconds: number, target: { str: string }) => {
   return Promise.resolve();
 };
 
-// 1. 測試 class 的 concurrency, class instance method 都有設定. 使用 defaut tag
-// 1.3  測試 class 的 concurrency, class static method 都有設定. 使用 defaut tag
-// 1.2 測試都有設定但 default tag 不影響到 a. tag1 b. synchronized 的 c. static
+test('Class usage: test concurrency', async (t) => {
+  @classConcurrency([{ limit: 100, isStatic: true }, { limit: 100, isStatic: false },
+  { limit: 1, isStatic: true, tag: "2" }, { limit: 1, isStatic: false, tag: "2" }])
+  class TestController {
+    @concurrent
+    static async staticTimeout(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
 
-// 2. 測試 class 的 concurrency, class 有但 method 沒有. 沒有 conconcureency
-// 3. 測試 class 的              class 沒有 method 有. 預設是 Infinity ???????? yes
+    @concurrent
+    async instanceTimeout(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
 
-// 7. ~~測試 class 設定 duplicate tag concurrency <- 算了~~
-// 4. 測試相容性
-// 5.              1. 同一個 tag 的 instance/static method 不相容
-// 6.              2. class 有 但 instance 是 sync 不相容
+    @concurrent({ tag: "2" })
+    static async staticTimeout2(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+
+    @concurrent({ tag: "2" })
+    async instanceTimeout2(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+
+    @synchronized({ tag: "3" })
+    async random(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+  }
+  // 1.1
+  let test = { str: '' }
+  await Promise.all([TestController.staticTimeout(0.5, test), TestController.staticTimeout(0.1, test)]);
+  t.is(test.str, '0.10.5')
+
+  test = { str: '' }
+  await Promise.all([TestController.staticTimeout2(0.5, test), TestController.staticTimeout2(0.1, test)]);
+  t.is(test.str, '0.50.1')
+
+  // 1.2
+  const testController = new TestController();
+  test = { str: '' }
+  await Promise.all([testController.instanceTimeout(0.5, test), testController.instanceTimeout(0.1, test)]);
+  t.is(test.str, '0.10.5')
+
+  test = { str: '' }
+  await Promise.all([testController.instanceTimeout2(0.5, test), testController.instanceTimeout2(0.1, test)]);
+  t.is(test.str, '0.50.1')
+
+  //2
+  class TestController2 {
+    @concurrent
+    static async staticTimeout(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+
+  }
+  test = { str: '' }
+  await Promise.all([TestController2.staticTimeout(0.5, test), TestController2.staticTimeout(0.1, test)]);
+  t.is(test.str, '0.10.5')
+
+
+  @classConcurrency([{ limit: 1, isStatic: true }, { limit: 1, isStatic: false },
+  { limit: 1, isStatic: true, tag: "2" },
+  { limit: 1, isStatic: false, tag: "2" }])
+  class TestController3 {
+    static async staticTimeoutNoDecorator(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+
+    @concurrent
+    static async staticTimeout(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+
+    @concurrent
+    async instanceTimeout(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+
+    @concurrent({ tag: "2" })
+    static async staticTimeout2(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+
+    @concurrent({ tag: "2" })
+    async instanceTimeout2(seconds: number, obj: { str: string }) {
+      await timeout(seconds, obj)
+    }
+  }
+  // 3
+  test = { str: '' }
+  await Promise.all([TestController3.staticTimeoutNoDecorator(0.5, test), TestController3.staticTimeoutNoDecorator(0.1, test)]);
+  t.is(test.str, '0.10.5')
+
+  //1.3
+  const testController3 = new TestController3();
+  test = { str: '' }
+  await Promise.all([TestController.staticTimeout(0.5, test), testController.instanceTimeout(0.4, test), TestController.staticTimeout(0.3, test), testController.instanceTimeout(0.2, test)]);
+  t.is(test.str, '0.20.30.40.5')
+
+  //4.
+  let error = null
+  try {
+    @classConcurrency([{ limit: 1, isStatic: true }])
+    class TestController4 {
+      static async staticTimeoutNoDecorator(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+
+      @synchronized
+      static async staticTimeout(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+    }
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, ErrMsg.ClassAndMethodDecoratorsIncompatible);
+
+  error = null
+  try {
+    @classConcurrency([{ limit: 1, isStatic: true, tag: "2" }])
+    class TestController5 {
+      static async staticTimeoutNoDecorator(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+
+      @synchronized
+      static async staticTimeout(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+    }
+  } catch (err) {
+    error = err;
+  }
+  t.is(error, null);
+
+  error = null
+  try {
+    @classConcurrency([{ limit: 1, isStatic: true, tag: "2" }])
+    class TestController6 {
+      @concurrent
+      static async staticTimeout(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+    }
+  } catch (err) {
+    error = err;
+  }
+  t.is(error, null);
+
+  error = null
+  try {
+    @classConcurrency([{ limit: 1, tag: "2" }])
+    class TestController7 {
+      @synchronized
+      async staticTimeout(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+    }
+  } catch (err) {
+    error = err;
+  }
+  t.is(error, null);
+
+  error = null
+  try {
+    @classConcurrency([{ limit: 1, tag: "2" }, { limit: 1, tag: "3", isStatic: true }])
+    class TestController8 {
+      async staticTimeout(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+    }
+  } catch (err) {
+    error = err;
+  }
+  t.is(error, null);
+
+  //5.
+  error = null
+  try {
+    @classConcurrency([{ limit: 1, isStatic: true }])
+    class TestController9 {
+      static async staticTimeoutNoDecorator(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+
+      @synchronized
+      static async staticTimeout(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+
+      @concurrent
+      static async staticTimeout2(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+    }
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, ErrMsg.TwoDecoratorsIncompatible);
+
+  error = null
+  try {
+    @classConcurrency({ limit: 1, tag: "2" } as any)
+    class TestController10 {
+      async staticTimeout(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+    }
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, ErrMsg.InvalidClassDecoratorParameter);
+
+  error = null
+  try {
+    @classConcurrency([null, { limit: "3" }] as any)
+    class TestController11 {
+      async staticTimeout(seconds: number, obj: { str: string }) {
+        await timeout(seconds, obj)
+      }
+    }
+  } catch (err) {
+    error = err;
+  }
+  t.is(error.message, ErrMsg.InvalidClassDecoratorParameter);
+});
 
 test('Instance usage: test concurrency', async (t) => {
 
@@ -153,8 +370,6 @@ test('Instance usage: test concurrency', async (t) => {
     error = err;
   }
   t.is(error.message, ErrMsg.InvalidQueueConcurrency);
-
-
 
   error = null
   try {

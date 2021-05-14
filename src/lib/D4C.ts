@@ -62,7 +62,7 @@ function checkIfClassConcurrencyApplyOnSynchronizedMethod(target, usedTag: strin
   }
 }
 
-export function classConcurrency(queuesParam: [{ tag?: string | symbol, limit: number, isStatic?: false }]): ClassDecorator {
+export function classConcurrency(queuesParam: Array<{ tag?: string | symbol, limit: number, isStatic?: boolean }>): ClassDecorator {
   if (!Array.isArray(queuesParam)) {
     throw new Error(ErrMsg.InvalidClassDecoratorParameter);
   }
@@ -70,7 +70,7 @@ export function classConcurrency(queuesParam: [{ tag?: string | symbol, limit: n
   /** target is constructor */
   return (target) => {
     queuesParam.forEach((queueParam) => {
-      if (!queuesParam) {
+      if (!queueParam) {
         return;
       }
       const { tag, limit, isStatic } = queueParam;
@@ -87,10 +87,10 @@ export function classConcurrency(queuesParam: [{ tag?: string | symbol, limit: n
           return;
         }
 
-        checkIfClassConcurrencyApplyOnSynchronizedMethod(target, tag);
+        checkIfClassConcurrencyApplyOnSynchronizedMethod(target, usedTag);
 
         /** inject concurrency info for each tag in instance method case */
-        if (target?.[concurrentSymbol]?.[usedTag]) {
+        if (target[concurrentSymbol]?.[usedTag]) {
           target[concurrentSymbol][usedTag] = limit;
         }
 
@@ -118,7 +118,7 @@ export function classConcurrency(queuesParam: [{ tag?: string | symbol, limit: n
         checkIfClassConcurrencyApplyOnSynchronizedMethod(target.prototype, usedTag);
 
         /** inject concurrency info for each tag in instance method case */
-        if (target.prototype?.[concurrentSymbol]?.[usedTag]) {
+        if (target.prototype[concurrentSymbol]?.[usedTag]) {
           target.prototype[concurrentSymbol][usedTag] = limit;
         }
 
@@ -336,7 +336,7 @@ function _q<T extends IAnyFn>(
       }
 
       currTaskQueues = this[queueSymbol];
-      decoratorConcurrencyLimit = this?.[concurrentSymbol]?.[tag];
+      decoratorConcurrencyLimit = this[concurrentSymbol]?.[tag];
       // console.log("decoratorConcurrencyLimit:", decoratorConcurrencyLimit)
     } else {
       throw new Error(ErrMsg.MissingThisDueBindIssue);
