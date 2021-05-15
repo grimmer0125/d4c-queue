@@ -206,9 +206,9 @@ function checkIfDecoratorOptionObject(obj: any): boolean {
   /**
    * hasOwnProperty should be false since it is a literal object
    */
-  //eslint-disable-next-line
   if (
     typeof obj === 'object' &&
+    //eslint-disable-next-line
     !obj.hasOwnProperty('constructor') &&
     (typeof obj.inheritPreErr === 'boolean' ||
       obj.inheritPreErr === undefined) &&
