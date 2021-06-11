@@ -385,13 +385,12 @@ export class TestsResolver {
 To use async functions, sometime we just `await async_fun1()` to wait for its finishing then start to call `async_func2`. But if we also do not want to use `await` to block current event loop? The workaround way is to make another wrapper function manually to detach, like below
 
 ```typescript
-async wrap_function(){
+async wrap_function() {
   await async_fun1()
   await async_func2()
 }
 
-current_function()
-{
+current_function() {
   // just call
   wrap_function()
 
@@ -403,8 +402,7 @@ current_function()
 Use this library can easily achieve, becomes
 
 ```typescript
-current_function();
-{
+current_function() {
   const d4c = new D4C();
   d4c.apply(async_fun1);
   d4c.apply(async_fun1);
