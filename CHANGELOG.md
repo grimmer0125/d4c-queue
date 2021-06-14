@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. See [standa
 
 Those versions which only include documentation change might not be included here.
 
+### [1.6.4](https://github.com/grimmer0125/d4c-queue/compare/v1.6.0...v1.6.4) (2021-06-14)
+
+Update README and fix potential security vulnerabilities in dependencies.
+
 ### [1.6.0](https://github.com/grimmer0125/d4c-queue/compare/v1.5.10...v1.6.0) (2021-05-07)
 
 ⭐ Decorator concurrency mode ⭐ is added.
@@ -22,12 +26,12 @@ class TestController {
 
 ```ts
 // orig: only setup one queue, omitting tag will apply default queue and new tag queue
-d4c = new D4C({ concurrency: { limit: 100 } });
-d4c.setConcurrency({ limit: 10 });
+d4c = new D4C({ concurrency: { limit: 100 } })
+d4c.setConcurrency({ limit: 10 })
 
 // new. to setup multiple queue, omitting tag will only for deafult queue and not apply on new tag queue
-d4c = new D4C([{ concurrency: { limit: 100 } }]);
-d4c.setConcurrency([{ limit: 10 }]);
+d4c = new D4C([{ concurrency: { limit: 100 } }])
+d4c.setConcurrency([{ limit: 10 }])
 ```
 
 ### [1.5.10](https://github.com/grimmer0125/d4c-queue/compare/v1.5.9...v1.5.10) (2021-05-07)
@@ -36,10 +40,10 @@ d4c.setConcurrency([{ limit: 10 }]);
 
 ```ts
 /** orig */
-d4c.setQueue({ concurrency: 10 });
+d4c.setQueue({ concurrency: 10 })
 
 /** new, rename parameter */
-d4c.setConcurrency({ limit: 10 });
+d4c.setConcurrency({ limit: 10 })
 ```
 
 - Allow D4C constructor can setup tag queue concurrency limit. `const d4c = new D4C({ limit: 100, tag: '2' });`
@@ -54,13 +58,13 @@ Add TypeDoc site and refactor code and improve some test.
 #### ⚠ BREAKING CHANGES
 
 ```ts
-const d4c = new D4C(100);
+const d4c = new D4C(100)
 ```
 
 To
 
 ```ts
-const d4c = new D4C({ concurrency: 100 });
+const d4c = new D4C({ concurrency: 100 })
 ```
 
 ### [1.5.0](https://github.com/grimmer0125/d4c-queue/compare/v1.4.5...v1.5.0) (2021-05-07)
@@ -70,9 +74,9 @@ const d4c = new D4C({ concurrency: 100 });
 Add concurrency mode support for D4C instance usage. Previous it only supports synchronization mode (concurrency = 1).
 
 ```ts
-const d4c = new D4C(100);
-d4c.setQueue({ concurrency: 10 }); // change default concurrency from 1 to 10
-d4c.setQueue({ concurrency: 10, tag: 'queue2' }); // concurrency for queue2
+const d4c = new D4C(100)
+d4c.setQueue({ concurrency: 10 }) // change default concurrency from 1 to 10
+d4c.setQueue({ concurrency: 10, tag: 'queue2' }) // concurrency for queue2
 ```
 
 ### [1.4.2](https://github.com/grimmer0125/d4c-queue/compare/v1.4.1...v1.4.2) (2021-05-06)
@@ -120,17 +124,17 @@ Improve documentation and tests, and fix a bug about empty arguments in d4c.appl
 original:
 
 ```ts
-import { D4C, dApply, dWrap, synchronized } from 'd4c-queue';
+import { D4C, dApply, dWrap, synchronized } from 'd4c-queue'
 
 /** global usage*/
 const asyncFunResult = await dWrap(asyncFun, { tag: 'queue1' })(
   'asyncFun_arg1',
   'asyncFun_arg2'
-);
+)
 
 /** instance usage */
-const d4c = new D4C();
-d4c.apply(async);
+const d4c = new D4C()
+d4c.apply(async)
 
 /** decorator usage */
 class ServiceAdapter {
@@ -142,10 +146,10 @@ class ServiceAdapter {
 becomes
 
 ```ts
-import { D4C, injectQ, synchronized } from 'd4c-queue';
+import { D4C, injectQ, synchronized } from 'd4c-queue'
 
 /** instance usage */
-d4c.apply(syncFun, { args: ['syncFun_arg1'] });
+d4c.apply(syncFun, { args: ['syncFun_arg1'] })
 
 /** decorator usage */
 @injectQ
@@ -216,14 +220,14 @@ Features
 - global usage
 
 ```ts
-D4C.wrap(asyncFun, { tag: 'queue1' })('asyncFun_arg1', 'asyncFun_arg2');
+D4C.wrap(asyncFun, { tag: 'queue1' })('asyncFun_arg1', 'asyncFun_arg2')
 ```
 
 - instance usage
 
 ```ts
-const d4c = new D4C();
-d4c.iwrap(asyncFun, { tag: 'queue1' })('asyncFun_arg1', 'asyncFun_arg2');
+const d4c = new D4C()
+d4c.iwrap(asyncFun, { tag: 'queue1' })('asyncFun_arg1', 'asyncFun_arg2')
 ```
 
 - decorator usage.
