@@ -65,7 +65,7 @@
 				<a href="#d4c-queue" id="d4c-queue" style="color: inherit; text-decoration: none;">
 					<h1>D4C Queue</h1>
 				</a>
-				<p><a href="https://www.npmjs.com/package/d4c-queue"><img src="https://img.shields.io/npm/v/d4c-queue.svg" alt="npm version"></a> <img src="https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg" alt="example workflow"> <a href="https://coveralls.io/github/grimmer0125/d4c-queue?branch=master"><img src="https://coveralls.io/repos/github/grimmer0125/d4c-queue/badge.svg?branch=master" alt="Coverage Status"></a></p>
+				<p><a href="https://www.npmjs.com/package/d4c-queue"><img src="https://img.shields.io/npm/v/d4c-queue.svg" alt="npm version"></a> <img src="https://github.com/grimmer0125/d4c-queue/actions/workflows/node.js.yml/badge.svg" alt="example workflow"> <a href="https://coveralls.io/github/grimmer0125/d4c-queue"><img src="https://coveralls.io/repos/github/grimmer0125/d4c-queue/badge.svg" alt="Coverage Status"></a></p>
 				<p>Wrap an <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function">async</a>/<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises">promise-returning</a>/<code>sync</code> function as a queue-ready async function, which is enqueued while being called. This is convenient to reuse it. In synchronization mode, task queues execute original functions sequentially by default (equivalently <code>concurrency limit = 1</code>). In concurrency mode, it allows changing concurrency limit to have concurrent tasks executed. It also supports <code>@synchronized</code>/<code>@concurrent</code> <a href="https://www.typescriptlang.org/docs/handbook/decorators.html">decorator</a> on instance or static methods. Passing arguments and using <code>await</code> to get return values are also supported.</p>
 				<a href="#features" id="features" style="color: inherit; text-decoration: none;">
 					<h2>Features</h2>
@@ -78,7 +78,7 @@
 					</li>
 					<li>This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.</li>
 					<li>Optional parameter, <code>inheritPreErr</code>. If current task is waiting for previous tasks, set it as <code>true</code> to inherit the error of the previous task and the task will not be executed and throw a custom error <code>new PreviousError(task.preError.message ?? task.preError)</code>. If this parameter is omitted or set as <code>false</code>, the task will continue whether previous tasks happen errors or not.</li>
-					<li>Optional parameter, <code>noBlockCurr</code>. Set it as <code>true</code> to forcibly execute the current task in the next tick of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.</li>
+					<li>Optional parameter, <code>noBlockCurr</code>. Set it as <code>true</code> to forcibly execute the current task in the next (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.</li>
 					<li>Support Browser and Node.js.</li>
 					<li>Fully Written in TypeScript and its <code>.d.ts</code> typing is out of box. JavaScript is supported, too.</li>
 					<li>Wrap a function to a new queue-ready async function. It is convenient to re-use this function. Also, it is able to pass arguments and get return value for each task function.</li>
@@ -136,8 +136,8 @@
 					</li>
 					<li>Each D4C instance will have its own queue system.</li>
 				</ul>
-				<pre><code>D4C queues (decorator) injected <span class="hljs-keyword">into</span> your <span class="hljs-keyword">class</span> (per instance):
-  - instance <span class="hljs-function"><span class="hljs-keyword">method</span> <span class="hljs-title">queues</span>:</span>
+				<pre><code>D4C queues (decorator) injected <span class="hljs-keyword">into</span> your <span class="hljs-keyword">class</span>:
+  - instance <span class="hljs-function"><span class="hljs-keyword">method</span> <span class="hljs-title">queues</span> <span class="hljs-params">(per instance)</span>:</span>
       - <span class="hljs-keyword">default</span> queue
       - tag1 queue
       - tag2 queue
@@ -159,7 +159,7 @@
 				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
 
 <span class="hljs-comment">/**
- * in place 1
+ * in some execution of event loop
  * you can choose to await the result or not.
  */</span>
 <span class="hljs-keyword">const</span> asyncFunResult = <span class="hljs-keyword">await</span> d4c.wrap(asyncFun)(
@@ -167,7 +167,7 @@
   <span class="hljs-string">&#x27;asyncFun_arg2&#x27;</span>
 );
 <span class="hljs-comment">/**
- * in place 2, another event in event loop. Either async or
+ * in another execution of event loop. Either async or
  * sync function is ok. E.g., pass a sync function,
  * it will wait for asyncFun&#x27;s finishing, then use await to get
  * the new wrapped async function&#x27;s result.
@@ -242,8 +242,8 @@ d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-nu
   <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">connect</span>(<span class="hljs-params"></span>)</span> {}
 }
 </code></pre>
-				<a href="#arrow-function" id="arrow-function" style="color: inherit; text-decoration: none;">
-					<h4>Arrow function</h4>
+				<a href="#arrow-function-property" id="arrow-function-property" style="color: inherit; text-decoration: none;">
+					<h4>Arrow function property</h4>
 				</a>
 				<p>Using decorators on <code>arrow function property</code> does not work since some limitation. If you need the effect of arrow function, you can bind by yourself (e.g. <code>this.handleChange = this.handleChange.bind(this);</code>) or consider <a href="https://www.npmjs.com/package/autobind-decorator">autobind-decorator</a></p>
 				<pre><code class="language-typescript"><span class="hljs-meta">@autobind</span>
@@ -272,7 +272,7 @@ d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-nu
 				<a href="#causality" id="causality" style="color: inherit; text-decoration: none;">
 					<h3>Causality</h3>
 				</a>
-				<p>Sometimes a task function is better to be executed after the previous task function is finished. For example, assume you are writing a adapter to use a network client library to connect to a service, either in a React frontend or a Node.js backend program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so <code>connect</code> is called first, later <code>send_message</code> is executed in another event. In the adapter code, usually a flag can be used and do something like</p>
+				<p>Sometimes a task function is better to be executed after the previous task function is finished. For example, assume you are writing a adapter to use a network client library to connect to a service, either in a React frontend or a Node.js backend program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so <code>connect</code> is called first, later <code>send_message</code> is triggered in another UI event. In the adapter code, usually a flag can be used and do something like</p>
 				<pre><code class="language-typescript"><span class="hljs-function"><span class="hljs-title">send_message</span>(<span class="hljs-params">msg: <span class="hljs-built_in">string</span></span>)</span> {
   <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.connectingStatus === <span class="hljs-string">&#x27;Connected&#x27;</span>) {
     <span class="hljs-comment">// send message</span>
@@ -327,15 +327,15 @@ d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-nu
   <span class="hljs-comment">/** execute python code in browser */</span>
 });
 </code></pre>
-				<a href="#concurrency" id="concurrency" style="color: inherit; text-decoration: none;">
-					<h3>Concurrency</h3>
+				<a href="#race-condition" id="race-condition" style="color: inherit; text-decoration: none;">
+					<h3>Race condition</h3>
 				</a>
 				<p>Concurrency may make race condition. And we usually use a synchronization mechanism (e.g. mutex) to solve it. A task queue can achieve this.</p>
 				<p>It is similar to causality. Sometimes two function which access same data within and will result race condition if they are executed concurrently. Although JavaScript is single thread (except Node.js Worker threads, Web Workers and JS runtime), the intrinsic property of event loop may result in some unexpected race condition, e.g.</p>
 				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> func1 = <span class="hljs-keyword">async</span> () =&gt; {
-  <span class="hljs-comment">// console.log(&quot;func1 start, event1 in event loop&quot;)</span>
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;func1 start, execution1 in event loop&quot;</span>)
   <span class="hljs-keyword">await</span> func3();
-  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;func1 end, should not be same event1&#x27;</span>);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;func1 end, should not be same event loop execution1&#x27;</span>);
 };
 
 <span class="hljs-keyword">const</span> func2 = <span class="hljs-keyword">async</span> () =&gt; {
@@ -348,7 +348,7 @@ d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-nu
 }
 testRaceCondition();
 </code></pre>
-				<p><code>func2</code> will be executed when <code>fun1</code> is not finished.</p>
+				<p><code>func2</code> will be executed when <code>func1</code> is not finished.</p>
 				<a href="#real-world-cases" id="real-world-cases" style="color: inherit; text-decoration: none;">
 					<h4>Real world cases</h4>
 				</a>
@@ -403,14 +403,13 @@ app.post(<span class="hljs-string">&#x27;/testing&#x27;</span>, <span class="hlj
 				<a href="#convenience" id="convenience" style="color: inherit; text-decoration: none;">
 					<h3>Convenience</h3>
 				</a>
-				<p>To use async functions, sometime we just <code>await async_fun1()</code> to wait for its finishing then start to call <code>async_func2</code>. But if we also do not want to use <code>await</code> to block current event loop? The workaround way is to make another wrapper function manually to detach, like below</p>
-				<pre><code class="language-typescript"><span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">wrap_function</span>(<span class="hljs-params"></span>)</span>{
-  <span class="hljs-keyword">await</span> async_fun1()
+				<p>To use async functions, sometimes we just <code>await async_func1()</code> to wait for its finishing then start to call <code>async_func2</code>. But if we also do not want to use <code>await</code> to block current event loop? The workaround way is to make another wrapper function manually to detach, like below</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">wrap_function</span>(<span class="hljs-params"></span>)</span> {
+  <span class="hljs-keyword">await</span> async_func1()
   <span class="hljs-keyword">await</span> async_func2()
 }
 
-<span class="hljs-function"><span class="hljs-title">current_function</span>(<span class="hljs-params"></span>)</span>
-{
+<span class="hljs-function"><span class="hljs-title">current_function</span>(<span class="hljs-params"></span>)</span> {
   <span class="hljs-comment">// just call</span>
   wrap_function()
 
@@ -419,11 +418,10 @@ app.post(<span class="hljs-string">&#x27;/testing&#x27;</span>, <span class="hlj
 }
 </code></pre>
 				<p>Use this library can easily achieve, becomes</p>
-				<pre><code class="language-typescript">current_function();
-{
+				<pre><code class="language-typescript"><span class="hljs-function"><span class="hljs-title">current_function</span>(<span class="hljs-params"></span>)</span> {
   <span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C();
-  d4c.apply(async_fun1);
-  d4c.apply(async_fun1);
+  d4c.apply(async_func1);
+  d4c.apply(async_func2);
 }
 </code></pre>
 				<a href="#api" id="api" style="color: inherit; text-decoration: none;">
