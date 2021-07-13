@@ -46,7 +46,8 @@
     "arrow function",
     "task-queue",
     "tasks",
-    "task-runner"
+    "task-runner",
+    "microtask"
   ],
   "scripts": {
     "build": "run-p build:*",
