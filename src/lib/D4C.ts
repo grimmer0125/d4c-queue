@@ -110,7 +110,7 @@ export function QConcurrency(
 
         checkIfClassConcurrencyApplyOnSynchronizedMethod(target, usedTag)
 
-        /** inject concurrency info for each tag in instance method case */
+        /** inject concurrency info for each tag in static method case */
         if (target[concurrentSymbol]?.[usedTag]) {
           target[concurrentSymbol][usedTag] = limit
         }
@@ -350,7 +350,7 @@ function _q<T extends IAnyFn>(
       currTaskQueues = d4cObj.queues
     } else if (this && (this[queueSymbol] || this[queueSymbol] === null)) {
       if (this[queueSymbol] === null) {
-        /** Decorator instance method first time case, using injected queues in user defined objects*/
+        /** instance method decorator first time case, using injected queues in user defined objects*/
         this[queueSymbol] = new Map<string | symbol, TaskQueue>()
       }
 

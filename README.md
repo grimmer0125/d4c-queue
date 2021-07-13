@@ -11,7 +11,7 @@ Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Referenc
    2. Class, instance, and static method decorators on classes: synchronization mode & concurrency mode.
 2. This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr`. If current task is waiting for previous tasks, set it as `true` to inherit the error of the previous task and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`. If this parameter is omitted or set as `false`, the task will continue whether previous tasks happen errors or not.
-4. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the next tick of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
+4. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the next (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
 5. Support Browser and Node.js.
 6. Fully Written in TypeScript and its `.d.ts` typing is out of box. JavaScript is supported, too.
 7. Wrap a function to a new queue-ready async function. It is convenient to re-use this function. Also, it is able to pass arguments and get return value for each task function.
@@ -79,8 +79,8 @@ Each queue is isolated with the others.
 - Each D4C instance will have its own queue system.
 
 ```
-D4C queues (decorator) injected into your class (per instance):
-  - instance method queues:
+D4C queues (decorator) injected into your class:
+  - instance method queues (per instance):
       - default queue
       - tag1 queue
       - tag2 queue
@@ -102,7 +102,7 @@ D4C instance queues (per D4C object):
 const d4c = new D4C();
 
 /**
- * in place 1
+ * in some execution of event loop
  * you can choose to await the result or not.
  */
 const asyncFunResult = await d4c.wrap(asyncFun)(
@@ -110,7 +110,7 @@ const asyncFunResult = await d4c.wrap(asyncFun)(
   'asyncFun_arg2'
 );
 /**
- * in place 2, another event in event loop. Either async or
+ * in another execution of event loop. Either async or
  * sync function is ok. E.g., pass a sync function,
  * it will wait for asyncFun's finishing, then use await to get
  * the new wrapped async function's result.
@@ -198,7 +198,7 @@ class TestController {
 }
 ```
 
-#### Arrow function
+#### Arrow function property
 
 Using decorators on `arrow function property` does not work since some limitation. If you need the effect of arrow function, you can bind by yourself (e.g. `this.handleChange = this.handleChange.bind(this);`) or consider [autobind-decorator](https://www.npmjs.com/package/autobind-decorator)
 
@@ -231,7 +231,7 @@ const res = await d4c.apply(testController.bindMethodByArrowPropertyOrAutobind);
 
 ### Causality
 
-Sometimes a task function is better to be executed after the previous task function is finished. For example, assume you are writing a adapter to use a network client library to connect to a service, either in a React frontend or a Node.js backend program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so `connect` is called first, later `send_message` is executed in another event. In the adapter code, usually a flag can be used and do something like
+Sometimes a task function is better to be executed after the previous task function is finished. For example, assume you are writing a adapter to use a network client library to connect to a service, either in a React frontend or a Node.js backend program, and you do not want to block current event loop (e.g. using a UI indicator to wait) for this case, so `connect` is called first, later `send_message` is triggered in another UI event. In the adapter code, usually a flag can be used and do something like
 
 ```typescript
 send_message(msg: string) {
@@ -294,7 +294,7 @@ export const parseByPython = d4c.wrap(async (buffer: ArrayBuffer) => {
 });
 ```
 
-### Concurrency
+### Race condition
 
 Concurrency may make race condition. And we usually use a synchronization mechanism (e.g. mutex) to solve it. A task queue can achieve this.
 
@@ -302,9 +302,9 @@ It is similar to causality. Sometimes two function which access same data within
 
 ```typescript
 const func1 = async () => {
-  // console.log("func1 start, event1 in event loop")
+  console.log("func1 start, execution1 in event loop")
   await func3();
-  console.log('func1 end, should not be same event1');
+  console.log('func1 end, should not be same event loop execution1');
 };
 
 const func2 = async () => {
@@ -318,7 +318,7 @@ async function testRaceCondition() {
 testRaceCondition();
 ```
 
-`func2` will be executed when `fun1` is not finished.
+`func2` will be executed when `func1` is not finished.
 
 #### Real world cases
 
@@ -382,11 +382,11 @@ export class TestsResolver {
 
 ### Convenience
 
-To use async functions, sometime we just `await async_fun1()` to wait for its finishing then start to call `async_func2`. But if we also do not want to use `await` to block current event loop? The workaround way is to make another wrapper function manually to detach, like below
+To use async functions, sometimes we just `await async_func1()` to wait for its finishing then start to call `async_func2`. But if we also do not want to use `await` to block current event loop? The workaround way is to make another wrapper function manually to detach, like below
 
 ```typescript
 async wrap_function() {
-  await async_fun1()
+  await async_func1()
   await async_func2()
 }
 
@@ -404,8 +404,8 @@ Use this library can easily achieve, becomes
 ```typescript
 current_function() {
   const d4c = new D4C();
-  d4c.apply(async_fun1);
-  d4c.apply(async_fun1);
+  d4c.apply(async_func1);
+  d4c.apply(async_func2);
 }
 ```
 
