@@ -78,7 +78,7 @@
 					</li>
 					<li>This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.</li>
 					<li>Optional parameter, <code>inheritPreErr</code>. If current task is waiting for previous tasks, set it as <code>true</code> to inherit the error of the previous task and the task will not be executed and throw a custom error <code>new PreviousError(task.preError.message ?? task.preError)</code>. If this parameter is omitted or set as <code>false</code>, the task will continue whether previous tasks happen errors or not.</li>
-					<li>Optional parameter, <code>noBlockCurr</code>. Set it as <code>true</code> to forcibly execute the current task in the next (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.</li>
+					<li>Optional parameter, <code>noBlockCurr</code>. Set it as <code>true</code> to forcibly execute the current task in the another (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.</li>
 					<li>Support Browser and Node.js.</li>
 					<li>Fully Written in TypeScript and its <code>.d.ts</code> typing is out of box. JavaScript is supported, too.</li>
 					<li>Wrap a function to a new queue-ready async function. It is convenient to re-use this function. Also, it is able to pass arguments and get return value for each task function.</li>
