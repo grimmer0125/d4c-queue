@@ -11,7 +11,7 @@ Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Referenc
    2. Class, instance, and static method decorators on classes: synchronization mode & concurrency mode.
 2. This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
 3. Optional parameter, `inheritPreErr`. If current task is waiting for previous tasks, set it as `true` to inherit the error of the previous task and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`. If this parameter is omitted or set as `false`, the task will continue whether previous tasks happen errors or not.
-4. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the next (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
+4. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the another (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
 5. Support Browser and Node.js.
 6. Fully Written in TypeScript and its `.d.ts` typing is out of box. JavaScript is supported, too.
 7. Wrap a function to a new queue-ready async function. It is convenient to re-use this function. Also, it is able to pass arguments and get return value for each task function.
