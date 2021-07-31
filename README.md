@@ -9,15 +9,15 @@ Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Referenc
 1. Two usages
    1. D4C instance: synchronization mode & concurrency mode.
    2. Class, instance, and static method decorators on classes: synchronization mode & concurrency mode.
-2. This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
-3. Optional parameter, `inheritPreErr`. If current task is waiting for previous tasks, set it as `true` to inherit the error of the previous task and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`. If this parameter is omitted or set as `false`, the task will continue whether previous tasks happen errors or not.
-4. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the another (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
+2. Wrap a function to a new queue-ready async function. It is convenient to re-use this function. Also, it is able to pass arguments and get return value for each task function.
+3. Support `async function`, a `promise-returning` function, and a `sync` function.
+4. Sub queues system (via tags).
 5. Support Browser and Node.js.
 6. Fully Written in TypeScript and its `.d.ts` typing is out of box. JavaScript is supported, too.
-7. Wrap a function to a new queue-ready async function. It is convenient to re-use this function. Also, it is able to pass arguments and get return value for each task function.
-8. Support `async function`, a `promise-returning` function, and a `sync` function.
-9. Sub queues system (via tags).
-10. Well tested.
+7. This library implements a FIFO task queue for O(1) speed. Using built-in JavaScript array will have O(n) issue.
+8. Well tested.
+9. Optional parameter, `inheritPreErr`. If current task is waiting for previous tasks, set it as `true` to inherit the error of the previous task and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`. If this parameter is omitted or set as `false`, the task will continue whether previous tasks happen errors or not.
+10. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the another (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
 
 ## Installation
 
@@ -31,13 +31,13 @@ Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package
 **ES6 import**
 
 ```typescript
-import { D4C, synchronized, QConcurrency, concurrent } from 'd4c-queue';
+import { D4C, synchronized, QConcurrency, concurrent } from 'd4c-queue'
 ```
 
 **CommonJS**
 
 ```typescript
-const { D4C, synchronized, QConcurrency, concurrent } = require('d4c-queue');
+const { D4C, synchronized, QConcurrency, concurrent } = require('d4c-queue')
 ```
 
 It is possible to use the `module` build with CommonJS require syntax in TypeScript or other build tools.
@@ -99,7 +99,7 @@ D4C instance queues (per D4C object):
 #### Synchronization mode
 
 ```typescript
-const d4c = new D4C();
+const d4c = new D4C()
 
 /**
  * in some execution of event loop
@@ -108,20 +108,20 @@ const d4c = new D4C();
 const asyncFunResult = await d4c.wrap(asyncFun)(
   'asyncFun_arg1',
   'asyncFun_arg2'
-);
+)
 /**
  * in another execution of event loop. Either async or
  * sync function is ok. E.g., pass a sync function,
  * it will wait for asyncFun's finishing, then use await to get
  * the new wrapped async function's result.
  */
-const syncFunFunResult = await d4c.wrap(syncFun)('syncFun_arg1');
+const syncFunFunResult = await d4c.wrap(syncFun)('syncFun_arg1')
 ```
 
 Alternatively, you can use below
 
 ```typescript
-d4c.apply(syncFun, { args: ['syncFun_arg1'] });
+d4c.apply(syncFun, { args: ['syncFun_arg1'] })
 ```
 
 #### Concurrency mode
@@ -134,21 +134,21 @@ Usage:
 
 ```ts
 /** change concurrency limit applied on default queues */
-const d4c = new D4C([{ limit: 100 }]);
+const d4c = new D4C([{ limit: 100 }])
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C([{ limit: 100, tag: '2' }]);
+const d4c = new D4C([{ limit: 100, tag: '2' }])
 ```
 
 You can adjust concurrency via `setConcurrency`.
 
 ```ts
-const d4c = new D4C();
+const d4c = new D4C()
 /** change concurrency limit on default queue*/
-d4c.setConcurrency([{ limit: 10 }]);
+d4c.setConcurrency([{ limit: 10 }])
 
 /** change concurrency limit for queue2 */
-d4c.setConcurrency([{ limit: 10, tag: 'queue2' }]);
+d4c.setConcurrency([{ limit: 10, tag: 'queue2' }])
 ```
 
 ### Decorators usage
@@ -168,7 +168,7 @@ class ServiceAdapter {
   //** parameters are optional */
   @synchronized({ tag: 'world', inheritPreErr: true, noBlockCurr: true })
   static async staticMethod(text: string) {
-    return text;
+    return text
   }
 }
 ```
@@ -221,10 +221,10 @@ class TestController {
 
   bindMethodByArrowPropertyOrAutobind = async () => {
     /** access some property in this. accessible after wrapping*/
-  };
+  }
 }
-const d4c = new D4C();
-const res = await d4c.apply(testController.bindMethodByArrowPropertyOrAutobind);
+const d4c = new D4C()
+const res = await d4c.apply(testController.bindMethodByArrowPropertyOrAutobind)
 ```
 
 ## Motivation and more detailed user scenario about Synchronization mode
@@ -252,10 +252,10 @@ class ServiceAdapter {
   async send_message(msg: string) {
     if (this.connectingStatus === 'Connected') {
       /** send message */
-      await client_send_message_without_wait_connect(msg);
+      await client_send_message_without_wait_connect(msg)
     } else if (this.connectingStatus === 'Connecting') {
       /** send message */
-      await client_send_message_wait_connect(msg);
+      await client_send_message_wait_connect(msg)
     } else {
       //..
     }
@@ -282,16 +282,16 @@ class ServiceAdapter {
 The code snippet is from [embedded-pydicom-react-viewer](https://github.com/grimmer0125/embedded-pydicom-react-viewer). Some function only can be executed after init function is finished.
 
 ```typescript
-const d4c = new D4C();
+const d4c = new D4C()
 export const initPyodide = d4c.wrap(async () => {
   /** init Pyodide*/
-});
+})
 
 /** without d4c-queue, it will throw exception while being called
  * before 'initPyodide' is finished */
 export const parseByPython = d4c.wrap(async (buffer: ArrayBuffer) => {
   /** execute python code in browser */
-});
+})
 ```
 
 ### Race condition
@@ -302,20 +302,20 @@ It is similar to causality. Sometimes two function which access same data within
 
 ```typescript
 const func1 = async () => {
-  console.log("func1 start, execution1 in event loop")
-  await func3();
-  console.log('func1 end, should not be same event loop execution1');
-};
+  console.log('func1 start, execution1 in event loop')
+  await func3()
+  console.log('func1 end, should not be same event loop execution1')
+}
 
 const func2 = async () => {
-  console.log('func2');
-};
+  console.log('func2')
+}
 
 async function testRaceCondition() {
-  func1(); // if add await will result in no race condition
-  func2();
+  func1() // if add await will result in no race condition
+  func2()
 }
-testRaceCondition();
+testRaceCondition()
 ```
 
 `func2` will be executed when `func1` is not finished.
@@ -330,7 +330,7 @@ No race condition on two API call in `Express`, any API will be executed one by 
 /** Express case */
 app.post('/testing', async (req, res) => {
   // Do something here
-});
+})
 ```
 
 However, race condition may happen on two API call in `Apollo`/`NestJS`.
@@ -344,7 +344,7 @@ const resolvers = {
   Query: {
     books: async () => books,
   },
-};
+}
 ```
 
 Two Apollo GraphQL queries/mutations may be executed concurrently, not like Express. This has advantage and disadvantage. If you need to worry about the possible race condition, you can consider this `d4c-queue` library, or `Database transaction` or [async-mutex](https://www.npmjs.com/package/async-mutex). You do not need to apply `d4c-queue` library on top API endpoint always, just apply on the place you worry about.
@@ -354,15 +354,15 @@ Two Apollo GraphQL queries/mutations may be executed concurrently, not like Expr
 The below shows how to make `hello query` become `synchronized`. Keep in mind that `@synchronized` should be below `@Query`.
 
 ```typescript
-import { Query } from '@nestjs/graphql';
-import { synchronized } from 'd4c-queue';
+import { Query } from '@nestjs/graphql'
+import { synchronized } from 'd4c-queue'
 
 function delay() {
   return new Promise<string>(function (resolve, reject) {
     setTimeout(function () {
-      resolve('world');
-    }, 10 * 1000);
-  });
+      resolve('world')
+    }, 10 * 1000)
+  })
 }
 
 export class TestsResolver {
@@ -372,10 +372,10 @@ export class TestsResolver {
    */
   @synchronized
   async hello() {
-    console.log('hello graphql resolver part: 1/2');
-    const resp = await delay();
-    console.log('hello graphql resolver part: 2/2');
-    return resp;
+    console.log('hello graphql resolver part: 1/2')
+    const resp = await delay()
+    console.log('hello graphql resolver part: 2/2')
+    return resp
   }
 }
 ```
@@ -425,9 +425,9 @@ setup a array of queue settings
 // use with @concurrent
 function QConcurrency(
   queuesParam: Array<{
-    limit: number;
-    tag?: string | symbol;
-    isStatic?: boolean;
+    limit: number
+    tag?: string | symbol
+    isStatic?: boolean
   }>
 ) {}
 
@@ -443,16 +443,16 @@ class TestController {}
 
 ```typescript
 function synchronized(option?: {
-  inheritPreErr?: boolean;
-  noBlockCurr?: boolean;
-  tag?: string | symbol;
+  inheritPreErr?: boolean
+  noBlockCurr?: boolean
+  tag?: string | symbol
 }) {}
 
 /** default concurrency limit is Infinity, // use with @QConcurrency */
 function concurrent(option?: {
-  tag?: string | symbol;
-  inheritPreErr?: boolean;
-  noBlockCurr?: boolean;
+  tag?: string | symbol
+  inheritPreErr?: boolean
+  noBlockCurr?: boolean
 }) {}
 ```
 
@@ -487,21 +487,21 @@ usage:
 
 ```typescript
 /** default concurrency is 1*/
-const d4c = new D4C();
+const d4c = new D4C()
 
 /** concurrency limit 500 applied on default queues */
-const d4c = new D4C([{ limit: 500 }]);
+const d4c = new D4C([{ limit: 500 }])
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C([{ limit: 100, tag: '2' }]);
+const d4c = new D4C([{ limit: 100, tag: '2' }])
 ```
 
 - setConcurrency
 
 ```ts
-d4c.setConcurrency([{ limit: 10 }]);
+d4c.setConcurrency([{ limit: 10 }])
 
-d4c.setConcurrency([{ limit: 10, tag: 'queue2' }]);
+d4c.setConcurrency([{ limit: 10, tag: 'queue2' }])
 ```
 
 - wrap
@@ -545,7 +545,7 @@ newFunc("asyncFun_arg1", "asyncFun_arg2");)
 becomes
 
 ```typescript
-d4c.apply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' });
+d4c.apply(asyncFun, { args: ['asyncFun_arg1'], tag: 'queue1' })
 ```
 
 ## Changelog
@@ -591,10 +591,37 @@ module.exports = {
     plugins: [['@babel/plugin-proposal-decorators', { legacy: true }]],
     loaderOptions: {},
     loaderOptions: (babelLoaderOptions, { env, paths }) => {
-      return babelLoaderOptions;
+      return babelLoaderOptions
     },
   },
-};
+}
+```
+
+### Angular Service example
+
+```
+import { Injectable } from '@angular/core';
+import { QConcurrency, concurrent } from 'd4c-queue';
+
+// can be placed below @Injectable, too
+@QConcurrency([
+  { limit: 1 }
+])
+@Injectable({
+  providedIn: 'root'
+})
+export class HeroService {
+
+  @concurrent
+  async task1() {
+    await wait(5 * 1000);
+  }
+
+  @concurrent
+  async task2() {
+    await wait(1 * 1000);
+  }
+}
 ```
 
 ### Use latest GitHub code of this library
