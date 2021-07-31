@@ -599,27 +599,24 @@ module.exports = {
 
 ### Angular Service example
 
-```
-import { Injectable } from '@angular/core';
-import { QConcurrency, concurrent } from 'd4c-queue';
+```typescript
+import { Injectable } from '@angular/core'
+import { QConcurrency, concurrent } from 'd4c-queue'
 
 // can be placed below @Injectable, too
-@QConcurrency([
-  { limit: 1 }
-])
+@QConcurrency([{ limit: 1 }])
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class HeroService {
-
   @concurrent
   async task1() {
-    await wait(5 * 1000);
+    await wait(5 * 1000)
   }
 
   @concurrent
   async task2() {
-    await wait(1 * 1000);
+    await wait(1 * 1000)
   }
 }
 ```

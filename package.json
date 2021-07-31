@@ -1,6 +1,6 @@
 {
   "name": "d4c-queue",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "description": "A task queue executes tasks sequentially or concurrently. Wrap an async/promise-returning/sync function as a queue-ready async function for easy reusing. Support passing arguments/getting return value, @synchronized/@concurrent decorator, Node.js/Browser.",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
