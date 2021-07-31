@@ -597,7 +597,7 @@ module.exports = {
 }
 ```
 
-### Angular Service example
+### Angular service example
 
 ```typescript
 import { Injectable } from '@angular/core'
