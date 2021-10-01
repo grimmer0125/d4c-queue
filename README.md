@@ -134,10 +134,10 @@ Usage:
 
 ```ts
 /** change concurrency limit applied on default queues */
-const d4c = new D4C([{ limit: 100 }])
+const d4c = new D4C([{ concurrency: { limit: 100 }}])
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C([{ limit: 100, tag: '2' }])
+const d4c = new D4C([{ concurrency: { limit: 100, tag: '2' }}])
 ```
 
 You can adjust concurrency via `setConcurrency`.
@@ -490,10 +490,10 @@ usage:
 const d4c = new D4C()
 
 /** concurrency limit 500 applied on default queues */
-const d4c = new D4C([{ limit: 500 }])
+const d4c = new D4C([{ concurrency: { limit: 500 }}])
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C([{ limit: 100, tag: '2' }])
+const d4c = new D4C([{ concurrency: { limit: 100, tag: '2' }}])
 ```
 
 - setConcurrency
