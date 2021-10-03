@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file. See [standa
 
 Those versions which only include documentation change might not be included here.
 
+### [1.6.9](https://github.com/grimmer0125/d4c-queue/compare/v1.6.5...v1.6.9) (2021-10-03)
+
+Update README. Fix potential security vulnerabilities in dependencies and gh-pages publishing.
 ### [1.6.5](https://github.com/grimmer0125/d4c-queue/compare/v1.6.4...v1.6.5) (2021-07-13)
 
 Update README and fix potential security vulnerabilities in dependencies.
