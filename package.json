@@ -116,7 +116,8 @@
     "normalize-url": "^4.5.1",
     "browserslist": "^4.16.5",
     "set-value": "^4.0.1",
-    "path-parse": "^1.0.7"
+    "path-parse": "^1.0.7",
+    "ansi-regex": "^5.0.1"
   },
   "files": [
     "build/main",
