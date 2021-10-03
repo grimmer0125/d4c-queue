@@ -184,10 +184,10 @@
 				<p>Default concurrency limit of D4C instance is <code>1</code> in this library.</p>
 				<p>Usage:</p>
 				<pre><code class="language-ts"><span class="hljs-comment">/** change concurrency limit applied on default queues */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span> }])
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span> }}])
 
 <span class="hljs-comment">/** setup concurrency for specific queue: &quot;2&quot; */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> }])
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> }}])
 </code></pre>
 				<p>You can adjust concurrency via <code>setConcurrency</code>.</p>
 				<pre><code class="language-ts"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C()
@@ -494,10 +494,10 @@ app.post(<span class="hljs-string">&#x27;/testing&#x27;</span>, <span class="hlj
 <span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C()
 
 <span class="hljs-comment">/** concurrency limit 500 applied on default queues */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">500</span> }])
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">500</span> }}])
 
 <span class="hljs-comment">/** setup concurrency for specific queue: &quot;2&quot; */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> }])
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> }}])
 </code></pre>
 				<ul>
 					<li>setConcurrency</li>
@@ -587,7 +587,7 @@ newFunc(<span class="hljs-string">&quot;asyncFun_arg1&quot;</span>, <span class=
 }
 </code></pre>
 				<a href="#angular-service-example" id="angular-service-example" style="color: inherit; text-decoration: none;">
-					<h3>Angular Service example</h3>
+					<h3>Angular service example</h3>
 				</a>
 				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { Injectable } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@angular/core&#x27;</span>
 <span class="hljs-keyword">import</span> { QConcurrency, concurrent } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;d4c-queue&#x27;</span>
