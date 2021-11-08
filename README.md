@@ -24,7 +24,7 @@ Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Referenc
 This package includes two builds.
 
 - ES6 build (ES2015) with CommonJS module for `main` build in package.json.
-- ES6 build (ES2015) with ES6 module for `module` build. Some tools will follow the `module` field in `package.json`, like Rollup, Webpack, or Parcel. It is good to let build tools can tree-shake your module build to import only the code they need.
+- ES6 build (ES2015) with ES6 module for `module` build. Some tools will follow the `module` field in `package.json`, like Rollup, Webpack, or Parcel. It is good to let build tools can tree-shake this module build to import only the code they need.
 
 Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package.
 
