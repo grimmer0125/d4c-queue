@@ -152,7 +152,19 @@ d4c.setConcurrency([{ limit: 10 }])
 d4c.setConcurrency([{ limit: 10, tag: 'queue2' }])
 ```
 
-When this async task function is called and the system detects the concurrency limit is reached, this tasks will not be really executed and will be enqueued. If you want to drop this task function call, you can set `dropWhenReachLimit` option when wrapping/applying the task function. e.g. `d4c.wrap(taskFun, { dropWhenReachLimit: true })`
+When this async task function is called and the system detects the concurrency limit is reached, this tasks will not be really executed and will be enqueued. If you want to drop this task function call, you can set `dropWhenReachLimit` option when wrapping/applying the task function. e.g.
+
+```ts
+const fn1 = d4c.wrap(taskFun, { dropWhenReachLimit: true })
+
+try {
+  await fn1()
+} catch (err) {
+  // when the concurrency limit is reached at this moment.
+  // err.message is QueueIsFull
+  console.log({ err })
+}
+```
 
 ### Decorators usage
 
