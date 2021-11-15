@@ -22,16 +22,18 @@ const funcPromise = (input: string[], input2: string): Promise<string> => {
   return Promise.resolve(input[0] + input2)
 }
 
-const timeout = (seconds: number, target: { str: string }) => {
+const timeout = (seconds: number, target?: { str: string }) => {
   return new Promise<void>((resolve, _) =>
     setTimeout(() => {
-      target.str += seconds
+      if (target?.str != undefined && target?.str != null) {
+        target.str += seconds
+      }
       resolve()
     }, seconds * 100)
   )
 }
 
-const timeoutError = (seconds: number, result) => {
+const timeoutError = (seconds: number, result: string) => {
   return new Promise((_, reject) =>
     setTimeout(() => {
       reject(result)
@@ -606,13 +608,15 @@ test('Decorator usage', async (t) => {
   t.is(test.str, '0.10.5')
 
   /** composite case: D4C instance on no autobind decorated method */
+  let error = null
   try {
     const d4c = new D4C()
     const newFunc = d4c.wrap(testController.greet)
     const resp = await newFunc('')
   } catch (err) {
-    t.is(err.message, ErrMsg.MissingThisDueBindIssue)
+    error = err
   }
+  t.is(error.message, ErrMsg.MissingThisDueBindIssue)
 
   /** composite case: D4C instance on autobind decorated method */
   const d4c = new D4C()
@@ -647,7 +651,7 @@ test('Decorator usage', async (t) => {
   t.is(test.str, '0.10.5')
 
   /** test invalid decorator */
-  let error = null
+  error = null
   try {
     class TestController4 {
       @synchronized({ tag: true } as any)
@@ -669,6 +673,7 @@ test('Decorator usage', async (t) => {
       // console.log(" err by purpose")
     }
   })()
+
   error = null
   try {
     await testController.instanceTimeout(0.1, { str: '' })
@@ -823,7 +828,7 @@ test("Instance usage: option inheritPreErr enable: task2 inherit task1's error i
 
   const fun1ErrorProducer = async () => {
     try {
-      await d4c.wrap(timeoutError)(1, new Error('some_error'))
+      await d4c.wrap(timeoutError)(1, 'some_error')
     } catch (_) {
       // console.log(" err by purpose")
     }
