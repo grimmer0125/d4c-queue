@@ -33,7 +33,7 @@ const timeout = (seconds: number, target?: { str: string }) => {
   )
 }
 
-const timeoutError = (seconds: number, result: string) => {
+const timeoutError = (seconds: number, result: string | Error) => {
   return new Promise((_, reject) =>
     setTimeout(() => {
       reject(result)
@@ -828,7 +828,7 @@ test("Instance usage: option inheritPreErr enable: task2 inherit task1's error i
 
   const fun1ErrorProducer = async () => {
     try {
-      await d4c.wrap(timeoutError)(1, 'some_error')
+      await d4c.wrap(timeoutError)(1, new Error('some_error'))
     } catch (_) {
       // console.log(" err by purpose")
     }
