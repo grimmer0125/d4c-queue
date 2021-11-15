@@ -85,6 +85,7 @@
 					<li>Well tested.</li>
 					<li>Optional parameter, <code>inheritPreErr</code>. If current task is waiting for previous tasks, set it as <code>true</code> to inherit the error of the previous task and the task will not be executed and throw a custom error <code>new PreviousError(task.preError.message ?? task.preError)</code>. If this parameter is omitted or set as <code>false</code>, the task will continue whether previous tasks happen errors or not.</li>
 					<li>Optional parameter, <code>noBlockCurr</code>. Set it as <code>true</code> to forcibly execute the current task in the another (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.</li>
+					<li>Optional parameter, <code>dropWhenReachLimit</code>. Set it as <code>true</code>, then this function call will be dropped when the system detects the queue concurrency limit is reached. It is like a kind of throttle mechanism but not time interval based. The dropped function call will not be really executed and will throw a execption whose message is <code>QueueIsFull</code> and you need to catch it.</li>
 				</ol>
 				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
 					<h2>Installation</h2>
@@ -92,7 +93,7 @@
 				<p>This package includes two builds.</p>
 				<ul>
 					<li>ES6 build (ES2015) with CommonJS module for <code>main</code> build in package.json.</li>
-					<li>ES6 build (ES2015) with ES6 module for <code>module</code> build. Some tools will follow the <code>module</code> field in <code>package.json</code>, like Rollup, Webpack, or Parcel. It is good to let build tools can tree-shake your module build to import only the code they need.</li>
+					<li>ES6 build (ES2015) with ES6 module for <code>module</code> build. Some tools will follow the <code>module</code> field in <code>package.json</code>, like Rollup, Webpack, or Parcel.</li>
 				</ul>
 				<p>Either <code>npm install d4c-queue</code> or <code>yarn add d4c-queue</code>. Then import this package.</p>
 				<p><strong>ES6 import</strong></p>
@@ -180,14 +181,14 @@
 				<a href="#concurrency-mode" id="concurrency-mode" style="color: inherit; text-decoration: none;">
 					<h4>Concurrency mode</h4>
 				</a>
-				<p>Is it useful for rate-limiting tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.</p>
+				<p>Is it useful for rate-limiting or throttling tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.</p>
 				<p>Default concurrency limit of D4C instance is <code>1</code> in this library.</p>
 				<p>Usage:</p>
 				<pre><code class="language-ts"><span class="hljs-comment">/** change concurrency limit applied on default queues */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span> }}])
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span> } }])
 
 <span class="hljs-comment">/** setup concurrency for specific queue: &quot;2&quot; */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> }}])
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> } }])
 </code></pre>
 				<p>You can adjust concurrency via <code>setConcurrency</code>.</p>
 				<pre><code class="language-ts"><span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C()
@@ -196,6 +197,17 @@ d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-nu
 
 <span class="hljs-comment">/** change concurrency limit for queue2 */</span>
 d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;queue2&#x27;</span> }])
+</code></pre>
+				<p>When this async task function is called and the system detects the concurrency limit is reached, this tasks will not be really executed and will be enqueued. If you want to drop this task function call, you can set <code>dropWhenReachLimit</code> option when wrapping/applying the task function. e.g.</p>
+				<pre><code class="language-ts"><span class="hljs-keyword">const</span> fn1 = d4c.wrap(taskFun, { <span class="hljs-attr">dropWhenReachLimit</span>: <span class="hljs-literal">true</span> })
+
+<span class="hljs-keyword">try</span> {
+  <span class="hljs-keyword">await</span> fn1()
+} <span class="hljs-keyword">catch</span> (err) {
+  <span class="hljs-comment">// when the concurrency limit is reached at this moment.</span>
+  <span class="hljs-comment">// err.message is QueueIsFull</span>
+  <span class="hljs-built_in">console</span>.log({ err })
+}
 </code></pre>
 				<a href="#decorators-usage" id="decorators-usage" style="color: inherit; text-decoration: none;">
 					<h3>Decorators usage</h3>
@@ -233,7 +245,7 @@ d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-nu
   <span class="hljs-meta">@concurrent</span>
   <span class="hljs-keyword">static</span> <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">fetchData</span>(<span class="hljs-params">url: <span class="hljs-built_in">string</span></span>)</span> {}
 
-  <span class="hljs-meta">@concurrent</span>({ <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> })
+  <span class="hljs-meta">@concurrent</span>({ <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span>, <span class="hljs-attr">dropWhenReachLimit</span>: <span class="hljs-literal">true</span> })
   <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-title">fetchData2</span>(<span class="hljs-params">url: <span class="hljs-built_in">string</span></span>)</span> {}
 
   <span class="hljs-comment">/** You can still use <span class="hljs-doctag">@synchronized</span>, as long as
@@ -466,6 +478,7 @@ app.post(<span class="hljs-string">&#x27;/testing&#x27;</span>, <span class="hlj
   tag?: <span class="hljs-built_in">string</span> | symbol
   inheritPreErr?: <span class="hljs-built_in">boolean</span>
   noBlockCurr?: <span class="hljs-built_in">boolean</span>
+  dropWhenReachLimit?: <span class="hljs-built_in">boolean</span>
 }</span>) </span>{}
 </code></pre>
 				<p>Example:</p>
@@ -477,7 +490,7 @@ app.post(<span class="hljs-string">&#x27;/testing&#x27;</span>, <span class="hlj
 <span class="hljs-meta">@concurrent</span>
 <span class="hljs-meta">@concurrent</span>()
 <span class="hljs-meta">@concurrent</span>({ <span class="hljs-attr">tag</span>: <span class="hljs-string">&quot;world&quot;</span>, <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span> })
-<span class="hljs-meta">@concurrent</span>({ <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">noBlockCurr</span>: <span class="hljs-literal">true</span> })
+<span class="hljs-meta">@concurrent</span>({ <span class="hljs-attr">inheritPreErr</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">noBlockCurr</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">dropWhenReachLimit</span>: <span class="hljs-literal">true</span> })
 </code></pre>
 				<p>See <a href="#decorators-usage">decorators-usage</a></p>
 				<a href="#d4c-instance-usage-1" id="d4c-instance-usage-1" style="color: inherit; text-decoration: none;">
@@ -494,10 +507,10 @@ app.post(<span class="hljs-string">&#x27;/testing&#x27;</span>, <span class="hlj
 <span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C()
 
 <span class="hljs-comment">/** concurrency limit 500 applied on default queues */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">500</span> }}])
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">500</span> } }])
 
 <span class="hljs-comment">/** setup concurrency for specific queue: &quot;2&quot; */</span>
-<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> }}])
+<span class="hljs-keyword">const</span> d4c = <span class="hljs-keyword">new</span> D4C([{ <span class="hljs-attr">concurrency</span>: { <span class="hljs-attr">limit</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">tag</span>: <span class="hljs-string">&#x27;2&#x27;</span> } }])
 </code></pre>
 				<ul>
 					<li>setConcurrency</li>
@@ -515,6 +528,7 @@ d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-nu
     tag?: <span class="hljs-built_in">string</span> | symbol;
     inheritPreErr?: <span class="hljs-built_in">boolean</span>;
     noBlockCurr?: <span class="hljs-built_in">boolean</span>;
+    dropWhenReachLimit?: <span class="hljs-built_in">boolean</span>;
   }
 )
 </code></pre>
@@ -529,6 +543,7 @@ d4c.setConcurrency([{ <span class="hljs-attr">limit</span>: <span class="hljs-nu
     tag?: <span class="hljs-built_in">string</span> | symbol;
     inheritPreErr?: <span class="hljs-built_in">boolean</span>;
     noBlockCurr?: <span class="hljs-built_in">boolean</span>;
+    dropWhenReachLimit?: <span class="hljs-built_in">boolean</span>;
     args?: Parameters&lt;<span class="hljs-keyword">typeof</span> func&gt;;
   }
 )
