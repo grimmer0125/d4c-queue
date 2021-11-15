@@ -18,13 +18,14 @@ Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Referenc
 8. Well tested.
 9. Optional parameter, `inheritPreErr`. If current task is waiting for previous tasks, set it as `true` to inherit the error of the previous task and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`. If this parameter is omitted or set as `false`, the task will continue whether previous tasks happen errors or not.
 10. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the another (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
+11. Optional parameter, `dropWhenReachLimit`. Set it as `true`. Then it will be dropped when it is called but the system detects the queue concurrency limit is reached. It is like a kind of throttle mechanism but not time interval based. The dropped function call will not be really executed and will throw a execption whose message is `QueueIsFull` and you need to catch it.
 
 ## Installation
 
 This package includes two builds.
 
 - ES6 build (ES2015) with CommonJS module for `main` build in package.json.
-- ES6 build (ES2015) with ES6 module for `module` build. Some tools will follow the `module` field in `package.json`, like Rollup, Webpack, or Parcel. It is good to let build tools can tree-shake this module build to import only the code they need.
+- ES6 build (ES2015) with ES6 module for `module` build. Some tools will follow the `module` field in `package.json`, like Rollup, Webpack, or Parcel.
 
 Either `npm install d4c-queue` or `yarn add d4c-queue`. Then import this package.
 
@@ -126,7 +127,7 @@ d4c.apply(syncFun, { args: ['syncFun_arg1'] })
 
 #### Concurrency mode
 
-Is it useful for rate-limiting tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.
+Is it useful for rate-limiting or throttling tasks. For example, setup some concurrency limit to avoid send GitHub GraphQL API requests too fast, since it has rate limits control.
 
 Default concurrency limit of D4C instance is `1` in this library.
 
@@ -134,10 +135,10 @@ Usage:
 
 ```ts
 /** change concurrency limit applied on default queues */
-const d4c = new D4C([{ concurrency: { limit: 100 }}])
+const d4c = new D4C([{ concurrency: { limit: 100 } }])
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C([{ concurrency: { limit: 100, tag: '2' }}])
+const d4c = new D4C([{ concurrency: { limit: 100, tag: '2' } }])
 ```
 
 You can adjust concurrency via `setConcurrency`.
@@ -150,6 +151,8 @@ d4c.setConcurrency([{ limit: 10 }])
 /** change concurrency limit for queue2 */
 d4c.setConcurrency([{ limit: 10, tag: 'queue2' }])
 ```
+
+When this async task function is called and the system detects the concurrency limit is reached, this tasks will not be really executed and will be enqueued. If you want to drop this task function call, you can set `dropWhenReachLimit` option when wrapping/applying the task function. e.g. `d4c.wrap(taskFun, { dropWhenReachLimit: true })`
 
 ### Decorators usage
 
@@ -188,7 +191,7 @@ class TestController {
   @concurrent
   static async fetchData(url: string) {}
 
-  @concurrent({ tag: '2' })
+  @concurrent({ tag: '2', dropWhenReachLimit: true })
   async fetchData2(url: string) {}
 
   /** You can still use @synchronized, as long as
@@ -453,6 +456,7 @@ function concurrent(option?: {
   tag?: string | symbol
   inheritPreErr?: boolean
   noBlockCurr?: boolean
+  dropWhenReachLimit?: boolean
 }) {}
 ```
 
@@ -467,7 +471,7 @@ Example:
 @concurrent
 @concurrent()
 @concurrent({ tag: "world", inheritPreErr: true })
-@concurrent({ inheritPreErr: true, noBlockCurr: true })
+@concurrent({ inheritPreErr: true, noBlockCurr: true, dropWhenReachLimit: true })
 
 ```
 
@@ -490,10 +494,10 @@ usage:
 const d4c = new D4C()
 
 /** concurrency limit 500 applied on default queues */
-const d4c = new D4C([{ concurrency: { limit: 500 }}])
+const d4c = new D4C([{ concurrency: { limit: 500 } }])
 
 /** setup concurrency for specific queue: "2" */
-const d4c = new D4C([{ concurrency: { limit: 100, tag: '2' }}])
+const d4c = new D4C([{ concurrency: { limit: 100, tag: '2' } }])
 ```
 
 - setConcurrency
@@ -513,6 +517,7 @@ public wrap<T extends IAnyFn>(
     tag?: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
+    dropWhenReachLimit?: boolean;
   }
 )
 ```
@@ -530,6 +535,7 @@ public apply<T extends IAnyFn>(
     tag?: string | symbol;
     inheritPreErr?: boolean;
     noBlockCurr?: boolean;
+    dropWhenReachLimit?: boolean;
     args?: Parameters<typeof func>;
   }
 )

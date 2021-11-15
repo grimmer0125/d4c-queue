@@ -846,9 +846,9 @@ test("Instance usage: option inheritPreErr enable: task2 inherit task1's error i
   t.is(error.message, 'some_error')
 })
 
-test('Instance usage: test option dropIfQueueFull', async (t) => {
+test('Instance usage: test option dropWhenReachLimit', async (t) => {
   const d4c = new D4C([{ concurrency: { limit: 2 } }])
-  const fn1 = d4c.wrap(timeout, { dropIfQueueFull: true })
+  const fn1 = d4c.wrap(timeout, { dropWhenReachLimit: true })
 
   let error = null
   try {
