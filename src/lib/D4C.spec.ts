@@ -845,3 +845,17 @@ test("Instance usage: option inheritPreErr enable: task2 inherit task1's error i
 
   t.is(error.message, 'some_error')
 })
+
+test('Instance usage: test option skipIfFull', async (t) => {
+  const d4c = new D4C([{ concurrency: { limit: 2 } }])
+  const fn1 = d4c.wrap(timeout, { skipIfFull: true })
+
+  let error = null
+  try {
+    await fn1(3)
+    await Promise.all([fn1(3), fn1(3), fn1(3)])
+  } catch (err) {
+    error = err
+  }
+  t.is(error.message, ErrMsg.QueueIsFull)
+})
