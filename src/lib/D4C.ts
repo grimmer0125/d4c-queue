@@ -214,7 +214,8 @@ function checkIfDecoratorOptionObject(obj: any): boolean {
     (typeof obj.inheritPreErr === 'boolean' ||
       obj.inheritPreErr === undefined) &&
     (typeof obj.noBlockCurr === 'boolean' || obj.noBlockCurr === undefined) &&
-    (typeof obj.skipIfFull === 'boolean' || obj.skipIfFull === undefined) &&
+    (typeof obj.dropIfQueueFull === 'boolean' ||
+      obj.dropIfQueueFull === undefined) &&
     checkTag(obj.tag)
   ) {
     return true
@@ -242,7 +243,7 @@ export function concurrent(option?: {
   tag?: string | symbol
   inheritPreErr?: boolean
   noBlockCurr?: boolean
-  skipIfFull?: boolean
+  dropIfQueueFull?: boolean
 }): MethodDecoratorType
 export function concurrent(
   targetOrOption?: any,
@@ -332,7 +333,7 @@ function _q<T extends IAnyFn>(
     tag?: QueueTag
     inheritPreErr?: boolean
     noBlockCurr?: boolean
-    skipIfFull?: boolean
+    dropIfQueueFull?: boolean
   }
 ): (...args: Parameters<typeof func>) => Promise<UnwrapPromise<typeof func>> {
   return async function (...args: any[]): Promise<any> {
@@ -385,7 +386,7 @@ function _q<T extends IAnyFn>(
     let err: Error
     let task: Task
     if (taskQueue.runningTask === taskQueue.concurrency) {
-      if (!option?.skipIfFull) {
+      if (!option?.dropIfQueueFull) {
         const promise = new Promise(function (resolve) {
           task = {
             unlock: resolve,
@@ -537,7 +538,7 @@ export class D4C {
       tag?: string | symbol
       inheritPreErr?: boolean
       noBlockCurr?: boolean
-      skipIfFull?: boolean
+      dropIfQueueFull?: boolean
       args?: Parameters<typeof func>
     }
   ): Promise<UnwrapPromise<typeof func>> {
@@ -552,7 +553,7 @@ export class D4C {
       tag?: string | symbol
       inheritPreErr?: boolean
       noBlockCurr?: boolean
-      skipIfFull?: boolean
+      dropIfQueueFull?: boolean
     }
   ): (...args: Parameters<typeof func>) => Promise<UnwrapPromise<typeof func>> {
     if (!option || checkTag(option.tag)) {
