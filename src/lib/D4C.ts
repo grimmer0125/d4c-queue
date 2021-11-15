@@ -397,8 +397,7 @@ function _q<T extends IAnyFn>(
         await promise
         taskQueue.runningTask += 1
       } else {
-        // drop this time
-        console.log('drop this time') // return or throw an exxception??
+        // drop this time, throttle mechanism
         throw new Error(ErrMsg.QueueIsFull)
       }
     } else if (option?.noBlockCurr) {
