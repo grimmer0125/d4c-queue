@@ -18,7 +18,7 @@ Wrap an [async](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Referenc
 8. Well tested.
 9. Optional parameter, `inheritPreErr`. If current task is waiting for previous tasks, set it as `true` to inherit the error of the previous task and the task will not be executed and throw a custom error `new PreviousError(task.preError.message ?? task.preError)`. If this parameter is omitted or set as `false`, the task will continue whether previous tasks happen errors or not.
 10. Optional parameter, `noBlockCurr`. Set it as `true` to forcibly execute the current task in the another (microtask) execution of the event loop. This is useful if you pass a sync function as the first task but do not want it to block the current event loop.
-11. Optional parameter, `dropWhenReachLimit`. Set it as `true`. Then it will be dropped when it is called but the system detects the queue concurrency limit is reached. It is like a kind of throttle mechanism but not time interval based. The dropped function call will not be really executed and will throw a execption whose message is `QueueIsFull` and you need to catch it.
+11. Optional parameter, `dropWhenReachLimit`. Set it as `true`, then this function call will be dropped when the system detects the queue concurrency limit is reached. It is like a kind of throttle mechanism but not time interval based. The dropped function call will not be really executed and will throw a execption whose message is `QueueIsFull` and you need to catch it.
 
 ## Installation
 
