@@ -40,6 +40,7 @@ export enum ErrMsg {
   TwoDecoratorsIncompatible = 'TwoDecoratorsInCompatible',
   ClassAndMethodDecoratorsIncompatible = 'ClassAndMethodDecoratorsIncompatible',
   MissingThisDueBindIssue = 'missingThisDueBindIssue',
+  QueueIsFull = 'QueueIsFull',
 }
 
 const queueSymbol = Symbol('d4cQueues') // subQueue system
@@ -213,6 +214,8 @@ function checkIfDecoratorOptionObject(obj: any): boolean {
     (typeof obj.inheritPreErr === 'boolean' ||
       obj.inheritPreErr === undefined) &&
     (typeof obj.noBlockCurr === 'boolean' || obj.noBlockCurr === undefined) &&
+    (typeof obj.dropWhenReachLimit === 'boolean' ||
+      obj.dropWhenReachLimit === undefined) &&
     checkTag(obj.tag)
   ) {
     return true
@@ -240,6 +243,7 @@ export function concurrent(option?: {
   tag?: string | symbol
   inheritPreErr?: boolean
   noBlockCurr?: boolean
+  dropWhenReachLimit?: boolean
 }): MethodDecoratorType
 export function concurrent(
   targetOrOption?: any,
@@ -329,6 +333,7 @@ function _q<T extends IAnyFn>(
     tag?: QueueTag
     inheritPreErr?: boolean
     noBlockCurr?: boolean
+    dropWhenReachLimit?: boolean
   }
 ): (...args: Parameters<typeof func>) => Promise<UnwrapPromise<typeof func>> {
   return async function (...args: any[]): Promise<any> {
@@ -381,16 +386,21 @@ function _q<T extends IAnyFn>(
     let err: Error
     let task: Task
     if (taskQueue.runningTask === taskQueue.concurrency) {
-      const promise = new Promise(function (resolve) {
-        task = {
-          unlock: resolve,
-          preError: null,
-          inheritPreErr: option?.inheritPreErr,
-        }
-      })
-      taskQueue.queue.push(task)
-      await promise
-      taskQueue.runningTask += 1
+      if (!option?.dropWhenReachLimit) {
+        const promise = new Promise(function (resolve) {
+          task = {
+            unlock: resolve,
+            preError: null,
+            inheritPreErr: option?.inheritPreErr,
+          }
+        })
+        taskQueue.queue.push(task)
+        await promise
+        taskQueue.runningTask += 1
+      } else {
+        // drop this time, throttle mechanism
+        throw new Error(ErrMsg.QueueIsFull)
+      }
     } else if (option?.noBlockCurr) {
       taskQueue.runningTask += 1
       await Promise.resolve()
@@ -528,6 +538,7 @@ export class D4C {
       tag?: string | symbol
       inheritPreErr?: boolean
       noBlockCurr?: boolean
+      dropWhenReachLimit?: boolean
       args?: Parameters<typeof func>
     }
   ): Promise<UnwrapPromise<typeof func>> {
@@ -542,6 +553,7 @@ export class D4C {
       tag?: string | symbol
       inheritPreErr?: boolean
       noBlockCurr?: boolean
+      dropWhenReachLimit?: boolean
     }
   ): (...args: Parameters<typeof func>) => Promise<UnwrapPromise<typeof func>> {
     if (!option || checkTag(option.tag)) {
