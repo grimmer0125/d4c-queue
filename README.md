@@ -242,7 +242,7 @@ const d4c = new D4C()
 const res = await d4c.apply(testController.bindMethodByArrowPropertyOrAutobind)
 ```
 
-## Motivation and more detailed user scenario about Synchronization mode
+## Motivation and more detailed user scenarios
 
 ### Causality
 
@@ -423,6 +423,10 @@ current_function() {
   d4c.apply(async_func2);
 }
 ```
+
+### Throttle case: avoid more and more delaying UI updating events as time grow
+
+Besides rate-limit cases (e.g. server side limit), another case is you trigger mouse move too often, and these events will cause some function calls (either calculation or API calls) and UI wait for these results to update in `await` way. It will not happen permanent UI dealy situation if these all happen in the same UI main thread since the funciton calls will avoid mouse move events been produced. But if these function calls are happend in another system (async http request) or calculation on web works (another thread), it may result in UI thread triggering too faster than the calcultion/consuming capability, which means it is over the performance bottlenect and you will see the UI updating delayed and delayed. The solution is to use `throttle` to limit the mouse event producing. This is why `dropWhenReachLimit` is introduced.
 
 ## API
 
